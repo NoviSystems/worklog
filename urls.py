@@ -3,7 +3,7 @@ import datetime
 from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
 
-from worklog.views import ReportView, ChartView, JobDataView, createWorkItem, viewWork
+from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork
 from timesheet import TimesheetView
 
 DATEMIN = r'(?P<datemin>\d{4}-\d{2}-\d{2})'

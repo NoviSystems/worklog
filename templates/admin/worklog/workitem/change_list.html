@@ -3,7 +3,10 @@
 {# Original file: django/contrib/admin/templates/admin/change_list.html #}
 {# This is nearly identical to the above file. #}
 
-{% load adminmedia admin_list i18n worklog_tags %}
+<!-- { % load adminmedia % } as of Django 1.5, adminmedia is deprecated -->
+{% load admin_list %}
+{% load i18n %}
+{% load worklog_tags %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -12,7 +15,7 @@
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/forms.css" />
   {% endif %}
   {% if cl.formset or action_form %}
-    {% url admin:jsi18n as jsi18nurl %}
+    {% url 'admin:jsi18n' as jsi18nurl %}
     <script type="text/javascript" src="{{ jsi18nurl|default:'../../jsi18n/' }}"></script>
   {% endif %}
   {{ media.css }}

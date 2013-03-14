@@ -8,8 +8,8 @@ from django.conf.urls.defaults import *
 from django.db.models import Sum
 
 from worklog import timesheet
-from worklog.models import WorkItem, Job, WorkLogReminder, BillingSchedule, Funding
-from worklog.models import BiweeklyEmployee, Holiday, WorkPeriod
+from models import WorkItem, Job, WorkLogReminder, BillingSchedule, Funding
+from models import BiweeklyEmployee, Holiday, WorkPeriod
 
 
 def mark_invoiced(modeladmin, request, queryset):

@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 
-import worklog.admin_filter
+import admin_filter
 
 class BiweeklyEmployee(models.Model):
     user = models.ForeignKey(User)

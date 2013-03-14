@@ -12,7 +12,7 @@ from django.template.loader import get_template
 from django.views.generic import TemplateView
 from django.shortcuts import get_object_or_404
 
-from worklog.models import WorkItem, BiweeklyEmployee, Holiday, WorkPeriod
+from models import WorkItem, BiweeklyEmployee, Holiday, WorkPeriod
 
 # Class representing a timesheet
 class Timesheet:

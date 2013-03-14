@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse as urlreverse
 import django.core.mail
 
 from worklog import timesheet
-from worklog.models import WorkItem, WorkLogReminder, Job, WorkPeriod
+from models import WorkItem, WorkLogReminder, Job, WorkPeriod
 
 import app_settings
 

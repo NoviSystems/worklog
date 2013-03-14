@@ -1,6 +1,6 @@
 from django.forms import ModelForm, Select, Form, HiddenInput, Textarea
 from django import forms
-from worklog.models import WorkItem, Job 
+from models import WorkItem, Job 
 from django.db.models import Q
 
 import datetime
