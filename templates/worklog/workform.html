@@ -15,49 +15,51 @@
 </head>
 
 <body>
-<h2>Add a new Work Item</h2>
-{% if holidays %}
-<h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
-{% endif %}
-
-{% if form %}
-  <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
-  
-  {% if reminder_id %}
-  <form action="/worklog/add/reminder_{{reminder_id}}/" method="post">
-  {% else %}
-  <form action="/worklog/add/" method="post">
+<div style="margin : 1em;">
+  <h2>Add a new Work Item</h2>
+  {% if holidays %}
+  <h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
   {% endif %}
-    <table class='formtable'>
-      {% csrf_token %}
-      {{ form }}
-      <tr>
-      <td><input type="submit" class="btn" name="submit_and_exit" value="Submit and Exit" /></td>
-      <td><input type="submit" class="btn" name="submit_and_add_another" value="Submit and Add Another" /></td>
-      </tr>
-    </table>
-  </form>
-  
-  <h4>Other Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
-  <table border="1">
-    <tr>
-    {% for title in column_names %}
-      <th>{{ title }}</th>
-    {% endfor %}
-    </tr>
+
+  {% if form %}
+    <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
     
-    {% for item in items %}
+    {% if reminder_id %}
+    <form action="/worklog/add/reminder_{{reminder_id}}/" method="post">
+    {% else %}
+    <form action="/worklog/add/" method="post">
+    {% endif %}
+      <table class='formtable'>
+        {% csrf_token %}
+        {{ form }}
+        <tr>
+        <td><input type="submit" class="btn" name="submit_and_exit" value="Submit and Exit" /></td>
+        <td><input type="submit" class="btn" name="submit_and_add_another" value="Submit and Add Another" /></td>
+        </tr>
+      </table>
+    </form>
+    
+    <h4>Other Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
+    <table border="1">
       <tr>
-        {% for field in item %}
-          <td>{{ field }}</td>
-        {% endfor %}
+      {% for title in column_names %}
+        <th>{{ title }}</th>
+      {% endfor %}
       </tr>
-    {% endfor %}
-  </table>
-  
-{% else %}
-    <p>This application is broken somehow...</p>
-{% endif %}
+      
+      {% for item in items %}
+        <tr>
+          {% for field in item %}
+            <td>{{ field }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+    
+  {% else %}
+      <p>This application is broken somehow...</p>
+  {% endif %}
+</div>
 </body>
 
 </html>
