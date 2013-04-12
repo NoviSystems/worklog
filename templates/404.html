@@ -1,13 +1,15 @@
-{% extends "admin/base_site.html" %}
-
-{% block extrastyle %}
-<link href="{{STATIC_URL}}bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" href="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
-{% endblock %}
-
-{% block content %}
-<div class='hero'>
-	<h1>Error</h1>
-	<p>Page not found.</p>
-</div>
-{% endblock %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>Page Not Found - 404</title>
+</head>
+<body>
+<h1>The page you are looking for cannot be located ... </h1>
+<h2>Perhaps you were looking for one of these: </h2>
+<ul>
+<li><a href="/lunch/">Lunch App</a></li>
+<li><a href="/worklog/add/">Worklog App</a></li>
+</ul>
+</body>
+</html>
