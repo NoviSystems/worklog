@@ -10,7 +10,7 @@ Worklog is a Django-based, hourly work logging web application that supports wor
 
 #### Site URL ####
 
-Add new entry for the site url in the admin/sites. This must be fully qualified and it must not include a closing slash. Update corresponding SITE_ID in settings.py. We can use 'http://127.0.0.1:8000' for local dev environment.
+Add new entry for the site url in the admin/sites. This must be fully qualified and it must not include a closing slash (We can use 'http://127.0.0.1:8000' for local dev environment). Update corresponding SITE_ID in settings.py. The SITE_ID is an integer field that corresponds to a Site object's private key, which is incremented by 1 for each new instance of a Site. Django, by default, will instantiate a site called 'example.com', where pk=1. Thus, the next site added will have pk=2, and so forth. Enter the private key integer into the SITE_ID field. If you are uncertain of your Site's private key, you can make a query for it in the django shell.
 
 #### Site Admins ####
 
