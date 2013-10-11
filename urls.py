@@ -2,9 +2,13 @@ import datetime
 
 from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork
 from timesheet import TimesheetView
+
+from dajaxice.core import dajaxice_autodiscover, dajaxice_config
+dajaxice_autodiscover()
 
 DATEMIN = r'(?P<datemin>\d{4}-\d{2}-\d{2})'
 DATEMAX = r'(?P<datemax>\d{4}-\d{2}-\d{2})'
@@ -30,6 +34,7 @@ urlpatterns = patterns('worklog',
     (r'^view/'+USERNAME+'/today/$', login_required(viewWork), {'datemin': 'today', 'datemax': 'today'}),
     (r'^view/'+USERNAME+'/'+DATERANGE1+'/$', login_required(viewWork)),
     (r'^view/'+USERNAME+'/'+DATERANGE2+'/$', login_required(viewWork)),
+    url(dajaxice_config.dajaxice_url, include('dajaxice.urls')),
 )
 
 urlpatterns += patterns('worklog',
@@ -39,3 +44,5 @@ urlpatterns += patterns('worklog',
     url(r'^chart/$', login_required(ChartView.as_view()), name='chart_url'),
     url(r'^chart/job/$', login_required(JobDataView.as_view()), name='job_data_url')
 )
+
+urlpatterns += staticfiles_urlpatterns()

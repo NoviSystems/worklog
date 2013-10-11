@@ -6,10 +6,14 @@ from celery.schedules import crontab
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse as urlreverse
+from django.core.exceptions import ObjectDoesNotExist
 import django.core.mail
 
 from worklog import timesheet
 from models import WorkItem, WorkLogReminder, Job, WorkPeriod
+
+from gh_connect import GitHubConnector
+from models import Repo, Issue
 
 import app_settings
 
@@ -237,3 +241,21 @@ def test_send_reminder_email(username, date=datetime.date.today()):
     
     django.core.mail.send_mail(subj, msg, from_email, recipients, fail_silently=False)
 
+@task
+def reconcile_db_with_gh(*args, **kwargs):
+    ghc = GitHubConnector()
+    issues = ghc.get_all_issues()
+    repos = ghc.get_all_repos()
+
+    for repo in repos:
+        r = Repo(github_id=repo.id, name=repo.name)
+        r.save()
+    
+    for issue in issues:
+        i = Issue(github_id=issue.id)
+        i.title = issue.title
+        i.number = issue.number
+        i.repo = Repo.objects.get(name=issue.repository[1])
+        i.save()
+
+    print "Not only did your task run successfully, but you're damned good looking too."

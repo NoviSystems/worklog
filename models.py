@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 
-import admin_filter
+import admin_filter, random
 
 class BiweeklyEmployee(models.Model):
     user = models.ForeignKey(User)
@@ -58,6 +58,22 @@ class Job(models.Model):
     def hasWork(self):
         return len(WorkItem.objects.filter(job=self)) != 0
 
+class Repo(models.Model):
+    github_id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=256)
+
+    def __unicode__(self):
+        return self.name
+
+class Issue(models.Model):
+    github_id = models.IntegerField(primary_key=True)
+    title = models.CharField(max_length=256, null=True)
+    number = models.IntegerField()
+    repo = models.ForeignKey(Repo, related_name='issue')
+
+    def __unicode__(self):
+        return str(self.number) + ': ' + str(self.title)
+
 class BillingSchedule(models.Model):
     job = models.ForeignKey(Job, related_name='billing_schedule')
     date = models.DateField()
@@ -76,9 +92,11 @@ class Funding(models.Model):
 class WorkItem(models.Model):
     user = models.ForeignKey(User)
     date = models.DateField()
-    hours = models.IntegerField()
+    hours = models.FloatField()
     text = models.TextField()
     job = models.ForeignKey(Job)
+    repo = models.ForeignKey(Repo, null=True)
+    issue = models.ForeignKey(Issue, null=True)
     invoiced = models.BooleanField(default=False)
     do_not_invoice = models.BooleanField(default=False)
     
@@ -94,10 +112,6 @@ class WorkItem(models.Model):
             if(not self.job.users.filter(id=self.user.id).exists()):
                 return         
         super(WorkItem, self).save(*args, **kwargs) 
-
-
-
-
 
 class WorkLogReminder(models.Model):
     reminder_id = models.CharField(max_length=36) # this is a uuid in string form

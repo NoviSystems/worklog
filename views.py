@@ -2,6 +2,7 @@ import datetime
 import calendar
 import time
 import re
+import github3
 
 from celery.execute import send_task
 
@@ -18,7 +19,7 @@ from django.views.generic import View, TemplateView
 from django.conf import settings
 
 from worklog.forms import WorkItemForm
-from worklog.models import WorkItem, WorkLogReminder, Job, Funding, Holiday, BiweeklyEmployee
+from worklog.models import WorkItem, WorkLogReminder, Job, Issue, Funding, Holiday, BiweeklyEmployee
 from worklog.tasks import generate_invoice
 
 # 'columns' determines the layout of the view table
@@ -28,6 +29,8 @@ _column_layout = [
     ('date','Date'),
     ('hours','Hours'),
     ('job','Job'),
+    ('repo','Repo'),
+    ('issue','Issue'),
     ('text','Task'),
     ]
     
@@ -58,8 +61,8 @@ def createWorkItem(request, reminder_id=None):
     except BadReminderId as e:
         resp = HttpResponse(e.args)
         resp['Worklog-UnableToCreateItem'] = '' # for testing purposes
-        return resp
-    
+        return resp    
+
     if request.method == 'POST': # If the form has been submitted...
         form = WorkItemForm(request.POST, reminder=reminder, logged_in_user=request.user)
         if form.is_valid():
@@ -67,8 +70,10 @@ def createWorkItem(request, reminder_id=None):
             hours = form.cleaned_data['hours']
             text = form.cleaned_data['text']
             job = form.cleaned_data['job']
+            repo = form.cleaned_data['repo']
+            issue = form.cleaned_data['issue']
             # create then save an item
-            wi = WorkItem(user=request.user, date=date, hours=hours, text=text, job=job)
+            wi = WorkItem(user=request.user, date=date, hours=hours, text=text, job=job, repo=repo, issue=issue)
             wi.save()
             if 'submit_and_add_another' in request.POST:
                 # redisplay workitem form so another item may be added
@@ -80,7 +85,7 @@ def createWorkItem(request, reminder_id=None):
                     return HttpResponseRedirect('/worklog/view/%s/%s_%s/' % ( request.user.username, date, date))
     else:
         form = WorkItemForm(reminder=reminder, logged_in_user=request.user) # An unbound form
-        
+
     items = WorkItem.objects.filter(date=date, user=request.user)
     rawitems = list(tuple(_itercolumns(item)) for item in items)
 

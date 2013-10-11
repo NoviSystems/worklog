@@ -1,6 +1,8 @@
 *.pyc
 *.db
+*.swp
 runserver
 runtests
 django-admin
 local_settings.py
+secrets.py
