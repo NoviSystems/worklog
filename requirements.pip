@@ -7,3 +7,5 @@ south
 gunicorn
 pytz
 flake8
+github3.py
+django_dajax
