@@ -3,6 +3,7 @@ from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from models import WorkItem, Job, Repo, Issue 
 from django.db.models import Q
+from django.forms import formsets, models
 
 import datetime
 import math
@@ -11,12 +12,14 @@ import random
 class BadWorkItemForm(Exception):
     pass
 
-class WorkItemForm(Form):
-    hours = forms.FloatField()
-    text = forms.CharField(widget=Textarea)
+class WorkItemForm(ModelForm):
     job = forms.ModelChoiceField(queryset=Job.objects.none(), empty_label="None") # empty queryset, overridden in ctor   
     repo = forms.ModelChoiceField(queryset=Repo.objects.all(), empty_label="None")
     issue = forms.ModelChoiceField(queryset=Issue.objects.none(), empty_label="None")
+
+    class Meta:
+        model = WorkItem
+        fields = ('hours','text','job','repo','issue')
 
     def __init__(self, *args, **kwargs):
         reminder = kwargs.pop("reminder")
@@ -39,8 +42,9 @@ class WorkItemForm(Form):
 
         if data:
             repo_id = data.get('repo')
-            repo = Repo.objects.get(github_id=repo_id)
-            self.fields["issue"].queryset = Issue.objects.filter(repo=repo)
+            if repo_id:
+                repo = Repo.objects.get(github_id=repo_id)
+                self.fields["issue"].queryset = Issue.objects.filter(repo=repo)
 
 
     def clean(self):

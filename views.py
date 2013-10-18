@@ -17,8 +17,10 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.views.generic import View, TemplateView
 from django.conf import settings
+from django.forms.models import modelformset_factory
+from django.forms.formsets import formset_factory
 
-from worklog.forms import WorkItemForm
+from worklog.forms import WorkItemForm, WorkItemFormSet
 from worklog.models import WorkItem, WorkLogReminder, Job, Issue, Funding, Holiday, BiweeklyEmployee
 from worklog.tasks import generate_invoice
 
@@ -66,15 +68,12 @@ def createWorkItem(request, reminder_id=None):
     if request.method == 'POST': # If the form has been submitted...
         form = WorkItemForm(request.POST, reminder=reminder, logged_in_user=request.user)
         if form.is_valid():
-            # get form data
-            hours = form.cleaned_data['hours']
-            text = form.cleaned_data['text']
-            job = form.cleaned_data['job']
-            repo = form.cleaned_data['repo']
-            issue = form.cleaned_data['issue']
-            # create then save an item
-            wi = WorkItem(user=request.user, date=date, hours=hours, text=text, job=job, repo=repo, issue=issue)
-            wi.save()
+            # Save but don't commit form data
+            f = form.save(commit=False)
+            # Add user and date before saving
+            f.user = request.user
+            f.date = date
+            f.save()
             if 'submit_and_add_another' in request.POST:
                 # redisplay workitem form so another item may be added
                 return HttpResponseRedirect(request.path)
