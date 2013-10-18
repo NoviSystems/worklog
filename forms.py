@@ -3,7 +3,7 @@ from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from models import WorkItem, Job, Repo, Issue 
 from django.db.models import Q
-from django.forms import formsets, models
+from django.forms import models
 
 import datetime
 import math

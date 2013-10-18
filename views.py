@@ -17,10 +17,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.views.generic import View, TemplateView
 from django.conf import settings
-from django.forms.models import modelformset_factory
-from django.forms.formsets import formset_factory
 
-from worklog.forms import WorkItemForm, WorkItemFormSet
+from worklog.forms import WorkItemForm
 from worklog.models import WorkItem, WorkLogReminder, Job, Issue, Funding, Holiday, BiweeklyEmployee
 from worklog.tasks import generate_invoice
 
