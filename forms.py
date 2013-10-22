@@ -53,8 +53,16 @@ class WorkItemForm(ModelForm):
             hours = cleaned_data["hours"]
         except KeyError:
             hours = 0
+        try:
+            text = cleaned_data["text"]
+        except KeyError:
+            text = None
+        try:
+            job = cleaned_data["job"]
+        except KeyError:
+            job = None
 
-        # Only allows hours to be entered in half hour increments.
+        # Only allows non-zero, non-negative hours to be entered in half hour increments.
         if (hours % 1 != 0.5) and (hours % 1 != 0):
             message_list = ["Please, Hammer, don't hurt 'em! Use half-hour increments.", 
                             "All your mantissa are belong to us. Half hour increments only. Please.", 
@@ -67,5 +75,28 @@ class WorkItemForm(ModelForm):
             self._errors["hours"] = self.error_class([error_message])
             if hours:
                 del cleaned_data["hours"]
+        elif hours < 0:
+            error_message = "We here at <Insert Company Name here>  would like you to have a non-negative work experience. Please enter a non-negative number of hours."
+            self._errors["hours"] = self.error_class([error_message])
+            if hours:
+                del cleaned_data["hours"]
+        elif not hours:
+            error_message = "If you work at <Insert Company Name here>, you're more hero than zero. Enter an hero number of hours."
+            self._errors["hours"] = self.error_class([error_message])
+            if hours:
+                del cleaned_data["hours"]
+        
+        # Custom error messages for empty fields
+        if text == None:
+            error_message = "This is where you describe the work you did when you weren't on r/banana, you pickle-hating scum."
+            self._errors["text"] = self.error_class([error_message])
+            if text:
+                del cleaned_data["text"]
+        
+        if job == None:
+            error_message = "i.e., the thing you're supposed to wear pants for, but you probably don't, since you're a programmer."
+            self._errors["job"] = self.error_class([error_message])
+            if text:
+                del cleaned_data["job"]
         
         return cleaned_data
