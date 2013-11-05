@@ -19,4 +19,4 @@ CLEAR_REMINDERS_DAYSOFWEEK = days_of_week_mapper[getattr(settings, 'WORKLOG_CLEA
 # The time and says to send reminder emails.
 SEND_REMINDERS_HOUR = getattr(settings, 'WORKLOG_SEND_REMINDERS_HOUR', 18)
 SEND_REMINDERS_DAYSOFWEEK = days_of_week_mapper[getattr(settings, 'WORKLOG_SEND_REMINDERS_DAYSOFWEEK', 'weekdays')]
-
+SEND_REMINDERS = getattr(settings, 'WORKLOG_SEND_REMINDERS', True)

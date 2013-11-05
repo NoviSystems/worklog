@@ -199,24 +199,28 @@ def save_reminder_record(user,id, date):
     
 send_hour = app_settings.SEND_REMINDERS_HOUR
 send_days = app_settings.SEND_REMINDERS_DAYSOFWEEK
+send_emails = app_settings.SEND_REMINDERS
 
 # periodic task -- by default: M-F at 6:00pm
 @periodic_task(run_every=crontab(hour=send_hour, minute=0, day_of_week=send_days))
 def send_reminder_emails():
-    datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
-    date = datetime.date.today()
-    for user in User.objects.all():
-        if not user.email or not user.is_active: continue
-        # get all workitems for 'user' that were submitted today
-        items = WorkItem.objects.filter(user=user.pk,date=date)
-        if not items:
-            # no work item today...
-            id = str(uuid.uuid4())
-            save_reminder_record(user,id,date)
-            et = compose_reminder_email(user.email, id, date)
-            datatuples = datatuples + (et,)
-    if datatuples:
-        django.core.mail.send_mass_mail(datatuples, fail_silently=False)
+    if send_emails:
+        datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
+        date = datetime.date.today()
+        for user in User.objects.all():
+            if not user.email or not user.is_active: continue
+            # get all workitems for 'user' that were submitted today
+            items = WorkItem.objects.filter(user=user.pk,date=date)
+            if not items:
+                # no work item today...
+                id = str(uuid.uuid4())
+                save_reminder_record(user,id,date)
+                et = compose_reminder_email(user.email, id, date)
+                datatuples = datatuples + (et,)
+        if datatuples:
+            django.core.mail.send_mass_mail(datatuples, fail_silently=False)
+    else:
+        print "Reminder emails turned off, not sent."
         
     
 clear_hour = app_settings.CLEAR_REMINDERS_HOUR
@@ -230,6 +234,7 @@ def clear_expired_reminder_records():
     oldrecs.delete()
 
 
+
 def test_send_reminder_email(username, date=datetime.date.today()):
     # For debugging purposes: sends a reminder email
     user = User.objects.filter(username=username)[0]
@@ -240,6 +245,7 @@ def test_send_reminder_email(username, date=datetime.date.today()):
     subj, msg, from_email, recipients = et
     
     django.core.mail.send_mail(subj, msg, from_email, recipients, fail_silently=False)
+
 
 @task
 def reconcile_db_with_gh(*args, **kwargs):
