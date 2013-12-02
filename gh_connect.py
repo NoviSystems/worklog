@@ -31,9 +31,8 @@ class GitHubConnector(object):
         for org in self.orgs:
             org_repos = org.iter_repos()
             for repo in org_repos:
-                repo_issues = repo.iter_issues()
-                for issue in repo_issues:
-                    issues.append(issue)    
+                issues += list(repo.iter_issues(state='open'))
+                issues += list(repo.iter_issues(state='closed'))
         return issues
 
     def get_repos_for_org(self, org_login=None, org_id=None):
