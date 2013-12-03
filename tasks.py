@@ -15,8 +15,6 @@ from models import WorkItem, WorkLogReminder, Job, WorkPeriod
 from gh_connect import GitHubConnector
 from models import Repo, Issue
 
-import app_settings
-
 import datetime, calendar
 import uuid
 
@@ -181,7 +179,7 @@ def generate_invoice_email():
 
 def compose_reminder_email(email_address, id, date):
     subj = "Remember to Submit Today's Worklog (%s)"%str(date)
-    expire_days =   app_settings.EMAIL_REMINDERS_EXPIRE_AFTER
+    expire_days =   settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER
     expiredate =    date + datetime.timedelta(days=expire_days)
     url =           create_reminder_url(id)
     msg = email_msg%{'url': url, 'expiredate': str(expiredate), 'date': str(date)}
@@ -198,11 +196,6 @@ def save_reminder_record(user,id, date):
     reminder = WorkLogReminder(reminder_id=id, user=user, date=date)
     reminder.save()
     
-    
-send_hour = app_settings.SEND_REMINDERS_HOUR
-send_days = app_settings.SEND_REMINDERS_DAYSOFWEEK
-send_emails = app_settings.SEND_REMINDERS
-
 # periodic task -- by default: M-F at 6:00pm
 # Crontab in settings.py
 @task
