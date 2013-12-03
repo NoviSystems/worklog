@@ -34,7 +34,8 @@ URL: %(url)s
 ##submit_log_url = "http://opus-dev.cnl.ncsu.edu:7979/worklog/add/reminder_%s"
 
 # Generate at 2 AM daily and check if the work period is over
-@periodic_task(run_every=crontab(hour=2, minute=0, day_of_week=[0,1,2,3,4,5,6]))
+# Crontab in settings.py
+@task
 def generate_timesheets():
     if WorkPeriod.objects.filter(due_date=datetime.date.today()).count() > 0:
         subject = 'Timesheets are due'
@@ -161,7 +162,8 @@ def generate_invoice(default_date=None):
         django.core.mail.send_mail(sub, msg, from_email, recipients)
 
 # Generate invoices at 2 AM daily if they are needed
-@periodic_task(run_every=crontab(hour=2, minute=0, day_of_week=[0,1,2,3,4,5,6]))
+# Crontab in settings.py
+@task
 def generate_invoice_email():
     default_date = datetime.date.today()
     billable_jobs = Job.objects.filter(billing_schedule__date=default_date).distinct()
@@ -202,6 +204,7 @@ send_days = app_settings.SEND_REMINDERS_DAYSOFWEEK
 send_emails = app_settings.SEND_REMINDERS
 
 # periodic task -- by default: M-F at 6:00pm
+# Crontab in settings.py
 @task
 def send_reminder_emails():
     if send_emails:
@@ -221,19 +224,14 @@ def send_reminder_emails():
             django.core.mail.send_mass_mail(datatuples, fail_silently=False)
     else:
         print "Reminder emails turned off, not sent."
-        
-    
-clear_hour = app_settings.CLEAR_REMINDERS_HOUR
-clear_days = app_settings.CLEAR_REMINDERS_DAYSOFWEEK
-        
-@periodic_task(run_every=crontab(hour=clear_hour, minute=0, day_of_week=clear_days))
+
+# Crontab in settings.py
+@task
 def clear_expired_reminder_records():
-    reminders_expire_days = app_settings.EMAIL_REMINDERS_EXPIRE_AFTER
+    reminders_expire_days = settings.EMAIL_REMINDERS_EXPIRE_AFTER
     olddate = datetime.date.today() - datetime.timedelta(days=reminders_expire_days)
     oldrecs = WorkLogReminder.objects.filter(date__lte=olddate)
     oldrecs.delete()
-
-
 
 def test_send_reminder_email(username, date=datetime.date.today()):
     # For debugging purposes: sends a reminder email
@@ -246,7 +244,7 @@ def test_send_reminder_email(username, date=datetime.date.today()):
     
     django.core.mail.send_mail(subj, msg, from_email, recipients, fail_silently=False)
 
-
+# Crontab in settings.py
 @task
 def reconcile_db_with_gh(*args, **kwargs):
     ghc = GitHubConnector()
