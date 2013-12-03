@@ -202,7 +202,7 @@ send_days = app_settings.SEND_REMINDERS_DAYSOFWEEK
 send_emails = app_settings.SEND_REMINDERS
 
 # periodic task -- by default: M-F at 6:00pm
-@periodic_task(run_every=crontab(hour=send_hour, minute=0, day_of_week=send_days))
+@task
 def send_reminder_emails():
     if send_emails:
         datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
