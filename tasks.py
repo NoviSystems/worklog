@@ -215,6 +215,7 @@ def send_reminder_emails():
                 datatuples = datatuples + (et,)
         if datatuples:
             django.core.mail.send_mass_mail(datatuples, fail_silently=False)
+        print "Reminder emails sent"
     else:
         print "Reminder emails turned off, not sent."
 
