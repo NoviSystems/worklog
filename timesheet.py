@@ -80,9 +80,28 @@ class Timesheet:
                 self.context[week_str] = '%s/%s' % (day[0].month, day[0].day)
                 self.context['%s_daily' % week_str] = hours
 
+                # If the person worked at all this day
                 if hours != 0:
+                    # Starting at 8 AMb 
                     start_hour = '8:00a'
-                    end_hour = '%s:00p' % (8 + hours - 12) if 8 + hours > 12 else '%s:00a' % (8 + hours)
+
+                    # Cast to int to get the fraction part
+                    fracpart = hours - int(hours)
+
+                    # If they've worked less than 4 hours, it's still the AM
+                    if hours < 4:
+
+                        if fracpart == 0.5:
+                            end_hour = '%s:30a' % (8 + int(hours))
+                        else:
+                            end_hour = '%s:00a' % (8 + hours)
+
+                    else:
+
+                        if fracpart == 0.5:
+                            end_hour = '%s:30p' % (8 + int(hours) - 12)
+                        else:
+                            end_hour = '%s:00p' % (8 + hours - 12)
 
                     self.context['%s_start' % week_str] = start_hour
                     self.context['%s_end' % week_str] = end_hour
