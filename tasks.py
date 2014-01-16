@@ -200,6 +200,7 @@ def save_reminder_record(user,id, date):
 # Crontab in settings.py
 @task
 def send_reminder_emails():
+    send_emails = True
     if send_emails:
         datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
         date = datetime.date.today()
