@@ -223,7 +223,7 @@ def send_reminder_emails():
 # Crontab in settings.py
 @task
 def clear_expired_reminder_records():
-    reminders_expire_days = settings.EMAIL_REMINDERS_EXPIRE_AFTER
+    reminders_expire_days = settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER
     olddate = datetime.date.today() - datetime.timedelta(days=reminders_expire_days)
     oldrecs = WorkLogReminder.objects.filter(date__lte=olddate)
     oldrecs.delete()
