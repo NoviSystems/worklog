@@ -89,19 +89,19 @@ class Timesheet:
                     fracpart = hours - int(hours)
 
                     # If they've worked less than 4 hours, it's still the AM
-                    if hours < 4:
+                    if hours <= 4:
 
                         if fracpart == 0.5:
                             end_hour = '%s:30a' % (8 + int(hours))
                         else:
-                            end_hour = '%s:00a' % (8 + hours)
+                            end_hour = '%s:00a' % (8 + int(hours))
 
                     else:
 
                         if fracpart == 0.5:
                             end_hour = '%s:30p' % (8 + int(hours) - 12)
                         else:
-                            end_hour = '%s:00p' % (8 + hours - 12)
+                            end_hour = '%s:00p' % (8 + int(hours) - 12)
 
                     self.context['%s_start' % week_str] = start_hour
                     self.context['%s_end' % week_str] = end_hour
