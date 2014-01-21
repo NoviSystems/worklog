@@ -1,15 +1,12 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-    <title>Internal Server Error - 500</title>
-</head>
-<body>
-<h1>We appologize, but an Internal Server Error has occured... </h1>
-<h2>Perhaps we can interest you in one of these: </h2>
-<ul>
-<li><a href="/lunch/">Lunch App</a></li>
-<li><a href="/worklog/add/">Worklog App</a></li>
-</ul>
-</body>
-</html>
+{% extends "base.html" %}
+
+{%block title %}500{%endblock%}
+
+{% block content %}
+    <h2>Internal Server Error</h2>
+    <p>Maybe you'd like to try one of these</p>
+    <ul>
+		<li><a href="/lunch/">Lunch App</a></li>
+		<li><a href="/worklog/add/">Worklog App</a></li>
+	</ul>
+{% endblock %}

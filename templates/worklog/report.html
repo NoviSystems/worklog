@@ -1,31 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us" xml:lang="en-us" >
+{% extends "base.html" %}
 
-<head>
-<title>Invoice Tools</title>
-<style type="text/css">
-  button {
-    overflow: visible;
-    width: auto;
-  }
-
-  button.link {
-    font-family: inherit;
-    font-size: inherit;
-    margin: 0;
-    padding: 0;
-    color: blue;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-</style>
-<link href="{{STATIC_URL}}bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" href="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
-</head>
-
-<body>
+{% block content %}
 
 <!-- Content -->
 <div class="content">
@@ -41,11 +16,9 @@
   <form method="post" action="">
     {% csrf_token %}
     <input type="hidden" name="date" value="{{ date }}" />
-    <button type="submit" name="generate" value="generate" class="link">Generate report</button><br />
-    <button type="submit" name="invoice" value="invoice" class="link">Invoice all items</button>
+    <button type="submit" name="generate" value="generate" class="btn btn-primary">Generate report</button><br />
+    <button type="submit" name="invoice" value="invoice" class="btn btn-primary">Invoice all items</button>
   </form>
 </div>
 
-</body>
-
-</html>
+{% endblock %}

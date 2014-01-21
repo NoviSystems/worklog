@@ -1,8 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us" xml:lang="en-us" >
+{% extends "base.html" %}
 
-<head>
-<title>Generate Timesheets</title>
+{% block content %}
 
 <style type="text/css">
 .error {
@@ -13,11 +11,7 @@
 	color: #00DD00;
 }
 </style>
-<link href="{{STATIC_URL}}bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" href="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
-</head>
 
-<body>
 <div class="content">
 	{% if error %}
 	<h2 class="error">{{ error }}</h2>
@@ -43,5 +37,5 @@
 	</form>
 	{% endif %}
 </div>
-</body>
-</html>
+
+{% endblock %}

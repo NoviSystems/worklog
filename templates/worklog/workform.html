@@ -1,25 +1,12 @@
+{% extends "base.html" %}
+
 {% load dajaxice_templatetags %}
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us" xml:lang="en-us" >
 
-<head>
-<title></title>
-<style type="text/css" media="screen">
-  .formtable th { text-align: right; vertical-align: top; }
+{% block content %}
 
-  h3 {
-    color: #FF0000;
-  }
-</style>
-<link href="{{STATIC_URL}}bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}dajax/jquery.dajax.core.js"></script>
 {% dajaxice_js_import %}
-</head>
 
-<body>
 <div style="margin : 1em;">
   <h2>Add a new Work Item</h2>
   {% if holidays %}
@@ -32,20 +19,20 @@
     {% if reminder_id %}
     <form action="/worklog/add/reminder_{{reminder_id}}/" method="post">
     {% else %}
-    <form action="/worklog/add/" method="post">
+    <form action="/worklog/add/" method="post" role="form">
     {% endif %}
-      <table class='formtable'>
+      <table class='table'>
         {% csrf_token %}
-        {{ form }}
+        {{ form.as_table }}
         <tr>
-        <td><input type="submit" class="btn" name="submit_and_exit" value="Submit and Exit" /></td>
-        <td><input type="submit" class="btn" name="submit_and_add_another" value="Submit and Add Another" /></td>
+          <td><button class='btn btn-primary' type="submit" name="submit_and_exit" value="Submit and Exit">Submit and Exit</button></td>
+          <td><button class='btn btn-info' type="submit" name="submit_and_add_another" value="Submit and Add Another">Submit and Add Another</button></td>
         </tr>
       </table>
     </form>
     
     <h4>Other Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
-    <table border="1">
+    <table class="table table-striped">
       <tr>
       {% for title in column_names %}
         <th>{{ title }}</th>
@@ -78,6 +65,4 @@
     });
 </script>
 
-</body>
-
-</html>
+{% endblock %}

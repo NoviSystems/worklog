@@ -1,15 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us" xml:lang="en-us" >
+{% extends "base.html" %}
 
-<head>
-<title></title>
-<link href="{{STATIC_URL}}bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" href="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
-</head>
+{% block content %}
 
-<body>
-<div class="container-fluid">
-  <div class="row-fluid">
+  <div class="row">
   <br>
 
     <!-- Sidebar -->
@@ -62,8 +55,5 @@
       </table>
     </div>
   </div>
-</div>
 
-</body>
-
-</html>
+{% endblock %}
