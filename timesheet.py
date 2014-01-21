@@ -89,7 +89,7 @@ class Timesheet:
                     fracpart = hours - int(hours)
 
                     # If they've worked less than 4 hours, it's still the AM
-                    if hours <= 4:
+                    if hours <= 4.5:
 
                         if fracpart == 0.5:
                             end_hour = '%s:30a' % (8 + int(hours))
