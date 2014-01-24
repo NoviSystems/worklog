@@ -2,13 +2,11 @@
 
 {% load dajaxice_templatetags %}
 
-
 {% block content %}
 
 {% dajaxice_js_import %}
 
-<div style="margin : 1em;">
-  <h2>Add a new Work Item</h2>
+  <h2>New Work Item</h2>
   {% if holidays %}
   <h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
   {% endif %}
@@ -25,8 +23,8 @@
         {% csrf_token %}
         {{ form.as_table }}
         <tr>
-          <td><button class='btn btn-primary' type="submit" name="submit_and_exit" value="Submit and Exit">Submit and Exit</button></td>
-          <td><button class='btn btn-info' type="submit" name="submit_and_add_another" value="Submit and Add Another">Submit and Add Another</button></td>
+          <td><button class='btn btn-primary' type="submit" name="submit_and_exit">Submit and Exit</button></td>
+          <td><button class='btn btn-warning' type="submit" name="submit_and_add_another">Submit and Add Another</button></td>
         </tr>
       </table>
     </form>
@@ -51,7 +49,6 @@
   {% else %}
       <p>This application is broken somehow...</p>
   {% endif %}
-</div>
 
 <script>
     $(document).ready(function() {

@@ -3,7 +3,7 @@
 {% block content %}
 
 <!-- Content -->
-<div class="content">
+<div class="content" style="margin-top: 25px;">
   {% if error %}
     {{ error }}
   {% endif %}
@@ -16,7 +16,7 @@
   <form method="post" action="">
     {% csrf_token %}
     <input type="hidden" name="date" value="{{ date }}" />
-    <button type="submit" name="generate" value="generate" class="btn btn-primary">Generate report</button><br />
+    <button type="submit" name="generate" value="generate" class="btn btn-primary">Generate report</button>
     <button type="submit" name="invoice" value="invoice" class="btn btn-primary">Invoice all items</button>
   </form>
 </div>

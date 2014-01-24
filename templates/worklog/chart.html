@@ -1,8 +1,7 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us" xml:lang="en-us" >
+{% extends "base.html" %}
 
-<head>
-    <title>Job Charts</title>
+{% block content %}
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.flot.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.flot.selection.min.js"></script>
@@ -11,9 +10,6 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/chart.js"></script>
     
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/smoothness/smoothness.css" />
-
-    <link href="{{STATIC_URL}}bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <script type="text/javascript" href="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
 
     <script type="text/javascript">
         var c, options = {
@@ -191,10 +187,6 @@
     </script>
     
     <style type="text/css">
-        body {
-            font-family: helvetica, arial, sans-serif;
-            font-size: .8em;
-        }
         .label {
             -o-transform:rotate(-90deg);
             -moz-transform: rotate(-90deg);
@@ -211,54 +203,51 @@
     </style>
 </head>
 
-<body>
-    <br>
-    <div class="content">
-        <div id="plot" style="width: 550px; height: 500px; float: left; margin: 0px 20px 0px 10px"></div>
-        {% if error %}
-        <div class="error">
-            {{ error }}
-        </div>
-        {% endif %}
-        {% if job_id %}
-            <script type="text/javascript">
-                $(document).ready(function() {
-                    jobId = '{{ job_id }}'
-                    $('#jobs > optgroup > option[value={{ job_id }}]').attr('selected', 'selected');
-                    $('#chartingForm').submit();
-                });
-            </script>
-        {% endif %}
-        <form id="chartingForm" method="post" target="">
-            {% csrf_token %}
-            <select id="jobs" name="job_id">
-    			<option value="-1">-- Select a Job --</option>
-    			<optgroup label="Open Jobs">
-                    {% for job in open_jobs %}
-                    <option value="{{ job.pk }}">{{ job }}</option>
-                    {% endfor %}
-                </optgroup>
-                <optgroup label="Closed Jobs">
-                    {% for job in closed_jobs %}
-                    <option value="{{ job.pk }}">{{ job }}</option>
-                    {% endfor %}
-                </optgroup>
-            </select>
-            <br />
-            <label for="startDate">Start Date (mm/dd/yyyy)</label>
-            <input type="text" id="startDate" name="start_date" value="" /><br />
-            <label for="endDate">End Date (mm/dd/yyyy)</label>
-            <input type="text" id="endDate" name="end_date" value="" /><br />
-            <input type="submit" value="Submit" />
-        </form>
-    </div>
-    <div id="options">
-        <label for="y-axis">Show Y-Axis</label>
-        <input type="checkbox" id="y-axis" /><br />
-        <label for="tooltips">Show Worklog Entries</label>
-        <input type="checkbox" id="tooltips" /><br />
-        <div id="overview" style="margin-top: 15px; width: 300px; height: 80px; float: left"></div>
-    </div>
-</body>
 
-</html>
+{% if error %}
+<div class="error">
+    {{ error }}
+</div>
+{% endif %}
+{% if job_id %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            jobId = '{{ job_id }}'
+            $('#jobs > optgroup > option[value={{ job_id }}]').attr('selected', 'selected');
+            $('#chartingForm').submit();
+        });
+    </script>
+{% endif %}
+<form id="chartingForm" method="post" target="" style="padding-top:20px;">
+    {% csrf_token %}
+    <select id="jobs" name="job_id">
+        <option value="-1">-- Select a Job --</option>
+        <optgroup label="Open Jobs">
+            {% for job in open_jobs %}
+            <option value="{{ job.pk }}">{{ job }}</option>
+            {% endfor %}
+        </optgroup>
+        <optgroup label="Closed Jobs">
+            {% for job in closed_jobs %}
+            <option value="{{ job.pk }}">{{ job }}</option>
+            {% endfor %}
+        </optgroup>
+    </select>
+    <br />
+    <label for="startDate">Start Date (mm/dd/yyyy)</label>
+    <input type="text" id="startDate" name="start_date" value="" /><br />
+    <label for="endDate">End Date (mm/dd/yyyy)</label>
+    <input type="text" id="endDate" name="end_date" value="" /><br />
+    <input type="submit" value="Submit" />
+</form>
+<div id="options">
+<label for="y-axis">Show Y-Axis</label>
+<input type="checkbox" id="y-axis" /><br />
+<label for="tooltips">Show Worklog Entries</label>
+<input type="checkbox" id="tooltips" /><br />
+<div id="overview" style="margin-top: 15px; width: 300px; height: 80px; float: left"></div>
+</div>
+
+<div id="plot" style="width: 550px; height: 500px; float: left; margin: 0px 20px 0px 10px"></div>
+
+{% endblock %}
