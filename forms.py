@@ -1,4 +1,4 @@
-from django.forms import ModelForm, Select, Form, HiddenInput, Textarea
+from django.forms import ModelForm, Select, Form, HiddenInput, Textarea, CharField
 from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from models import WorkItem, Job, Repo, Issue 
@@ -13,9 +13,30 @@ class BadWorkItemForm(Exception):
     pass
 
 class WorkItemForm(ModelForm):
+
+    hours = forms.CharField()
+    text = forms.CharField(widget = forms.Textarea)
     job = forms.ModelChoiceField(queryset=Job.objects.none(), empty_label="None") # empty queryset, overridden in ctor   
     repo = forms.ModelChoiceField(queryset=Repo.objects.all(), empty_label="None", required=False)
     issue = forms.ModelChoiceField(queryset=Issue.objects.none(), empty_label="None", required=False)
+
+    # Proper Styling of the Form for Bootstrap 3
+
+    hours.widget.attrs['class'] = 'form-control'
+    text.widget.attrs['class'] = 'form-control'
+
+    hours.widget.attrs['placeholder'] = 'Hours Worked'
+    text.widget.attrs['placeholder'] = 'Work Description'
+
+    hours.widget.attrs['style'] = 'width: 200px;'
+    text.widget.attrs['style'] = 'width: 300px;'
+
+    job.widget.attrs['class'] = 'form-control'
+    repo.widget.attrs['class'] = 'form-control'
+    issue.widget.attrs['class'] = 'form-control'
+
+
+
 
     class Meta:
         model = WorkItem

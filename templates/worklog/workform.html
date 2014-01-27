@@ -17,7 +17,7 @@
     {% if reminder_id %}
     <form action="/worklog/add/reminder_{{reminder_id}}/" method="post">
     {% else %}
-    <form action="/worklog/add/" method="post" role="form">
+    <form action="/worklog/add/" method="post" role="form" class="form-inline">
     {% endif %}
       <table class='table'>
         {% csrf_token %}
