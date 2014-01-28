@@ -2,6 +2,8 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 
+from gh_connect import GitHubConnector
+
 import admin_filter, random
 
 class BiweeklyEmployee(models.Model):
@@ -111,6 +113,20 @@ class WorkItem(models.Model):
         if(not self.job.available_all_users):
             if(not self.job.users.filter(id=self.user.id).exists()):
                 return         
+
+        # If the text begins with "commit <sha1>", we'll sub in the actual commit message
+        if (self.text[0:6] == "commit"):
+
+            ghc = GitHubConnector()
+            repos = ghc.get_all_repos()
+    
+            for repo in repos:
+                if repo.id == self.repo.github_id:
+                    
+                    check = repo.commit(self.text[7:]).commit.message
+                       
+                    self.text = check
+                    break         
         super(WorkItem, self).save(*args, **kwargs) 
 
 class WorkLogReminder(models.Model):
