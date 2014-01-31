@@ -1,24 +1,18 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "worklog/base.html" %} {% block content %}
 
 <!-- Content -->
 <div class="content" style="margin-top: 25px;">
-  {% if error %}
-    {{ error }}
-  {% endif %}
-  {% if generated %}
+    {% if error %} {{ error }} {% endif %} {% if generated %}
     <h1>An invoice was generated and emailed to you</h1>
-  {% endif %}
-  {% if invoiced %}
+    {% endif %} {% if invoiced %}
     <h1>All un-invoiced items have now been invoiced</h1>
-  {% endif %}
-  <form method="post" action="">
-    {% csrf_token %}
-    <input type="hidden" name="date" value="{{ date }}" />
-    <button type="submit" name="generate" value="generate" class="btn btn-primary">Generate report</button>
-    <button type="submit" name="invoice" value="invoice" class="btn btn-primary">Invoice all items</button>
-  </form>
+    {% endif %}
+    <form method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="date" value="{{ date }}" />
+        <button type="submit" name="generate" value="generate" class="btn btn-primary">Generate report</button>
+        <button type="submit" name="invoice" value="invoice" class="btn btn-primary">Invoice all items</button>
+    </form>
 </div>
 
 {% endblock %}
