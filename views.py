@@ -18,9 +18,13 @@ from django.contrib.auth.models import User
 from django.views.generic import View, TemplateView
 from django.conf import settings
 
-from worklog.forms import WorkItemForm
+from worklog.forms import WorkItemForm, WorkItemBaseFormSet
+from django.forms.models import modelformset_factory
 from worklog.models import WorkItem, WorkLogReminder, Job, Issue, Funding, Holiday, BiweeklyEmployee
 from worklog.tasks import generate_invoice
+
+
+WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm)
 
 # 'columns' determines the layout of the view table
 _column_layout = [
@@ -56,6 +60,7 @@ def validate_reminder_id(request, reminder_id):
     return (rems[0],date)
 
 def createWorkItem(request, reminder_id=None):
+    WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
     try:
         reminder,date = validate_reminder_id(request, reminder_id)
     except BadReminderId as e:
@@ -64,14 +69,18 @@ def createWorkItem(request, reminder_id=None):
         return resp    
 
     if request.method == 'POST': # If the form has been submitted...
-        form = WorkItemForm(request.POST, reminder=reminder, logged_in_user=request.user)
-        if form.is_valid():
-            # Save but don't commit form data
-            f = form.save(commit=False)
-            # Add user and date before saving
-            f.user = request.user
-            f.date = date
-            f.save()
+
+        formset = WorkItemFormSet(request.POST, reminder=reminder, logged_in_user=request.user)
+        if formset.is_valid():
+            for f in formset.forms:
+                # Save but don't commit form data
+                form = f.save(commit=False)
+                # Add user and date before saving
+                form.user = request.user
+                form.date = date
+
+                form.save()
+
             if 'submit_and_add_another' in request.POST:
                 # redisplay workitem form so another item may be added
                 return HttpResponseRedirect(request.path)
@@ -81,7 +90,7 @@ def createWorkItem(request, reminder_id=None):
                 else:
                     return HttpResponseRedirect('/worklog/view/%s/%s_%s/' % ( request.user.username, date, date))
     else:
-        form = WorkItemForm(reminder=reminder, logged_in_user=request.user) # An unbound form
+        formset = WorkItemFormSet(reminder=reminder, logged_in_user=request.user) # An unbound form
 
     items = WorkItem.objects.filter(date=date, user=request.user)
     rawitems = list(tuple(_itercolumns(item)) for item in items)
@@ -92,13 +101,14 @@ def createWorkItem(request, reminder_id=None):
         holidays = None
 
     return render_to_response('worklog/workform.html',
-            {'form': form, 'reminder_id': reminder_id, 'date': date,
+            {'formset': formset, 'reminder_id': reminder_id, 'date': date,
              'items': rawitems, 
              'column_names': list(t for k,t in _column_layout),
              'holidays': holidays
             },
             context_instance=RequestContext(request)
         )
+                         
                             
 def make_month_range(d):
     # take a date, return a tuple of two dates.  The day in the second date is the last day in that month.

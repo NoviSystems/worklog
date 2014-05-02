@@ -115,18 +115,21 @@ class WorkItem(models.Model):
                 return         
 
         # If the text begins with "commit <sha1>", we'll sub in the actual commit message
-        if (self.text[0:6] == "commit"):
+        if (self.text[0:6] == "commit" and self.repo):
 
             ghc = GitHubConnector()
             repos = ghc.get_all_repos()
     
             for repo in repos:
+
                 if repo.id == self.repo.github_id:
                     
-                    check = repo.commit(self.text[7:]).commit.message
+                    msg = repo.commit(self.text[7:]).commit.message
                        
-                    self.text = check
-                    break         
+                    self.text = '%s for commit %s' % (msg, self.text[7:])
+                    break                
+
+
         super(WorkItem, self).save(*args, **kwargs) 
 
 class WorkLogReminder(models.Model):

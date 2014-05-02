@@ -1,28 +1,91 @@
 {% extends "worklog/base.html" %} {% load dajaxice_templatetags %} {% block content %} {% dajaxice_js_import %}
 
+
+
 <h2>New Work Item</h2>
 {% if holidays %}
 <h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
-{% endif %} {% if form %}
+{% endif %} {% if formset %}
 <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
 
+
+
+
 {% if reminder_id %}
-<form action="/worklog/add/reminder_{{reminder_id}}/" method="post">
+<form action="/worklog/add/reminder_{{reminder_id}}/" method="post" id="workform" role="form" class="form-horizontal">
+    {% csrf_token %}
     {% else %}
-    <form action="/worklog/add/" method="post" role="form" class="form-inline">
-        {% endif %}
-        <table class='table'>
-            {% csrf_token %} {{ form.as_table }}
-            <tr>
-                <td>
-                    <button class='btn btn-primary' type="submit" name="submit_and_exit">Submit and Exit</button>
-                </td>
-                <td>
-                    <button class='btn btn-warning' type="submit" name="submit_and_add_another">Submit and Add Another</button>
-                </td>
-            </tr>
-        </table>
+    <form action="/worklog/add/" method="post" id="workform" role="form" class="form-horizontal">
+        {% csrf_token %} {% endif %} {% for form in formset.forms %}
+        <div class="panel panel-default" id="formset">
+            <div class="panel-body">
+                <script>
+                    $(document).ready(function() {
+                        $(document).on('change', '#id_form-{{ forloop.counter0 }}-repo', function() {
+                            if ($(this).val() != '') {
+                                Dajaxice.worklog.update_repo_issues(Dajax.process, {
+                                    'repo_id': $(this).val(),
+                                    'formid': "{{ forloop.counter0 }}"
+                                });
+                            } else {
+                                Dajaxice.worklog.initialize_issues(Dajax.process, { "formid": {{ forloop.counter0 }}});
+                            }
+                        });
+
+                        $('#id_form-{{ forloop.counter0 }}-repo').change();
+                    });
+
+                </script>
+                {{ form.non_field_errors }}
+                <div class="col-md-6"> 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group {%if form.job.errors %}has-error{%endif%}" style="margin:15px;">
+                                <label class="control-label">{%if form.job.errors %}{{form.job.errors.as_text }} {% else %} Job {%endif%}</label>
+                                {{ form.job }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group {%if form.hours.errors %}has-error{%endif%}" style="margin:15px;">
+                                <label class="control-label">{%if form.hours.errors %}{{form.hours.errors.as_text }} {% else %} Hours {%endif%}</label>
+                                {{ form.hours }}
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group {%if form.repo.errors %}has-error{%endif%}" style="margin:15px;">
+                                <label class="control-label">{%if form.repo.errors %}{{form.repo.errors.as_text }} {% else %} Repo {%endif%}</label>
+                                {{ form.repo }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group {%if form.issue.errors %}has-error{%endif%}" style="margin:15px; ">
+                                <label class="control-label">{%if form.issue.errors %}{{form.issue.errors.as_text }} {% else %} Issue {%endif%}</label>
+                                {{ form.issue }}
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group {%if form.text.errors %}has-error{%endif%}" style="margin:15px;">
+                        <label class="control-label">{%if form.text.errors %}{{form.text.errors.as_text }} {% else %} Description {%endif%}</label>
+                        {{ form.text }}
+                        <p class="help-block">Try using 'commit &lt;sha1&gt;' here, and we'll swap in the GitHub commit message for you</p>
+                    </div>
+                </div>
+
+                {{ form.DELETE }}
+            </div>
+        </div>
+        {% endfor %} {{ formset.management_form }}
+        <button class='btn btn-success' type="submit" name="submit_and_exit">Submit and Exit</button>
     </form>
+
 
     <h4>Other Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
     <table class="table table-striped">
@@ -46,17 +109,16 @@
     {% endif %}
 
     <script>
-    $(document).ready(function() {
-        $(document).on('change', '#id_repo', function() {
-            if ($(this).val() != '') {
-                Dajaxice.worklog.update_repo_issues(Dajax.process, {
-                    'repo_id': $(this).val()
+        $(document).ready(function() {
+            $(function() {
+                $('#formset').formset({
+                    prefix: '{{ formset.prefix }}',
+                    addText: 'Add Another Form',
+                    deleteText: 'Remove Form',
                 });
-            } else {
-                Dajaxice.worklog.initialize_issues(Dajax.process);
-            }
+            })
+
         });
-    });
     </script>
 
     {% endblock %}
