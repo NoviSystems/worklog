@@ -1,6 +1,6 @@
 from github3 import GitHub
 from github3.issues import Issue
-from worklog import secrets
+import secrets
 
 class GitHubConnector(object):
     
