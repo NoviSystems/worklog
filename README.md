@@ -4,6 +4,20 @@
 
 Worklog is a Django-based, hourly work logging web application that supports work item entry, job costing, job funding, burn-down charting, work item filtering, CSV report generation, and an e-mail reminder system.
 
+## Getting Started ##
+
+Worklog is a django application that exists within the labsite ecosystem. To develop worklog, you first need to setup [labsite](https://github.com/ITNG/labsite).
+
+These instructions assume that labsite was cloned into your home directory. Clone worklog into your home directory.
+
+    $ cd ~
+    $ git clone git@github.com:ITNG/worklog.git
+
+A soft link between labsite and worklog needs to exist so that the local changes to worklog are visible to labsite.
+
+    $ cd ~/labsite
+    $ ln -s ~/worklog/worklog
+
 ## Project Configuration ##
 
 ### Required settings.py Parameters ###
