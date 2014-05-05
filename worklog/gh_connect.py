@@ -1,21 +1,21 @@
 from github3 import GitHub
-from github3.issues import Issue
-import secrets
+from django.conf import settings
+
 
 class GitHubConnector(object):
-    
+
     def __init__(self):
 
-        self.git_hub = GitHub(secrets.GITHUB_USER, secrets.GITHUB_PASS)
-        self.orgs = list(self.git_hub.iter_orgs())      
+        self.git_hub = GitHub(settings.GITHUB_USER, settings.GITHUB_PASS)
+        self.orgs = list(self.git_hub.iter_orgs())
 
         # As of 10/3/2013, the default rate limit was 5000/hr.
-        # Should your code loop infinitely, this exception will 
-        # leave enough requests to debug the problem without 
+        # Should your code loop infinitely, this exception will
+        # leave enough requests to debug the problem without
         # having to wait an hour.
         if self.git_hub.ratelimit_remaining < 500:
             raise Exception('You have only 500 GitHub requests left for this hour')
-        
+
     def get_issues_for_repo(self, repo_name=None, github_id=None, repo_tuple=None):
         repos = self.git_hub.iter_all_repos()
         for repo in repos:
