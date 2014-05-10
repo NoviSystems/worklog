@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 
 from gh_connect import GitHubConnector
 
-import admin_filter, random
 
 class BiweeklyEmployee(models.Model):
     user = models.ForeignKey(User)
@@ -19,6 +18,7 @@ class BiweeklyEmployee(models.Model):
     def __unicode__(self):
         return '%s' % self.user.get_full_name()
 
+
 class Holiday(models.Model):
     description = models.CharField(max_length=255)
     start_date = models.DateField()
@@ -26,6 +26,7 @@ class Holiday(models.Model):
 
     def __unicode__(self):
         return '%s' % (self.description,)
+
 
 class WorkPeriod(models.Model):
     payroll_id = models.CharField(max_length=8)
@@ -36,6 +37,7 @@ class WorkPeriod(models.Model):
 
     def __unicode__(self):
         return '%s' % (self.payroll_id,)
+
 
 class Job(models.Model):
     name = models.CharField(max_length=256)
@@ -49,16 +51,17 @@ class Job(models.Model):
 
     def __unicode__(self):
         return self.name
-    
+
     @staticmethod
     def get_jobs_open_on(date):
         return Job.objects.filter(open_date__lte=date).filter(Q(close_date__gte=date) | Q(close_date=None))
-    
+
     def hasFunding(self):
         return len(self.funding.all()) != 0
-    
+
     def hasWork(self):
         return len(WorkItem.objects.filter(job=self)) != 0
+
 
 class Repo(models.Model):
     github_id = models.IntegerField(primary_key=True)
@@ -66,6 +69,7 @@ class Repo(models.Model):
 
     def __unicode__(self):
         return self.name
+
 
 class Issue(models.Model):
     github_id = models.IntegerField(primary_key=True)
@@ -76,12 +80,14 @@ class Issue(models.Model):
     def __unicode__(self):
         return str(self.number) + ': ' + str(self.title)
 
+
 class BillingSchedule(models.Model):
     job = models.ForeignKey(Job, related_name='billing_schedule')
     date = models.DateField()
 
     def __unicode__(self):
         return 'Billing for %s' % self.job
+
 
 class Funding(models.Model):
     job = models.ForeignKey(Job, related_name='funding')
@@ -90,6 +96,7 @@ class Funding(models.Model):
 
     def __unicode__(self):
         return 'Funding for %s' % self.job
+
 
 class WorkItem(models.Model):
     user = models.ForeignKey(User)
@@ -101,11 +108,12 @@ class WorkItem(models.Model):
     issue = models.ForeignKey(Issue, null=True, blank=True)
     invoiced = models.BooleanField(default=False)
     do_not_invoice = models.BooleanField(default=False)
-    
+
     # see worklog.admin_filter
     date.year_month_filter = True
     user.user_filter = True
-    invoiced.is_invoiced_filter = True    
+    invoiced.is_invoiced_filter = True 
+
     def __str__(self):
         return '%s on %s work %d hours on %s' % (self.user, self.date, self.hours, self.text)
 
@@ -119,29 +127,14 @@ class WorkItem(models.Model):
 
             ghc = GitHubConnector()
             repos = ghc.get_all_repos()
-    
+
             for repo in repos:
 
                 if repo.id == self.repo.github_id:
-                    
+
                     msg = repo.commit(self.text[7:]).commit.message
-                       
+
                     self.text = '%s for commit %s' % (msg, self.text[7:])
                     break                
 
-
         super(WorkItem, self).save(*args, **kwargs) 
-
-class WorkLogReminder(models.Model):
-    reminder_id = models.CharField(max_length=36) # this is a uuid in string form
-    user = models.ForeignKey(User)
-    date = models.DateField()
-    submitted_jobs = models.ManyToManyField(Job) # prevent submitting for same job/date combination more than once
-    def __str__(self):
-        return 'Reminder for %s on %s with id %s'%(self.user, self.date, self.id)
-    def get_available_jobs(self):
-        jobs = Job.get_jobs_open_on(self.date)
-        # exclude jobs already submitted with this reminder
-        jobs = jobs.exclude(id__in=self.submitted_jobs.get_query_set())
-        return jobs
-

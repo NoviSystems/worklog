@@ -1,8 +1,8 @@
-import datetime
-
 from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic.base import RedirectView
+from django.core.urlresolvers import reverse_lazy
 
 from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork
 from timesheet import TimesheetView
@@ -20,13 +20,14 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 ##JOBID = r'(?:_job_(?P<jobid>[0-9]+))'
 
 urlpatterns = patterns('worklog',
-    (r'^$', login_required(createWorkItem), {'reminder_id': None}),
-    (r'^add/$', login_required(createWorkItem), {'reminder_id': None}),
-    (r'^add/reminder_(?P<reminder_id>[0-9a-f\-]{36})/$', login_required(createWorkItem), {}, 'worklog-reminder-view'), # last item is the view-name
-    
+    (r'^$', RedirectView.as_view(url=reverse_lazy('worklog-today'))),
+    (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem)),
+    (r'^today/$', login_required(createWorkItem), {}, 'worklog-today'),
+
     (r'^view/$', login_required(viewWork)),
     #(r'^view/today/$', 'views.viewWork', {'datemin': datetime.date.today(), 'datemax': datetime.date.today()}),
     (r'^view/today/$', login_required(viewWork), {'datemin': 'today', 'datemax': 'today'}),
+
     (r'^view/'+DATERANGE1+'/$', login_required(viewWork)),
     (r'^view/'+DATERANGE2+'/$', login_required(viewWork)),
     (r'^view/'+USERNAME+'/$', login_required(viewWork)),
