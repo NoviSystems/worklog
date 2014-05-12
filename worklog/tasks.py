@@ -1,15 +1,11 @@
 from django.conf import settings
 
 from celery.task import task
-from celery.schedules import crontab
 
 from django.contrib.auth.models import User
-from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse as urlreverse
-from django.core.exceptions import ObjectDoesNotExist
 import django.core.mail
 
-from worklog import timesheet
 from models import WorkItem, Job, WorkPeriod
 
 from gh_connect import GitHubConnector
@@ -20,8 +16,8 @@ import calendar
 import uuid
 
 email_msg = """\
-This is your friendly reminder to submit a work log for today, %(date)s. If 
-you haven't done so already, you may use the following URL to submit today's 
+This is your friendly reminder to submit a work log for today, %(date)s. If
+you haven't done so already, you may use the following URL to submit today's
 log, but you must do so before it expires on %(expiredate)s.
 
 URL: %(url)s
@@ -39,7 +35,7 @@ URL: %(url)s
 def generate_timesheets():
     if WorkPeriod.objects.filter(due_date=datetime.date.today()).count() > 0:
         subject = 'Timesheets are due'
-        msg = 'Please visit: %s?date=%s' % (Site.objects.get_current().domain + urlreverse('timesheet_url'), datetime.date.today())
+        msg = 'Please visit: %s?date=%s' % (settings.SITE_URL + urlreverse('timesheet_url'), datetime.date.today())
         recipients = []
 
         for admin in settings.ADMINS:
@@ -58,7 +54,7 @@ def generate_invoice(default_date=None):
     else:
         default_date = datetime.datetime.strptime(default_date, '%Y-%m-%d').date()
 
-    cal = calendar.Calendar(0)
+    # cal = calendar.Calendar(0)
     billable_jobs = Job.objects.filter(billing_schedule__date=default_date).exclude(do_not_invoice=True).distinct()
     send_mail = False
 
@@ -152,7 +148,7 @@ def generate_invoice(default_date=None):
 
         msg = ('\n\n').join(email_msgs)
 
-        msg += '\n\nReport tools: %s?date=%s' % (Site.objects.get_current().domain + urlreverse('report_url'), default_date)
+        msg += '\n\nReport tools: %s?date=%s' % (settings.SITE_URL + urlreverse('report_url'), default_date)
 
         recipients = []
 
@@ -173,7 +169,7 @@ def generate_invoice_email():
     # continue only if we there are jobs to bill
     if billable_jobs:
         sub = 'Invoice'
-        msg = 'Report tools: %s?date=%s' % (Site.objects.get_current().domain + urlreverse('report_url'), default_date)
+        msg = 'Report tools: %s?date=%s' % (settings.SITE_URL + urlreverse('report_url'), default_date)
         recipients = []
         for admin in settings.ADMINS:
             recipients.append(admin[1])
@@ -194,9 +190,9 @@ def compose_reminder_email(email_address, id, date):
     return (subj, msg, from_email, recipients)
 
 
-def create_reminder_url(id): 
+def create_reminder_url(id):
     path = urlreverse('worklog-today', kwargs={'date': 'today'}, current_app='worklog')
-    return Site.objects.get_current().domain + path
+    return settings.SITE_URL + path
 
 
 # periodic task -- by default: M-F at 6:00pm
@@ -208,7 +204,7 @@ def send_reminder_emails():
         datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
         date = datetime.date.today()
         for user in User.objects.all():
-            if not user.email or not user.is_active: 
+            if not user.email or not user.is_active:
                 continue
 
             id = str(uuid.uuid4())
