@@ -191,7 +191,7 @@ def compose_reminder_email(email_address, id, date):
 
 
 def create_reminder_url(id):
-    path = urlreverse('worklog-today', kwargs={'date': 'today'}, current_app='worklog')
+    path = urlreverse('worklog-current-date', current_app='worklog')
     return settings.SITE_URL + path
 
 
