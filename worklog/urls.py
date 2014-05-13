@@ -21,14 +21,12 @@ DATERANGE2 = '(?:_'+DATEMAX+')'
 USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 ##JOBID = r'(?:_job_(?P<jobid>[0-9]+))'
 
-CURRENT_DATE = str(datetime.date.today())
-
 urlpatterns = patterns('worklog',
     (r'^$', RedirectView.as_view(url=reverse_lazy('worklog-current-date'))),
     (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem)),
     (r'^today/$', RedirectView.as_view(url=reverse_lazy('worklog-current-date')), {}, 'worklog-today'),
     (r'^add/$', RedirectView.as_view(url=reverse_lazy('worklog-current-date')), {}, 'worklog-add'),
-    (r'^'+CURRENT_DATE+'/$', login_required(createWorkItem), {}, 'worklog-current-date'),
+    (r'^'+str(datetime.date.today())+'/$', login_required(createWorkItem), {}, 'worklog-current-date'),
 
     (r'^view/$', login_required(viewWork)),
     #(r'^view/today/$', 'views.viewWork', {'datemin': datetime.date.today(), 'datemax': datetime.date.today()}),
