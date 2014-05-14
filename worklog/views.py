@@ -11,7 +11,7 @@ from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
-from django.views.generic import View, TemplateView
+from django.views.generic import View, TemplateView, RedirectView
 
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
 from django.forms.models import modelformset_factory
@@ -19,6 +19,8 @@ from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee
 from worklog.tasks import generate_invoice
 
 from labsite import settings
+
+from django.conf.urls.defaults import url
 
 # 'columns' determines the layout of the view table
 _column_layout = [
@@ -44,9 +46,14 @@ class WorkItemView(TemplateView):
     pass
 
 
+class CurrentDateRedirectView(RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        return '/worklog/' + str(datetime.date.today())
+
+
 def createWorkItem(request, date='today'):
     WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
-    print date
 
     if date == 'today':
         date = datetime.date.today()

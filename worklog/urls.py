@@ -4,9 +4,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic.base import RedirectView
 from django.core.urlresolvers import reverse_lazy
 
-import datetime
-
-from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork
+from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView
 from timesheet import TimesheetView
 
 from dajaxice.core import dajaxice_autodiscover, dajaxice_config
@@ -24,9 +22,8 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 urlpatterns = patterns('worklog',
     (r'^$', RedirectView.as_view(url=reverse_lazy('worklog-current-date'))),
     (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem)),
-    (r'^today/$', RedirectView.as_view(url=reverse_lazy('worklog-current-date')), {}, 'worklog-today'),
-    (r'^add/$', RedirectView.as_view(url=reverse_lazy('worklog-current-date')), {}, 'worklog-add'),
-    (r'^'+str(datetime.date.today())+'/$', login_required(createWorkItem), {}, 'worklog-current-date'),
+    (r'^today/$', CurrentDateRedirectView.as_view(), {}, 'worklog-today'),
+    (r'^add/$', CurrentDateRedirectView.as_view(), {}, 'worklog-add'),
 
     (r'^view/$', login_required(viewWork)),
     #(r'^view/today/$', 'views.viewWork', {'datemin': datetime.date.today(), 'datemax': datetime.date.today()}),
