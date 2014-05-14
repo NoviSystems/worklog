@@ -20,7 +20,7 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 ##JOBID = r'(?:_job_(?P<jobid>[0-9]+))'
 
 urlpatterns = patterns('worklog',
-    (r'^$', RedirectView.as_view(url=reverse_lazy('worklog-current-date'))),
+    (r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
     (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem)),
     (r'^today/$', CurrentDateRedirectView.as_view(), {}, 'worklog-today'),
     (r'^add/$', CurrentDateRedirectView.as_view(), {}, 'worklog-add'),
