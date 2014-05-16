@@ -47,9 +47,10 @@ class WorkItemView(TemplateView):
 
 
 class CurrentDateRedirectView(RedirectView):
+    permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        return '/worklog/' + str(datetime.date.today())
+        return '/worklog/' + str(datetime.date.today()) + '/'
 
 
 def createWorkItem(request, date='today'):
