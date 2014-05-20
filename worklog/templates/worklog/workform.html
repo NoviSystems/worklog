@@ -1,120 +1,88 @@
-{% extends "worklog/base.html" %} {% load dajaxice_templatetags %} {% block content %} {% dajaxice_js_import %}
+{% extends "worklog/base.html" %}{% block content %}
 
 
-{% if formset %}
 <h2>New Work Item</h2>
 {% if holidays %}
 <h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
-{% endif %} {% if formset %}
+{% endif %} 
 <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
-
-
-
-
-<form action="/worklog/{{date.isoformat}}/" method="post" id="workform" role="form" class="form-horizontal">
-    {% csrf_token %}
-    {% else %}
-    <form action="/worklog/{{date.isoformat}}/" method="post" id="workform" role="form" class="form-horizontal">
-        {% csrf_token %} {% endif %} 
-
-        {% for form in formset.forms %}
-        <div class="panel panel-default" id="formset">
-            <div class="panel-body">
-                <script>
-                    $(document).ready(function() {
-                        $(document).on('change', '#id_form-{{ forloop.counter0 }}-repo', function() {
-                            if ($(this).val() != '') {
-                                Dajaxice.worklog.update_repo_issues(Dajax.process, {
-                                    'repo_id': $(this).val(),
-                                    'formid': "{{ forloop.counter0 }}"
-                                });
-                            } else {
-                                Dajaxice.worklog.initialize_issues(Dajax.process, { "formid": {{ forloop.counter0 }}});
-                            }
-                        });
-
-                        $('#id_form-{{ forloop.counter0 }}-repo').change();
-                    });
-
-                </script>
-                {{ form.non_field_errors }}
-                <div class="col-md-6"> 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group {%if form.job.errors %}has-error{%endif%}" style="margin:15px;">
-                                <label class="control-label">{%if form.job.errors %}{{form.job.errors.as_text }} {% else %} Job {%endif%}</label>
-                                {{ form.job }}
-                            </div>
+        <table class="table table-hover" id="form-table">
+            <thead>
+                <th class="col-md-2">Job</th>
+                <th class="col-md-2">Hours</th>
+                <th class="col-md-2">Repo</th>
+                <th class="col-md-2">Issue</th>
+                <th class="col-md-4">Description</th>
+                <th><button class="btn btn-primary btn-xs" type="button" id="add-form">+</button></th>
+            </thead>
+            <tbody>
+                <tr id="row-0">
+                    <form action="" method="post" id="workform-0" role="form" class="form-inline">
+                    {% csrf_token %}
+                    <td class="col-md-2">
+                        <div class="form-group">
+                            <select class="form-control input-sm" id="id_form-0-job" name="job">
+                                <option value selected="selected">None</option>
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group {%if form.hours.errors %}has-error{%endif%}" style="margin:15px;">
-                                <label class="control-label">{%if form.hours.errors %}{{form.hours.errors.as_text }} {% else %} Hours {%endif%}</label>
-                                {{ form.hours }}
-                            </div>
+                    </td>
+                    <td class="col-md-2">
+                        <div class="form-group">
+                            <input class="form-control input-sm" id="id_form-0-hours" name="hours" placeholder="Hours Worked" type="text">
                         </div>
-                    </div>
-
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group {%if form.repo.errors %}has-error{%endif%}" style="margin:15px;">
-                                <label class="control-label">{%if form.repo.errors %}{{form.repo.errors.as_text }} {% else %} Repo {%endif%}</label>
-                                {{ form.repo }}
-                            </div>
+                    </td>
+                    <td class="col-md-2">
+                        <div class="form-group">
+                            <select class="form-control input-sm" id="id_form-0-repo" name="repo">
+                                <option value selected="selected">None</option>
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group {%if form.issue.errors %}has-error{%endif%}" style="margin:15px; ">
-                                <label class="control-label">{%if form.issue.errors %}{{form.issue.errors.as_text }} {% else %} Issue {%endif%}</label>
-                                {{ form.issue }}
-                            </div>
-
+                    </td>
+                    <td class="col-md-2">
+                        <div class="form-group" id="issue-select">
+                            <select class="form-control input-sm" id="id_form-0-issue" name="issue">
+                                    <option value selected="selected">None</option>
+                            </select>
                         </div>
-                    </div>
+                    </td>
+                    <td class="col-md-4">
+                        <div class="form-group">
+                            <textarea class="form-control input-sm" cols="40" id="id_form-0-text" name="text" placeholder="Work Description" rows="1"></textarea>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger btn-xs" type="button" id="delete-workform-0">&times;</button>
+                    </td>
+                    </form>
+                </tr>
+            </tbody>
 
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group {%if form.text.errors %}has-error{%endif%}" style="margin:15px;">
-                        <label class="control-label">{%if form.text.errors %}{{form.text.errors.as_text }} {% else %} Description {%endif%}</label>
-                        {{ form.text }}
-                        <p class="help-block">Try using 'commit &lt;sha1&gt;' here, and we'll swap in the GitHub commit message for you</p>
-                    </div>
-                </div>
-
-                {{ form.DELETE }}
-            </div>
-        </div>
-        {% endfor %} {{ formset.management_form }}
-        <button class='btn btn-success' type="submit" name="submit_and_exit">Submit and Exit</button>
-    </form>
-    {% endif %}
+        </table>
+         
+        <button class='btn btn-success' type="button" id="submit">Submit All</button>
     <h4>Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
-    <table class="table table-striped">
-        <tr>
-            {% for title in column_names %}
-            <th>{{ title }}</th>
-            {% endfor %}
-        </tr>
+    <table class="table" id="display-table">
+        <thead>
+            <th>User</th>
+            <th>Job</th>
+            <th>Hours</th>
+            <th>Repo</th>
+            <th>Issue</th>
+            <th>Task</th>
+        </thead>
+        <tbody>
 
-        {% for item in items %}
-        <tr>
-            {% for field in item %}
-            <td>{{ field }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
+        </tbody>
     </table>
 
     <script>
-        $(document).ready(function() {
-            $(function() {
-                $('#formset').formset({
-                    prefix: '{{ formset.prefix }}',
-                    addText: 'Add Another Form',
-                    deleteText: 'Remove Form',
-                });
-            })
-
-        });
+        var worklog = {
+            date: '{{ date.isoformat }}',
+            csrfToken: '{{ csrf_token }}',
+            username: '{{ user.username }}',
+            userpk: '{{ user.pk }}',
+            url: '{{ SITE_URL }}'
+        };
     </script>
 
     {% endblock %}

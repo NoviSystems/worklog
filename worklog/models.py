@@ -75,7 +75,7 @@ class Issue(models.Model):
     github_id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=256, null=True)
     number = models.IntegerField()
-    repo = models.ForeignKey(Repo, related_name='issue')
+    repo = models.ForeignKey(Repo, related_name='issues')
 
     def __unicode__(self):
         return str(self.number) + ': ' + str(self.title)

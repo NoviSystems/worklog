@@ -1,8 +1,6 @@
 from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.views.generic.base import RedirectView
-from django.core.urlresolvers import reverse_lazy
 
 from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView
 from timesheet import TimesheetView
@@ -37,6 +35,8 @@ urlpatterns = patterns('worklog',
     (r'^view/'+USERNAME+'/'+DATERANGE1+'/$', login_required(viewWork)),
     (r'^view/'+USERNAME+'/'+DATERANGE2+'/$', login_required(viewWork)),
     url(dajaxice_config.dajaxice_url, include('dajaxice.urls')),
+
+    (r'^api/', include('worklog.api.urls')),
 )
 
 urlpatterns += patterns('worklog',
