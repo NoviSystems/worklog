@@ -19,7 +19,7 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 
 urlpatterns = patterns('worklog',
     (r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
-    (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem)),
+    (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem), {}, 'worklog-current-date'),
     (r'^today/$', CurrentDateRedirectView.as_view(), {}, 'worklog-today'),
     (r'^add/$', CurrentDateRedirectView.as_view(), {}, 'worklog-add'),
 

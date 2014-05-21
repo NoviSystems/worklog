@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.views.generic import View, TemplateView, RedirectView
+from django.core.urlresolvers import reverse
 
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
 from django.forms.models import modelformset_factory
@@ -50,7 +51,7 @@ class CurrentDateRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        return '/worklog/' + str(datetime.date.today()) + '/'
+        return reverse('worklog-current-date', kwargs={'date': str(datetime.date.today())})
 
 
 def createWorkItem(request, date='today'):

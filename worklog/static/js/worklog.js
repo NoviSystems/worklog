@@ -8,7 +8,7 @@ $(document).ready(function() {
     }
 
     function populateJobs(formNumber) {
-        $.getJSON(worklog.url + "/worklog/api/jobs/", null, function(data, status) {
+        $.getJSON(worklog.url + "/worklog/api/jobs/?available_all_users=True&date=" + worklog.date, null, function(data, status) {
             data.sort(function(a, b) {
                 if (a.name < b.name)
                     return -1;
@@ -17,7 +17,7 @@ $(document).ready(function() {
                 return 0;
             });
             for (var i in data) {
-                $('#id_form-' + formNumber + '-job').append('<option value="' + data[i].pk + '">' + data[i].name);
+                $('#id_form-' + formNumber + '-job').append('<option value="' + data[i].id + '">' + data[i].name);
             }
         });
         return $();
@@ -187,7 +187,7 @@ $(document).ready(function() {
 
     function submitWorkItem(formNumber) {
         var postData = {
-            user: worklog.userpk,
+            user: worklog.userid,
             date: worklog.date,
             job: $('#id_form-' + formNumber + '-job').val(),
             hours: $('#id_form-' + formNumber + '-hours').val(),

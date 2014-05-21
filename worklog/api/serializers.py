@@ -2,35 +2,33 @@ from worklog.models import WorkItem, Job, Repo, Issue
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
+import datetime
+
 
 class UserSerializer(serializers.ModelSerializer):
-	pk = serializers.Field()
 
 	class Meta:
 		model = User
-		fields = ('username', 'email')
+		fields = ('id', 'username', 'email')
 
 
 class JobSerializer(serializers.ModelSerializer):
-	pk = serializers.Field()
 
 	class Meta:
 		model = Job
-		fields = ('name', 'pk')
+		fields = ('id', 'name')
 
 
 class IssueSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Issue
-		fields = ('github_id', 'title', 'number', 'repo')
 
 
 class RepoSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Repo
-		fields = ('github_id', 'name')
 
 
 class WorkItemSerializer(serializers.ModelSerializer):
@@ -39,17 +37,29 @@ class WorkItemSerializer(serializers.ModelSerializer):
 		model = WorkItem
 		fields = ('user', 'date', 'hours', 'text', 'job', 'repo', 'issue')
 
-	def validate(self, attrs):
+	def validate_issue(self, attrs, source):
+		issue = attrs[source]
+		repo = attrs['repo']
+
 		try:
-			if attrs['issue'].repo != attrs['repo']:
+			if issue.repo != repo:
 				raise serializers.ValidationError("Issue does not belong to repo.")
 		except AttributeError:
 			pass
 		return attrs
 
 	def validate_hours(self, attrs, source):
-		value = attrs[source]
+		hours = attrs[source]
 
-		if value % 1 != 0.5 and value % 1 != 0:
-			raise serializers.ValidationError("Hours must be in half-hour increments.")
+		if hours % 1 != 0.5 and hours % 1 != 0:
+			raise serializers.ValidationError("For the love of Satan, half-hour increments. Please.")
+		elif hours < 0:
+			raise serializers.ValidationError("The whole part of hours must be in N.")
+
 		return attrs
+
+	def validate_job(self, attrs, source):
+		job = attrs[source]
+
+		if job.open_date > datetime.date.today() or job.close_date <= datetime.date.today():
+			raise serializers.ValidationError("Job must be open.")

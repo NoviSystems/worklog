@@ -6,60 +6,60 @@
 <h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
 {% endif %} 
 <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
-        <table class="table table-hover" id="form-table">
-            <thead>
-                <th class="col-md-2">Job</th>
-                <th class="col-md-2">Hours</th>
-                <th class="col-md-2">Repo</th>
-                <th class="col-md-2">Issue</th>
-                <th class="col-md-4">Description</th>
-                <th><button class="btn btn-primary btn-xs" type="button" id="add-form">+</button></th>
-            </thead>
-            <tbody>
-                <tr id="row-0">
-                    <form action="" method="post" id="workform-0" role="form" class="form-inline">
-                    {% csrf_token %}
-                    <td class="col-md-2">
-                        <div class="form-group">
-                            <select class="form-control input-sm" id="id_form-0-job" name="job">
+    <table class="table table-hover" id="form-table">
+        <thead>
+            <th class="col-md-2">Job</th>
+            <th class="col-md-2">Hours</th>
+            <th class="col-md-2">Repo</th>
+            <th class="col-md-2">Issue</th>
+            <th class="col-md-4">Description</th>
+            <th><button class="btn btn-primary btn-xs" type="button" id="add-form">+</button></th>
+        </thead>
+        <tbody>
+            <tr id="row-0">
+                <form action="" method="post" id="workform-0" role="form" class="form-inline">
+                {% csrf_token %}
+                <td class="col-md-2">
+                    <div class="form-group">
+                        <select class="form-control input-sm" id="id_form-0-job" name="job">
+                            <option value selected="selected">None</option>
+                        </select>
+                    </div>
+                </td>
+                <td class="col-md-2">
+                    <div class="form-group">
+                        <input class="form-control input-sm" id="id_form-0-hours" name="hours" placeholder="Hours Worked" type="text">
+                    </div>
+                </td>
+                <td class="col-md-2">
+                    <div class="form-group">
+                        <select class="form-control input-sm" id="id_form-0-repo" name="repo">
+                            <option value selected="selected">None</option>
+                        </select>
+                    </div>
+                </td>
+                <td class="col-md-2">
+                    <div class="form-group" id="issue-select">
+                        <select class="form-control input-sm" id="id_form-0-issue" name="issue">
                                 <option value selected="selected">None</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td class="col-md-2">
-                        <div class="form-group">
-                            <input class="form-control input-sm" id="id_form-0-hours" name="hours" placeholder="Hours Worked" type="text">
-                        </div>
-                    </td>
-                    <td class="col-md-2">
-                        <div class="form-group">
-                            <select class="form-control input-sm" id="id_form-0-repo" name="repo">
-                                <option value selected="selected">None</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td class="col-md-2">
-                        <div class="form-group" id="issue-select">
-                            <select class="form-control input-sm" id="id_form-0-issue" name="issue">
-                                    <option value selected="selected">None</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td class="col-md-4">
-                        <div class="form-group">
-                            <textarea class="form-control input-sm" cols="40" id="id_form-0-text" name="text" placeholder="Work Description" rows="1"></textarea>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-danger btn-xs" type="button" id="delete-workform-0">&times;</button>
-                    </td>
-                    </form>
-                </tr>
-            </tbody>
+                        </select>
+                    </div>
+                </td>
+                <td class="col-md-4">
+                    <div class="form-group">
+                        <textarea class="form-control input-sm" cols="40" id="id_form-0-text" name="text" placeholder="Work Description" rows="1"></textarea>
+                    </div>
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-xs" type="button" id="delete-workform-0">&times;</button>
+                </td>
+                </form>
+            </tr>
+        </tbody>
 
-        </table>
-         
-        <button class='btn btn-success' type="button" id="submit">Submit All</button>
+    </table>
+    <button class='btn btn-success' type="button" id="submit">Submit All</button>
+    
     <h4>Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
     <table class="table" id="display-table">
         <thead>
@@ -80,7 +80,7 @@
             date: '{{ date.isoformat }}',
             csrfToken: '{{ csrf_token }}',
             username: '{{ user.username }}',
-            userpk: '{{ user.pk }}',
+            userid: '{{ user.id }}',
             url: '{{ SITE_URL }}'
         };
     </script>

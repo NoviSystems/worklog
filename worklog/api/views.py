@@ -35,8 +35,21 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class JobViewSet(viewsets.ReadOnlyModelViewSet):
-	queryset = models.Job.objects.filter(available_all_users=True)
+	model = models.Job
 	serializer_class = serializers.JobSerializer
+
+	def get_queryset(self):
+		queryset = models.Job.objects.all()
+		available_all_users = self.request.QUERY_PARAMS.get('available_all_users', None)
+		date = self.request.QUERY_PARAMS.get('date', None)
+
+		if date is not None:
+			queryset = models.Job.get_jobs_open_on(date)
+
+		if available_all_users is not None:
+			queryset = queryset.filter(available_all_users=True)
+
+		return queryset
 
 
 class RepoViewSet(viewsets.ReadOnlyModelViewSet):
