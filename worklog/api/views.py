@@ -23,9 +23,14 @@ class WorkItemViewSet(viewsets.ModelViewSet):
 	def get_queryset(self):
 		queryset = models.WorkItem.objects.all()
 		date = self.request.QUERY_PARAMS.get('date', None)
+		user = self.request.QUERY_PARAMS.get('user', None)
 
 		if date is not None:
 			queryset = queryset.filter(date=date)
+
+		if user is not None:
+			queryset = queryset.filter(user=user)
+
 		return queryset
 
 
@@ -42,6 +47,7 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
 		queryset = models.Job.objects.all()
 		available_all_users = self.request.QUERY_PARAMS.get('available_all_users', None)
 		date = self.request.QUERY_PARAMS.get('date', None)
+		name = self.request.QUERY_PARAMS.get('name', None)
 
 		if date is not None:
 			queryset = models.Job.get_jobs_open_on(date)
@@ -49,12 +55,23 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
 		if available_all_users is not None:
 			queryset = queryset.filter(available_all_users=True)
 
+		if name is not None:
+			queryset = queryset.filter(name=name)
+
 		return queryset
 
 
 class RepoViewSet(viewsets.ReadOnlyModelViewSet):
-	queryset = models.Repo.objects.all()
+	model = models.Repo
 	serializer_class = serializers.RepoSerializer
+
+	def get_queryset(self):
+		queryset = models.Repo.objects.all()
+		name = self.request.QUERY_PARAMS.get('name', None)
+
+		if name is not None:
+			queryset = queryset.filter(name=name)
+		return queryset
 
 
 class IssueViewSet(viewsets.ReadOnlyModelViewSet):

@@ -35,7 +35,32 @@ class WorkItemSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = WorkItem
-		fields = ('user', 'date', 'hours', 'text', 'job', 'repo', 'issue')
+		fields = ('id', 'user', 'date', 'hours', 'text', 'job', 'repo', 'issue')
+
+	def validate_job(self, attrs, source):
+
+		if attrs[source] is None:
+			raise serializers.ValidationError("This field is required.")
+
+		open_jobs = Job.get_jobs_open_on(datetime.date.today())
+
+		if not open_jobs.get(name=attrs[source]):
+			raise serializers.ValidationError("Job must be open.")
+
+		return attrs
+
+	def validate_hours(self, attrs, source):
+		hours = attrs[source]
+
+		if not hours:
+			raise serializers.ValidationError("This field is required.")
+
+		if hours % 1 != 0.5 and hours % 1 != 0:
+			raise serializers.ValidationError("For the love of Satan, half-hour increments. Please.")
+		elif hours < 0:
+			raise serializers.ValidationError("The whole part of hours must be in N.")
+
+		return attrs
 
 	def validate_issue(self, attrs, source):
 		issue = attrs[source]
@@ -48,18 +73,10 @@ class WorkItemSerializer(serializers.ModelSerializer):
 			pass
 		return attrs
 
-	def validate_hours(self, attrs, source):
-		hours = attrs[source]
+	def validate_text(self, attrs, source):
+		text = attrs[source]
 
-		if hours % 1 != 0.5 and hours % 1 != 0:
-			raise serializers.ValidationError("For the love of Satan, half-hour increments. Please.")
-		elif hours < 0:
-			raise serializers.ValidationError("The whole part of hours must be in N.")
+		if not text:
+			raise serializers.ValidationError("This field is required.")
 
 		return attrs
-
-	def validate_job(self, attrs, source):
-		job = attrs[source]
-
-		if job.open_date > datetime.date.today() or job.close_date <= datetime.date.today():
-			raise serializers.ValidationError("Job must be open.")
