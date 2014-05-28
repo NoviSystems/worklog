@@ -210,54 +210,29 @@ $(document).ready(function() {
         });
     }
 
-    initializeDisplayTable();
+    $.when(getJobs(), getRepos(), getIssues()).done(function() {
+        initializeDisplayTable();
+    });
 
     function addWorkItemToDisplayTable(workItem) {
 
-        var jobName = '';
-        function getJobName() {
-            return $.getJSON(worklog.url + '/worklog/api/jobs/' + workItem.job, null, function(data) {
-                jobName = data.name;
-            });
-        }
+        var jobName = jobs[workItem.job.toString()].name;
+        if (workItem.repo) { var repoName = repos[workItem.repo.toString()].name; }
+        if (workItem.issue) { var issueTitle = issues[workItem.issue.toString()].title; }
 
-        var repoName = '';
-        function getRepoName() {
-            if (workItem.repo) {
-                return $.getJSON(worklog.url + '/worklog/api/repos/' + workItem.repo, null, function(data) {
-                    repoName = data.name;
-                });                        
-            }
-        }
-
-        var issueTitle = '';
-        function getIssueTitle () {
-            if (workItem.issue) {
-                return $.getJSON(worklog.url + '/worklog/api/issues/' + workItem.issue, null, function(data) {
-                    issueTitle = data.title;
-                });
-            }
-        }
-
-        $.when(getJobName(), getRepoName(), getIssueTitle()).done(function() {
-            buildTableRow();
-        });
-
-        function buildTableRow() {
-            $('#display-table tbody').append(
-                '<tr class="workitem" id="' + workItem.id + '">\
-                    <td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>\
-                    <td class="col-md-2" id="hours">' + workItem.hours + '</td>\
-                    <td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>\
-                    <td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueTitle : 'None') + '</td>\
-                    <td class="col-md-3" id="text">' + workItem.text + '</td>\
-                    <td id="controls">\
-                        <button type="button" class="btn btn-link btn-xs" id="edit"><span class="glyphicon glyphicon-pencil"></span></button>\
-                        <button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target=".bs-example-modal-sm" id="delete"><span class="glyphicon glyphicon-trash"></span></button>\
-                    </td>\
-                </tr>'
-            );
-        }
+        $('#display-table tbody').append(
+            '<tr class="workitem" id="' + workItem.id + '">\
+                <td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>\
+                <td class="col-md-2" id="hours">' + workItem.hours + '</td>\
+                <td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>\
+                <td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueTitle : 'None') + '</td>\
+                <td class="col-md-3" id="text">' + workItem.text + '</td>\
+                <td id="controls">\
+                    <button type="button" class="btn btn-link btn-xs" id="edit"><span class="glyphicon glyphicon-pencil"></span></button>\
+                    <button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target=".bs-example-modal-sm" id="delete"><span class="glyphicon glyphicon-trash"></span></button>\
+                </td>\
+            </tr>'
+        );
     }
 
     $('#display-table tbody').on('click', '#edit', function() {
@@ -367,48 +342,21 @@ $(document).ready(function() {
         var $text = $(selector + ' #text').parent().parent();
         var $edit = $(selector + ' #controls');
 
-        var jobName = '';
-        function getJobName() {
-            return $.getJSON(worklog.url + '/worklog/api/jobs/' + workItem.job, null, function(data) {
-                jobName = data.name;
-            });
-        }
+        var jobName = jobs[workItem.job.toString()].name;
+        if (workItem.repo) { var repoName = repos[workItem.repo.toString()].name; }
+        if (workItem.issue) { var issueTitle = issues[workItem.issue.toString()].title; }
 
-        var repoName = '';
-        function getRepoName() {
-            if (workItem.repo) {
-                return $.getJSON(worklog.url + '/worklog/api/repos/' + workItem.repo, null, function(data) {
-                    repoName = data.name;
-                });                        
-            }
-        }
-
-        var issueTitle = '';
-        function getIssueTitle () {
-            if (workItem.issue) {
-                return $.getJSON(worklog.url + '/worklog/api/issues/' + workItem.issue, null, function(data) {
-                    issueTitle = data.title;
-                });
-            }
-        }
-
-        function restoreRow() {
-            $job.replaceWith('<td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>');
-            $hours.replaceWith('<td class="col-md-2" id="hours">' + workItem.hours + '</td>');
-            $repo.replaceWith('<td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>');
-            $issue.replaceWith('<td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueTitle : 'None') + '</td>');
-            $text.replaceWith('<td class="col-md-3" id="text">' + workItem.text + '</td>');
-            $edit.replaceWith(
-                '<td id="controls">\
-                    <button type="button" class="btn btn-link btn-xs" id="edit"><span class="glyphicon glyphicon-pencil"></span></button>\
-                    <button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target=".bs-example-modal-sm" id="delete"><span class="glyphicon glyphicon-trash"></span></button>\
-                </td>'
-            );
-        }
-
-        $.when(getJobName(), getRepoName(), getIssueTitle()).done(function() {
-            restoreRow();
-        });
+        $job.replaceWith('<td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>');
+        $hours.replaceWith('<td class="col-md-2" id="hours">' + workItem.hours + '</td>');
+        $repo.replaceWith('<td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>');
+        $issue.replaceWith('<td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueTitle : 'None') + '</td>');
+        $text.replaceWith('<td class="col-md-3" id="text">' + workItem.text + '</td>');
+        $edit.replaceWith(
+            '<td id="controls">\
+                <button type="button" class="btn btn-link btn-xs" id="edit"><span class="glyphicon glyphicon-pencil"></span></button>\
+                <button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target=".bs-example-modal-sm" id="delete"><span class="glyphicon glyphicon-trash"></span></button>\
+            </td>'
+        );
     }
 
     function appendErrorMessageToField(message, field, selector) {
@@ -454,7 +402,7 @@ $(document).ready(function() {
                     restoreWorkItem(selector, workItemData)
                     $(selector).addClass('success');
                     $(selector).on('click', function() {
-                       $(this).removeClass('success');s
+                       $(this).removeClass('success');
                     });
                 } else if (method === 'POST') {
                     removeForm(selector); 
