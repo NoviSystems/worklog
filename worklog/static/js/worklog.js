@@ -6,10 +6,8 @@ var jobs = {};
 var repos = {};
 var issues = {};
 
-
-
 var getJobs = function() {
-    return $.getJSON(worklog.url + '/worklog/api/jobs/?available_all_users=True&date=' + worklog.date, null, function(data, status) {
+    return $.getJSON('/worklog/api/jobs/?available_all_users=True&date=' + worklog.date, null, function(data, status) {
         jobList = data;
         jobList.sort(function(a, b) {
             if (a.name < b.name)
@@ -28,7 +26,7 @@ var getJobs = function() {
 
 
 var getRepos = function() { 
-    return $.getJSON(worklog.url + '/worklog/api/repos/', null, function(data, status) {
+    return $.getJSON('/worklog/api/repos/', null, function(data, status) {
         repoList = data;
         repoList.sort(function(a, b) {
             if (a.name < b.name)
@@ -45,7 +43,7 @@ var getRepos = function() {
 }
 
 var getIssues = function(repo) {
-    return $.getJSON(worklog.url + '/worklog/api/issues/', null, function(data, status) {
+    return $.getJSON('/worklog/api/issues/', null, function(data, status) {
         issueList = data;
         for (var i = 0; i < issueList.length; i++) {
             var key = issueList[i].github_id;
@@ -153,12 +151,6 @@ $(document).ready(function() {
 
     var $formTemplate =  $('#row-0').clone(true);
 
-    $.when(getJobs(), getRepos(), getIssues()).done(function() {
-        populateJobsInSelectorWithJobSelected('#row-0', null);
-        populateReposInSelectorWithRepoSelected('#row-0', null);
-        assignIssuesToRepos();
-    });
-
     setIssueSelectWidthInSelector('#row-0');
 
     $('#form-table tbody').on('click', '#delete', function() {
@@ -203,7 +195,7 @@ $(document).ready(function() {
     };
 
     function initializeDisplayTable() {
-        $.getJSON(worklog.url + "/worklog/api/workitems/?date=" + worklog.date, null, function (data) {
+        $.getJSON('/worklog/api/workitems/?date=' + worklog.date, null, function (data) {
             for (var i = 0; i < data.length; i++) {
                 addWorkItemToDisplayTable(data[i]);
             }
@@ -212,6 +204,9 @@ $(document).ready(function() {
 
     $.when(getJobs(), getRepos(), getIssues()).done(function() {
         initializeDisplayTable();
+        populateJobsInSelectorWithJobSelected('#row-0', null);
+        populateReposInSelectorWithRepoSelected('#row-0', null);
+        assignIssuesToRepos();
     });
 
     function addWorkItemToDisplayTable(workItem) {
@@ -390,7 +385,7 @@ $(document).ready(function() {
 
         $.ajax({
             type: method,
-            url: worklog.url + '/worklog/api/workitems/' + (method !== 'POST' ? workItemData.id + '/' : ''),
+            url: '/worklog/api/workitems/' + (method !== 'POST' ? workItemData.id + '/' : ''),
             data: workItemData,
             success: function(data) {
 
