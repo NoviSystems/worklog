@@ -5,9 +5,6 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView
 from timesheet import TimesheetView
 
-from dajaxice.core import dajaxice_autodiscover, dajaxice_config
-dajaxice_autodiscover()
-
 DATEMIN = r'(?P<datemin>\d{4}-\d{2}-\d{2})'
 DATEMAX = r'(?P<datemax>\d{4}-\d{2}-\d{2})'
 # accepts:  date_date   or   date_   or   _date
@@ -34,7 +31,6 @@ urlpatterns = patterns('worklog',
     (r'^view/'+USERNAME+'/today/$', login_required(viewWork), {'datemin': 'today', 'datemax': 'today'}),
     (r'^view/'+USERNAME+'/'+DATERANGE1+'/$', login_required(viewWork)),
     (r'^view/'+USERNAME+'/'+DATERANGE2+'/$', login_required(viewWork)),
-    url(dajaxice_config.dajaxice_url, include('dajaxice.urls')),
 
     (r'^api/', include('worklog.api.urls')),
 )

@@ -451,8 +451,11 @@ $(document).ready(function() {
                 }
 
                 if (method === 'PATCH') {
-                    restoreWorkItem(selector, workItemData);
+                    restoreWorkItem(selector, workItemData)
                     $(selector).addClass('success');
+                    $(selector).on('click', function() {
+                       $(this).removeClass('success');s
+                    });
                 } else if (method === 'POST') {
                     removeForm(selector); 
                     addWorkItemToDisplayTable(workItemData)
@@ -465,6 +468,9 @@ $(document).ready(function() {
                 for (var key in response) {
                     appendErrorMessageToField(response[key], key, selector);
                     $(selector).addClass('danger');
+                    $(selector).on('click', function() {
+                        $(this).removeClass('danger');
+                    });
                 }
             },
             dataType: 'text'
