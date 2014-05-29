@@ -101,32 +101,32 @@ $(document).ready(function() {
     }
 
     function setIssueSelectWidthInSelector(selector) {
-        $(selector + ' #issue').width(160);
+        $(selector + ' .issue').width(160);
     }
 
     function populateJobsInSelectorWithJobSelected(selector, jobID) {
         for (var i in jobList) {
-            $(selector + ' #job').append('<option value="' + jobList[i].id + '">' + jobList[i].name);
+            $(selector + ' .job').append('<option value="' + jobList[i].id + '">' + jobList[i].name);
         }
         if (jobID) {
-            $(selector + ' #job').val(jobID);
+            $(selector + ' .job').val(jobID);
         }
     }
 
     function populateReposInSelectorWithRepoSelected(selector, repoID) {
         for (var i in repoList) {
-            $(selector + ' #repo').append('<option value="' + repoList[i].github_id + '">' + repoList[i].name + '</option>');
+            $(selector + ' .repo').append('<option value="' + repoList[i].github_id + '">' + repoList[i].name + '</option>');
         }
         if (repoID) {
-            $(selector + ' #repo').val(repoID);
-            $(selector + ' #repo').change();
+            $(selector + ' .repo').val(repoID);
+            $(selector + ' .repo').change();
         }
     }
 
     function populateIssuesFromRepoInSelector(repo, selector) {
 
-        $(selector + ' #issue').empty();
-        $(selector + ' #issue').append('<option value selected="selected">None</option>');
+        $(selector + ' .issue').empty();
+        $(selector + ' .issue').append('<option value selected="selected">None</option>');
         if (repo != '') {
 
             var issues = repos[repo].issues;
@@ -139,13 +139,13 @@ $(document).ready(function() {
                 return 0;
             });
             for (var i in issues) {
-                $(selector + ' #issue').append('<option value="' + issues[i].github_id + '">' + issues[i].number + ': ' + issues[i].title + '</option>');
+                $(selector + ' .issue').append('<option value="' + issues[i].github_id + '">' + issues[i].number + ': ' + issues[i].title + '</option>');
                 setIssueSelectWidthInSelector(selector);
             }
         }
     }
 
-    $('.table tbody').on('change', '#repo', function() {
+    $('.table tbody').on('change', '.repo', function() {
         populateIssuesFromRepoInSelector($(this).val(), '#' + $(this).parent().parent().parent().attr('id'));
     });
 
@@ -153,14 +153,16 @@ $(document).ready(function() {
 
     setIssueSelectWidthInSelector('#row-0');
 
-    $('#form-table tbody').on('click', '#delete', function() {
+    $('#form-table tbody').on('click', '.delete', function() {
         removeForm('#' + $(this).parent().parent().attr('id'));
     });
 
     function removeForm(selector) {
 
         var formNumber = selector[5];
-        $(selector).remove();
+        $(selector).fadeOut('slow', function() {
+            $(selector).remove();  
+        });
 
          for (var j = 0; j < formArray.length; j++) {
             if (formNumber == formArray[j]) {
@@ -222,25 +224,27 @@ $(document).ready(function() {
 
         $('#display-table tbody').append(
             '<tr class="workitem" id="' + workItem.id + '">\
-                <td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>\
-                <td class="col-md-2" id="hours">' + workItem.hours + '</td>\
-                <td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>\
-                <td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueNumber + ': ' + issueTitle : 'None') + '</td>\
-                <td class="col-md-3" id="text">' + workItem.text + '</td>\
-                <td id="controls">\
-                    <button type="button" class="btn btn-link btn-xs" id="edit"><span class="glyphicon glyphicon-pencil"></span></button>\
-                    <button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target=".bs-example-modal-sm" id="delete"><span class="glyphicon glyphicon-trash"></span></button>\
+                <td class="col-md-2 job" name="' + workItem.job + '">' + jobName + '</td>\
+                <td class="col-md-2 hours" name=' + workItem.hours + '>' + workItem.hours + '</td>\
+                <td class="col-md-2 repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>\
+                <td class="col-md-2 issue" name="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueNumber + ': ' + issueTitle : 'None') + '</td>\
+                <td class="col-md-3 text" name=' + workItem.text + '>' + workItem.text + '</td>\
+                <td class="controls">\
+                    <button type="button" class="btn btn-link btn-xs edit" data-workitem="' + workItem.id + '"><span class="glyphicon glyphicon-pencil"></span></button>\
+                    <button type="button" class="btn btn-link btn-xs delete" data-toggle="modal" data-target=".bs-example-modal-sm" data-workitem="' + workItem.id + '"><span class="glyphicon glyphicon-trash"></span></button>\
                 </td>\
             </tr>'
         );
+        $('#' + workItem.id).hide().fadeIn('slow');
     }
 
-    $('#display-table tbody').on('click', '#edit', function() {
-        makeWorkItemEditable('#' + $(this).parent().parent().attr('id'));
+    $('#display-table tbody').on('click', '.edit', function() {
+        makeWorkItemEditable('#' + $(this).data('workitem'));
     });
 
-    $('#display-table tbody').on('click', '#delete', function() {
-        $('.modal #delete').attr('name', $(this).parent().parent().attr('id'));
+    $('#display-table tbody').on('click', '.delete', function() {
+        console.log($(this).data('workitem'));
+        $('.modal #delete').attr('name', $(this).data('workitem'));
     });
 
     $('.modal').on('click', '#delete', function() {
@@ -248,24 +252,26 @@ $(document).ready(function() {
         $('.modal').modal('toggle');
     });
 
-    $('#display-table tbody').on('click', '#save', function() {
-        submitWorkItemFromSelector('#' + $(this).parent().parent().attr('id'), 'PATCH');
+    $('#display-table tbody').on('click', ' .save', function() {
+        submitWorkItemFromSelector('#' + $(this).data('workitem'), 'PATCH');
     });
 
-    $('#display-table tbody').on('click', '#cancel', function() {
-        var selector = '#' + $(this).parent().parent().attr('id');
+    $('#display-table tbody').on('click', ' .cancel', function() {
+        var selector = '#' + $(this).data('workitem');
         var wi = buildWorkItemFromSelector(selector, false);
         restoreWorkItem(selector, wi);
     });
 
     function makeWorkItemEditable(workItem) {
 
-        var $job = $(workItem + ' #job');
-        var $hours = $(workItem + ' #hours');
-        var $repo = $(workItem + ' #repo');
-        var $issue = $(workItem + ' #issue');
-        var $text = $(workItem + ' #text');
-        var $controls = $(workItem + ' #controls');
+        var workItemId = workItem.substring(1, workItem.length);
+
+        var $job = $(workItem + ' .job');
+        var $hours = $(workItem + ' .hours');
+        var $repo = $(workItem + ' .repo');
+        var $issue = $(workItem + ' .issue');
+        var $text = $(workItem + ' .text');
+        var $controls = $(workItem + ' .controls');
 
         var jobID = $job.attr('name');
         var repoID = $repo.attr('name');
@@ -275,7 +281,7 @@ $(document).ready(function() {
             $job.replaceWith(
                 '<td class="col-md-2">\
                     <div class="form-group">\
-                        <select class="form-control input-sm" id="job">\
+                        <select class="form-control input-sm job" data-workitem="' + workItemId + '">\
                             <option value selected="selected">None</option>\
                         </select>\
                     </div>\
@@ -285,7 +291,7 @@ $(document).ready(function() {
             $hours.replaceWith(
                 '<td class="col-md-2">\
                     <div class="form-group">\
-                        <input class="form-control input-sm" id="hours" value="' + $hours.text() + '" type="text">\
+                        <input class="form-control input-sm hours" data-hours="" value="' + $hours.text() + '" type="text" data-workitem="' + workItemId + '">\
                     </div>\
                 </td>'
             );
@@ -293,7 +299,7 @@ $(document).ready(function() {
             $repo.replaceWith(
                 '<td class="col-md-2">\
                     <div class="form-group">\
-                        <select class="form-control input-sm" id="repo">\
+                        <select class="form-control input-sm repo" data-repo="" data-workitem="' + workItemId + '">\
                             <option value selected="selected">None</option>\
                         </select>\
                     </div>\
@@ -303,7 +309,7 @@ $(document).ready(function() {
             $issue.replaceWith(
                 '<td class="col-md-2">\
                     <div class="form-group">\
-                        <select class="form-control input-sm" id="issue">\
+                        <select class="form-control input-sm issue" data-issue="" data-workitem="' + workItemId + '">\
                             <option value selected="selected">None</option>\
                         </select>\
                     </div>\
@@ -313,15 +319,15 @@ $(document).ready(function() {
             $text.replaceWith(
                 '<td class="col-md-3">\
                     <div class="form-group">\
-                        <textarea class="form-control input-sm" cols="40" id="text" placeholder="Work Description" rows="1">' + $text.text() + '</textarea>\
+                        <textarea class="form-control input-sm text" cols="40" data-text="" placeholder="Work Description" rows="1" data-workitem="' + workItemId + '">' + $text.text() + '</textarea>\
                     </div>\
                 </td>'
             );
 
             $controls.replaceWith(
-                '<td id="controls">\
-                    <button type="button" class="btn btn-link btn-xs" id="save"><span class="glyphicon glyphicon-ok"></span></button>\
-                    <button type="button" class="btn btn-link btn-xs" id="cancel"><span class="glyphicon glyphicon-remove"></span></button>\
+                '<td class="controls">\
+                    <button type="button" class="btn btn-link btn-xs save" data-workitem="' + workItemId + '"><span class="glyphicon glyphicon-ok"></span></button>\
+                    <button type="button" class="btn btn-link btn-xs cancel" data-workitem="' + workItemId + '"><span class="glyphicon glyphicon-remove"></span></button>\
                 </td>'
             );  
         }
@@ -331,16 +337,17 @@ $(document).ready(function() {
         populateJobsInSelectorWithJobSelected(workItem, jobID);
         populateReposInSelectorWithRepoSelected(workItem, repoID);
         setIssueSelectWidthInSelector(workItem);
-        $(workItem + ' #issue').val(issueID);
+        $(workItem + ' .issue').val(issueID);
     }
 
     function restoreWorkItem(selector, workItem) {
-        var $job = $(selector + ' #job').parent().parent();
-        var $hours = $(selector + ' #hours').parent().parent();
-        var $repo = $(selector + ' #repo').parent() .parent();
-        var $issue = $(selector + ' #issue').parent().parent();
-        var $text = $(selector + ' #text').parent().parent();
-        var $edit = $(selector + ' #controls');
+
+        var $job = $(selector + ' .job').parent().parent();
+        var $hours = $(selector + ' .hours').parent().parent();
+        var $repo = $(selector + ' .repo').parent() .parent();
+        var $issue = $(selector + ' .issue').parent().parent();
+        var $text = $(selector + ' .text').parent().parent();
+        var $edit = $(selector + ' .controls');
 
         var jobName = jobs[workItem.job.toString()].name;
 
@@ -352,21 +359,21 @@ $(document).ready(function() {
             var issueNumber = issues[workItem.issue.toString()].number;
         }
 
-        $job.replaceWith('<td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>');
-        $hours.replaceWith('<td class="col-md-2" id="hours">' + workItem.hours + '</td>');
-        $repo.replaceWith('<td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>');
-        $issue.replaceWith('<td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueNumber + ': ' + issueTitle : 'None') + '</td>');
-        $text.replaceWith('<td class="col-md-3" id="text">' + workItem.text + '</td>');
+        $job.replaceWith('<td class="col-md-2 job" name="' + workItem.job + '">' + jobName + '</td>');
+        $hours.replaceWith('<td class="col-md-2 hours">' + workItem.hours + '</td>');
+        $repo.replaceWith('<td class="col-md-2 repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>');
+        $issue.replaceWith('<td class="col-md-2 issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueNumber + ': ' + issueTitle : 'None') + '</td>');
+        $text.replaceWith('<td class="col-md-3 text">' + workItem.text + '</td>');
         $edit.replaceWith(
-            '<td id="controls">\
-                <button type="button" class="btn btn-link btn-xs" id="edit"><span class="glyphicon glyphicon-pencil"></span></button>\
-                <button type="button" class="btn btn-link btn-xs" data-toggle="modal" data-target=".bs-example-modal-sm" id="delete"><span class="glyphicon glyphicon-trash"></span></button>\
+            '<td class="controls">\
+                <button type="button" class="btn btn-link btn-xs edit" data-workitem="' + workItem.id + '"><span class="glyphicon glyphicon-pencil"></span></button>\
+                <button type="button" class="btn btn-link btn-xs delete" data-toggle="modal" data-target=".bs-example-modal-sm" data-workitem="' + workItem.id + '"><span class="glyphicon glyphicon-trash"></span></button>\
             </td>'
         );
     }
 
     function appendErrorMessageToField(message, field, selector) {
-        var id = selector + ' #' + field;
+        var id = selector + ' .' + field;
         $(id).parent().addClass('has-error');
 
         if ($(id).parent().children('label').length !== 0) {
@@ -381,11 +388,11 @@ $(document).ready(function() {
             id: (method !== 'POST' ? selector.substring(1, selector.length) : ""),
             user: worklog.userid,
             date: worklog.date,
-            job: $(selector + ' #job').val(),
-            hours: $(selector + ' #hours').val(),
-            repo: $(selector + ' #repo').val(),
-            issue: $(selector + ' #issue').val(),
-            text: $(selector + ' #text').val(),
+            job: $(selector + ' .job').val(),
+            hours: $(selector + ' .hours').val(),
+            repo: $(selector + ' .repo').val(),
+            issue: $(selector + ' .issue').val(),
+            text: $(selector + ' .text').val(),
             csrfmiddlewaretoken: worklog.csrfToken,
         }
     }
@@ -393,6 +400,8 @@ $(document).ready(function() {
     function submitWorkItemFromSelector(selector, method) {
 
         var workItemData = buildWorkItemFromSelector(selector, method);
+
+        console.log(selector);
 
         $.ajax({
             type: method,
@@ -403,22 +412,24 @@ $(document).ready(function() {
                 if ($(selector).hasClass('danger')) {
                     $(selector).removeClass('danger');
                 }
-
                 if (method === 'PATCH') {
                     restoreWorkItem(selector, workItemData)
                     $(selector).addClass('success', function() {
-                        $(selector).children().addClass('custom-fade', function() {
+                        $(selector).addClass('workitem-fade', function() {
                             $(selector).removeClass('success', function() {
-                                $(selector).removeClass('custom-fade');
+                                window.setTimeout(function () {
+                                    $(selector).removeClass('workitem-fade');
+                                }, 2000);
                             });
                         });
-                    });
-                                        
+                    });                                        
                 } else if (method === 'POST') {
                     removeForm(selector); 
                     addWorkItemToDisplayTable($.parseJSON(data));
                 } else if (method === 'DELETE') {
-                    $(selector).remove();
+                    $(selector).fadeOut('slow', function() {
+                        $(selector).remove();
+                    });
                 }
             },
             error: function (data){
