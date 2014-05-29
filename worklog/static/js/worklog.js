@@ -212,15 +212,20 @@ $(document).ready(function() {
     function addWorkItemToDisplayTable(workItem) {
 
         var jobName = jobs[workItem.job.toString()].name;
-        if (workItem.repo) { var repoName = repos[workItem.repo.toString()].name; }
-        if (workItem.issue) { var issueTitle = issues[workItem.issue.toString()].title; }
+        if (workItem.repo) { 
+            var repoName = repos[workItem.repo.toString()].name; 
+        }
+        if (workItem.issue) { 
+            var issueTitle = issues[workItem.issue.toString()].title;
+            var issueNumber = issues[workItem.issue.toString()].number;
+        }
 
         $('#display-table tbody').append(
             '<tr class="workitem" id="' + workItem.id + '">\
                 <td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>\
                 <td class="col-md-2" id="hours">' + workItem.hours + '</td>\
                 <td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>\
-                <td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueTitle : 'None') + '</td>\
+                <td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueNumber + ': ' + issueTitle : 'None') + '</td>\
                 <td class="col-md-3" id="text">' + workItem.text + '</td>\
                 <td id="controls">\
                     <button type="button" class="btn btn-link btn-xs" id="edit"><span class="glyphicon glyphicon-pencil"></span></button>\
@@ -338,13 +343,19 @@ $(document).ready(function() {
         var $edit = $(selector + ' #controls');
 
         var jobName = jobs[workItem.job.toString()].name;
-        if (workItem.repo) { var repoName = repos[workItem.repo.toString()].name; }
-        if (workItem.issue) { var issueTitle = issues[workItem.issue.toString()].title; }
+
+        if (workItem.repo) { 
+            var repoName = repos[workItem.repo.toString()].name; 
+        }
+        if (workItem.issue) { 
+            var issueTitle = issues[workItem.issue.toString()].title; 
+            var issueNumber = issues[workItem.issue.toString()].number;
+        }
 
         $job.replaceWith('<td class="col-md-2" id="job" name="' + workItem.job + '">' + jobName + '</td>');
         $hours.replaceWith('<td class="col-md-2" id="hours">' + workItem.hours + '</td>');
         $repo.replaceWith('<td class="col-md-2" id="repo" name="' + (workItem.repo ? workItem.repo : '') + '">' + (repoName ? repoName : 'None') + '</td>');
-        $issue.replaceWith('<td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueTitle : 'None') + '</td>');
+        $issue.replaceWith('<td class="col-md-2" id="issue" name ="' + (workItem.issue ? workItem.issue : '') + '">' + (issueTitle ? issueNumber + ': ' + issueTitle : 'None') + '</td>');
         $text.replaceWith('<td class="col-md-3" id="text">' + workItem.text + '</td>');
         $edit.replaceWith(
             '<td id="controls">\
@@ -395,10 +406,14 @@ $(document).ready(function() {
 
                 if (method === 'PATCH') {
                     restoreWorkItem(selector, workItemData)
-                    $(selector).addClass('success');
-                    $(selector).on('click', function() {
-                       $(this).removeClass('success');
+                    $(selector).addClass('success', function() {
+                        $(selector).children().addClass('custom-fade', function() {
+                            $(selector).removeClass('success', function() {
+                                $(selector).removeClass('custom-fade');
+                            });
+                        });
                     });
+                                        
                 } else if (method === 'POST') {
                     removeForm(selector); 
                     addWorkItemToDisplayTable($.parseJSON(data));
