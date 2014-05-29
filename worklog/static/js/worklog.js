@@ -154,13 +154,13 @@ $(document).ready(function() {
     setIssueSelectWidthInSelector('#row-0');
 
     $('#form-table tbody').on('click', '.delete', function() {
-        removeForm('#' + $(this).parent().parent().attr('id'));
+        removeForm('#' + $(this).parent().parent().attr('id'), 'fast');
     });
 
-    function removeForm(selector) {
+    function removeForm(selector, speed) {
 
         var formNumber = selector[5];
-        $(selector).fadeOut('slow', function() {
+        $(selector).fadeOut(speed, function() {
             $(selector).remove();  
         });
 
@@ -186,7 +186,7 @@ $(document).ready(function() {
 
         var $cloned = $formTemplate.clone(true).attr('id', 'row-' + formCount);
 
-        $cloned.appendTo('#form-table');
+        $cloned.appendTo('#form-table').hide().fadeIn('fast');
 
         populateReposInSelectorWithRepoSelected('#row-' + formCount, null);
         populateJobsInSelectorWithJobSelected('#row-' + formCount, null);
@@ -243,7 +243,6 @@ $(document).ready(function() {
     });
 
     $('#display-table tbody').on('click', '.delete', function() {
-        console.log($(this).data('workitem'));
         $('.modal #delete').attr('name', $(this).data('workitem'));
     });
 
@@ -401,8 +400,6 @@ $(document).ready(function() {
 
         var workItemData = buildWorkItemFromSelector(selector, method);
 
-        console.log(selector);
-
         $.ajax({
             type: method,
             url: '/worklog/api/workitems/' + (method !== 'POST' ? workItemData.id + '/' : ''),
@@ -424,7 +421,7 @@ $(document).ready(function() {
                         });
                     });                                        
                 } else if (method === 'POST') {
-                    removeForm(selector); 
+                    removeForm(selector, 'slow'); 
                     addWorkItemToDisplayTable($.parseJSON(data));
                 } else if (method === 'DELETE') {
                     $(selector).fadeOut('slow', function() {
