@@ -195,7 +195,7 @@ $(document).ready(function() {
     };
 
     function initializeDisplayTable() {
-        $.getJSON('/worklog/api/workitems/?date=' + worklog.date, null, function (data) {
+        $.getJSON('/worklog/api/workitems/?date=' + worklog.date + '&user=' + worklog.userid, null, function (data) {
             for (var i = 0; i < data.length; i++) {
                 addWorkItemToDisplayTable(data[i]);
             }
@@ -401,7 +401,7 @@ $(document).ready(function() {
                     });
                 } else if (method === 'POST') {
                     removeForm(selector); 
-                    addWorkItemToDisplayTable(workItemData)
+                    addWorkItemToDisplayTable($.parseJSON(data));
                 } else if (method === 'DELETE') {
                     $(selector).remove();
                 }
