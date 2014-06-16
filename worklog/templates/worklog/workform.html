@@ -7,91 +7,159 @@
 <h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
 {% endif %} 
 <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
-    <table class="table table-hover" id="form-table">
-        <thead>
-            <th class="col-md-2">Job</th>
-            <th class="col-md-2">Hours</th>
-            <th class="col-md-2">Repo</th>
-            <th class="col-md-2">Issue</th>
-            <th class="col-md-4">Description</th>
-            <th><button class="btn btn-primary btn-xs" type="button" id="add-form">+</button></th>
-        </thead>
-        <tbody>
-            <tr id="row-0">
-                <form id="workform" role="form" class="form-inline">
-                {% csrf_token %}
-                    <td class="col-md-2">
-                        <div class="form-group">
-                            <select class="form-control input-sm job">
-                                <option value selected="selected">None</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td class="col-md-2">
-                        <div class="form-group">
-                            <input class="form-control input-sm hours" placeholder="Hours Worked" type="text">
-                        </div>
-                    </td>
-                    <td class="col-md-2">
-                        <div class="form-group">
-                            <select class="form-control input-sm repo">
-                                <option value selected="selected">None</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td class="col-md-2">
-                        <div class="form-group">
-                            <select class="form-control input-sm issue">
-                                    <option value selected="selected">None</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td class="col-md-4">
-                        <div class="form-group">
-                            <textarea class="form-control input-sm text" cols="40" placeholder="Work Description" rows="1"></textarea>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-danger btn-xs delete" type="button">&times;</button>
-                    </td>
-                </form>
-            </tr>
-        </tbody>
 
-    </table>
     <button class='btn btn-success' type="button" id="submit">Submit All</button>
 
     <div style="padding:10px"></div>
+
+    {% verbatim %}
+    <!-- Please note that the Django templating language will not be rendered a verbatim block. -->
+    <script id="form-table-template" type="text/x-handlebars-template">
+        <table class="table table-hover" id={{tableID}}>
+        {{#if smallWindow}}
+            <thead>
+                <tr>
+                    <th class="col-xs-3">Field</th>
+                    <th class="col-xs-15">Value</th>
+                </tr>
+            </thead>
+            <tbody id={{row.id}}>
+                <tr>
+                    <td class="col-xs-3">Job</td>
+                    <td class="col-xs-15">{{{row.job}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Hours</td>
+                    <td class="col-xs-15">{{{row.hours}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Repo</td>
+                    <td class="col-xs-15">{{{row.repo}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Issue</td>
+                    <td class="col-xs-15">{{{row.issue}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Description</td>
+                    <td class="col-xs-15">{{{row.text}}}</td>
+                </tr>
+            </tbody>
+        {{else}}
+            <thead>
+                <tr>
+                    <th class="col-md-2">Job</th>
+                    <th class="col-md-2">Hours</th>
+                    <th class="col-md-2">Repo</th>
+                    <th class="col-md-2">Issue</th>
+                    <th class="col-md-4">Description</th>
+                    <th id="button-head">
+                        <button class="btn btn-primary btn-xs" type="button" id="add-form">+</button>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        {{/if}}
+
+        </table>
+    </script>
+
+    <script id="row-template" type="text/x-handlebars-template">
+        <tr id={{id}}>
+            <td class={{job.class}}{{#if job.name}} name={{job.name}}{{/if}}>{{{job.value}}}</td>
+            <td class={{hours.class}}{{#if hours.name}} name={{hours.name}}{{/if}}>{{{hours.value}}}</td>
+            <td class={{repo.class}}{{#if repo.name}} name={{repo.name}}{{/if}}>{{{repo.value}}}</td>
+            <td class={{issue.class}}{{#if issue.name}} name={{issue.name}}{{/if}}>{{{issue.value}}}</td>
+            <td class={{text.class}}{{#if text.name}} name={{text.name}}{{/if}}>{{{text.value}}}</td>
+            <td{{#if button.class}} class={{button.class}}{{/if}}>{{{button.value}}}</td>
+        </tr>
+    </script>
+
+    <script id="modal-form-template" type="text/x-handlebars-template">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th class="col-xs-3">Field</th>
+                    <th class="col-xs-15">Value</th>
+                </tr>
+            </thead>
+            <tbody id={{row.id}}>
+
+                <tr>
+                    <td class="col-xs-3">Job</td>
+                    <td class="col-xs-15">{{{row.job}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Hours</td>
+                    <td class="col-xs-15">{{{row.hours}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Repo</td>
+                    <td class="col-xs-15">{{{row.repo}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Issue</td>
+                    <td class="col-xs-15">{{{row.issue}}}</td>
+                </tr>
+                <tr>
+                    <td class="col-xs-3">Description</td>
+                    <td class="col-xs-15">{{{row.text}}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </script>
+    {% endverbatim %}
     
     <h4>Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
-    <table class="table" id="display-table">
-        <thead>
-            <th>Job</th>
-            <th>Hours</th>
-            <th>Repo</th>
-            <th>Issue</th>
-            <th>Task</th>
-            <th></th>
-        </thead>
-        <tbody>
-            <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-              <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
+        <div class="table-responsive">
+            <table class="table table-hover" id="display-table">
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Hours</th>
+                        <th>Repo</th>
+                        <th>Issue</th>
+                        <th>Task</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <div class="modal fade bs-delete-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
+                            </div>
+                            <div class="modal-body">
+                                Please confirm your choice.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
+                                <button type="button" class="btn btn-danger" id="delete">Delete</button>
+                            </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="modal-body">
-                        Please confirm your choice.
+                    <div class="modal fade bs-edit-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="myModalLabel">Edit Work Item</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" id="save">Save</button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal" id="cancel">Cancel</button>
+                            </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
-                        <button type="button" class="btn btn-danger" id="delete">Delete</button>
-                    </div>
-                </div>
-              </div>
-            </div>
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
 
     {% endblock %}

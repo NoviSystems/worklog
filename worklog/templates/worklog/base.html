@@ -21,9 +21,6 @@
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" />
-    <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script>
-
     <script>
         var worklog = {
             date: '{{ date.isoformat }}',
@@ -32,8 +29,15 @@
             userid: '{{ user.id }}',
         };
     </script>
-    <script src="{% static 'js/worklog.js' %}"></script>
-    <script src="{% static 'js/jquery.cookie.js' %}"></script>
+    <script src="{% static 'js/app/widgets.js' %}"></script>
+    <script src="{% static 'js/app/fields.js' %}"></script>
+    <script src="{% static 'js/app/forms.js' %}"></script>
+    <script src="{% static 'js/app/formsets.js' %}"></script>
+    <script src="{% static 'js/app/tables.js' %}"></script>
+    <script src="{% static 'js/app/workitem.js' %}"></script>
+    <script src="{% static 'js/lib/jquery.cookie.js' %}"></script>
+    <script src="{% static 'js/lib/jquery-ui-1.10.4.custom.min.js' %}"></script>
+    <script src="{% static 'js/lib/handlebars-v1.3.0.js' %}"></script>
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
