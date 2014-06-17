@@ -17,7 +17,7 @@ var workItemFormSet = new FormSet();
 function API () {}
 
 API.getJobs = function() {
-    return $.getJSON('/worklog/api/jobs/?available_all_users=True&date=' + worklog.date, null, function(data, status) {
+    return $.getJSON('/worklog/api/jobs/?date=' + worklog.date + '&user=' + worklog.userid, null, function(data, status) {
         jobList = data;
         jobList.sort(function(a, b) {
             if (a.name < b.name) { return -1; }

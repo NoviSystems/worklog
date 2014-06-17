@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 
 @api_view(('GET',))
@@ -45,18 +46,18 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
 
 	def get_queryset(self):
 		queryset = models.Job.objects.all()
-		available_all_users = self.request.QUERY_PARAMS.get('available_all_users', None)
 		date = self.request.QUERY_PARAMS.get('date', None)
 		name = self.request.QUERY_PARAMS.get('name', None)
+		user = self.request.QUERY_PARAMS.get('user', None)
 
 		if date is not None:
 			queryset = models.Job.get_jobs_open_on(date)
 
-		if available_all_users is not None:
-			queryset = queryset.filter(available_all_users=True)
-
 		if name is not None:
 			queryset = queryset.filter(name=name)
+
+		if user is not None:
+			queryset = queryset.filter(Q(users__id=user) | Q(available_all_users=True)).distinct()
 
 		return queryset
 
