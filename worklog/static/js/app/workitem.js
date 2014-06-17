@@ -255,7 +255,7 @@ $(document).ready(function() {
         });
 
         $('.bs-delete-modal-sm').on('click', '#delete', function() {
-            displayTable.deleteWorkItem($(this).data('workitem'));
+            displayTable.deleteWorkItem($(this).attr('data-workitem'));
             $('.bs-delete-modal-sm').modal('toggle');
         });
 
