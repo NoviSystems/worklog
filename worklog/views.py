@@ -97,7 +97,7 @@ def createWorkItem(request, date='today'):
         holidays = None
 
     return render_to_response('worklog/workform.html',
-            {'formset': formset, 'date': date,
+            {'open': formset, 'date': date,
              'items': rawitems, 
              'column_names': list(t for k,t in _column_layout),
              'holidays': holidays

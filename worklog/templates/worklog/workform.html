@@ -1,7 +1,7 @@
 {% extends "worklog/base.html" %}
 {% block content %}
 
-
+{% if open %}
 <h2>New Work Item</h2>
 {% if holidays %}
 <h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
@@ -11,6 +11,57 @@
     <button class='btn btn-success' type="button" id="submit">Submit All</button>
 
     <div style="padding:10px"></div>
+{% endif %}
+    <h4>Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
+        <div class="table-responsive">
+            <table class="table table-hover" id="display-table">
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Hours</th>
+                        <th>Repo</th>
+                        <th>Issue</th>
+                        <th>Task</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <div class="modal fade bs-delete-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
+                            </div>
+                            <div class="modal-body">
+                                Please confirm your choice.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
+                                <button type="button" class="btn btn-danger" id="delete">Delete</button>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal fade bs-edit-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="myModalLabel">Edit Work Item</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" id="save">Save</button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal" id="cancel">Cancel</button>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                </tbody>
+            </table>
+        </div>
 
     {% verbatim %}
     <!-- Please note that the Django templating language will not be rendered a verbatim block. -->
@@ -110,56 +161,7 @@
         </table>
     </script>
     {% endverbatim %}
-    
-    <h4>Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
-        <div class="table-responsive">
-            <table class="table table-hover" id="display-table">
-                <thead>
-                    <tr>
-                        <th>Job</th>
-                        <th>Hours</th>
-                        <th>Repo</th>
-                        <th>Issue</th>
-                        <th>Task</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <div class="modal fade bs-delete-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-                      <div class="modal-dialog modal-sm">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
-                            </div>
-                            <div class="modal-body">
-                                Please confirm your choice.
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
-                                <button type="button" class="btn btn-danger" id="delete">Delete</button>
-                            </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="modal fade bs-edit-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-                      <div class="modal-dialog modal-sm">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="myModalLabel">Edit Work Item</h4>
-                            </div>
-                            <div class="modal-body">
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-success" id="save">Save</button>
-                                <button type="button" class="btn btn-danger" data-dismiss="modal" id="cancel">Cancel</button>
-                            </div>
-                        </div>
-                      </div>
-                    </div>
-                </tbody>
-            </table>
-        </div>
 
     {% endblock %}
+
+
