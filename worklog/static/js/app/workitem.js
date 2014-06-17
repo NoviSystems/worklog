@@ -277,7 +277,7 @@ $(document).ready(function() {
         });
 
         $('#display-table tbody').on('click', ' .cancel', function() {
-            displayTable.restoreRow($(this).data('workitem'));
+            displayTable.restoreRow(workItems[$(this).data('workitem')]);
         });
 
         $('.alert').alert();
