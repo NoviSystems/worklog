@@ -202,14 +202,16 @@ def send_reminder_emails():
     send_emails = settings.WORKLOG_SEND_REMINDERS
     if send_emails:
         datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
-        date = datetime.date.today()
+        base = datetime.date.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(0, settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER)]
         for user in User.objects.all():
             if not user.email or not user.is_active:
                 continue
-
-            id = str(uuid.uuid4())
-            et = compose_reminder_email(user.email, id, date)
-            datatuples = datatuples + (et,)
+            for date in date_list:
+                if not WorkItem.objects.filter(user=user, date=date):
+                    id = str(uuid.uuid4())
+                    et = compose_reminder_email(user.email, id, date)
+                    datatuples = datatuples + (et,)
         if datatuples:
             django.core.mail.send_mass_mail(datatuples, fail_silently=False)
         print "Reminder emails sent"
