@@ -182,7 +182,7 @@ def compose_reminder_email(email_address, id, date):
     subj = "Remember to Submit Today's Worklog (%s)" % str(date)
     expire_days = settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER
     expiredate = date + datetime.timedelta(days=expire_days)
-    url = create_reminder_url(id)
+    url = create_reminder_url(id, date)
     msg = email_msg % {'url': url, 'expiredate': str(expiredate), 'date': str(date)}
     from_email = settings.DEFAULT_FROM_EMAIL
     recipients = [email_address]
@@ -190,8 +190,8 @@ def compose_reminder_email(email_address, id, date):
     return (subj, msg, from_email, recipients)
 
 
-def create_reminder_url(id):
-    path = '/worklog/' + str(datetime.date.today()) + '/'
+def create_reminder_url(id, date):
+    path = '/worklog/' + str(date) + '/'
     return settings.SITE_URL + path
 
 
@@ -208,7 +208,7 @@ def send_reminder_emails():
             if not user.email or not user.is_active:
                 continue
             for date in date_list:
-                if not WorkItem.objects.filter(user=user, date=date):
+                if not WorkItem.objects.filter(user=user, date=date) and date.isoweekday() in range(1, 6):
                     id = str(uuid.uuid4())
                     et = compose_reminder_email(user.email, id, date)
                     datatuples = datatuples + (et,)
