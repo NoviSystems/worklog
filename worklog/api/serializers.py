@@ -52,7 +52,7 @@ class WorkItemSerializer(serializers.ModelSerializer):
 	def validate_hours(self, attrs, source):
 		hours = attrs[source]
 
-		if not hours:
+		if not hours and hours != 0:
 			raise serializers.ValidationError("This field is required.")
 
 		if hours % 1 != 0.5 and hours % 1 != 0:
