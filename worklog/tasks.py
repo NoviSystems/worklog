@@ -199,10 +199,10 @@ def create_reminder_url(id, date):
 # Crontab in settings.py
 @task
 def send_reminder_emails():
-    send_emails = settings.WORKLOG_SEND_REMINDERS
+    base = datetime.date.today()
+    send_emails = settings.WORKLOG_SEND_REMINDERS and base.isoweekday() in range(1, 6)
     if send_emails:
         datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
-        base = datetime.date.today()
         date_list = [base - datetime.timedelta(days=x) for x in range(0, settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER)]
         for user in User.objects.all():
             if not user.email or not user.is_active:

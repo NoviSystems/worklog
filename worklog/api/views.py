@@ -1,20 +1,9 @@
 from worklog import models
 from worklog.api import serializers 
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.reverse import reverse
 
 from django.contrib.auth.models import User
 from django.db.models import Q
-
-
-@api_view(('GET',))
-def api_root(request, format=None):
-	return Response({
-		'users':reverse('user-list', request=request, format=format),
-		'workitems': reverse('workitem-list', request=request, format=format),
-	})
 
 
 class WorkItemViewSet(viewsets.ModelViewSet):

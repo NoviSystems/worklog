@@ -261,7 +261,7 @@ $(document).ready(function() {
 
         $('.bs-edit-modal-sm').on('click', '#save', function() {
             var id = $(this).attr('data-workitem');
-            workItemFormSet.saveWorkItem('#modal-' + id)
+            workItemFormSet.saveWorkItem('#modal-' + id);
         });
 
         $('.bs-edit-modal-sm').on('click', '#cancel', function() {

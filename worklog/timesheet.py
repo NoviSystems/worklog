@@ -3,7 +3,6 @@ import ho.pisa as pisa
 import cStringIO as StringIO
 import re
 
-import django.core.mail
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.http import HttpResponse
@@ -13,6 +12,7 @@ from django.views.generic import TemplateView
 from django.shortcuts import get_object_or_404
 
 from models import WorkItem, BiweeklyEmployee, Holiday, WorkPeriod
+
 
 # Class representing a timesheet
 class Timesheet:
@@ -24,22 +24,22 @@ class Timesheet:
     def __init__(self, employee, workperiod):
         self.employee = employee
         self.work_period = workperiod
-        self.context = { }
+        self.context = {}
         self.pdf = None
 
     # Generate the paysheet data for a given BiweeklyEmployee and WorkPeriod
     # Returns a tuple of two lists where each list is a week in the work period
     def get_hours(self):
-        holidays = Holiday.objects.filter(start_date__gte=self.work_period.start_date, \
+        holidays = Holiday.objects.filter(start_date__gte=self.work_period.start_date, 
             end_date__lte=self.work_period.end_date)
-        work_items = WorkItem.objects.filter(user=self.employee.user, \
+        work_items = WorkItem.objects.filter(user=self.employee.user, 
             date__range=(self.work_period.start_date, self.work_period.end_date))
 
-        first_week = self.get_weekly_hours(self.work_period.start_date, \
+        first_week = self.get_weekly_hours(self.work_period.start_date, 
             self.work_period.start_date + date.timedelta(days=7), work_items, holidays)
-        second_week = self.get_weekly_hours(self.work_period.end_date - date.timedelta(days=6), \
-            self.work_period.end_date + date.timedelta(days=1), work_items, holidays) # Have to add one extra day
-                                                                                 # for the end date to work
+        second_week = self.get_weekly_hours(self.work_period.end_date - date.timedelta(days=6), 
+            self.work_period.end_date + date.timedelta(days=1), work_items, holidays)  # Have to add one extra day
+                                                                                       # for the end date to work
 
         return (first_week, second_week,)
 

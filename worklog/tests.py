@@ -6,9 +6,18 @@ import uuid
 from django.test import TestCase
 from django.core import mail  # for testing email functionality
 from django.contrib.auth.models import User
+from django.db.models import Q
 
-from models import WorkItem, Job
+from models import WorkItem, Job, Repo, Issue
 import tasks
+import factories
+
+from api.serializers import WorkItemSerializer
+from api.views import WorkItemViewSet, JobViewSet, RepoViewSet, IssueViewSet
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.serializers import ValidationError
+from rest_framework.test import APITestCase, APIRequestFactory
 
 
 class UserLogin_Context(object):
@@ -55,16 +64,6 @@ class Worklog_TestCaseBase(TestCase):
         self.user = User.objects.create_user(username="master", email="master@example.com", password="password")
         self.user2 = User.objects.create_user(username="user2", email="user2@example.com", password="password")
 
-        self.email_count = {
-            0: 0,
-            1: 2,
-            2: 2,
-            3: 3,
-            4: 4, 
-            5: 4,
-            6: 0
-        }
-        
     def tearDown(self):
         # Clean up all test data.  This does not affect the 'real' database, 
         # only the test database
@@ -287,18 +286,29 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
         for item in items:
             wi = WorkItem.objects.create(user=item[0], date=item[1], hours=item[2], text=item[3], job=item[4])
             wi.save()
-        
+
         # try to send emails
         tasks.send_reminder_emails()
 
-        emails_sent = self.email_count[self.today.isoweekday()] * 3 - 1
+        email_count = {
+            1: 6,
+            2: 5,
+            3: 8,
+            4: 11, 
+            5: 11,
+            6: 0,
+            7: 0
+        }
+
+        emails_sent = email_count[datetime.date.today().isoweekday()]
         
         self.assertEquals(len(mail.outbox), emails_sent)  # user3, user4, user5
         all_recipients = list(m.to[0] for m in mail.outbox)
         self.assertEquals(len(all_recipients), emails_sent)
-        self.assertTrue("user3@example.com" in all_recipients)
-        self.assertTrue("user4@example.com" in all_recipients)
-        self.assertTrue("user5@example.com" in all_recipients)
+        if emails_sent:
+            self.assertTrue("user3@example.com" in all_recipients)
+            self.assertTrue("user4@example.com" in all_recipients)
+            self.assertTrue("user5@example.com" in all_recipients)
         
     def test_empty(self):
         # create some work items
@@ -338,10 +348,440 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
         self.assertEquals(len(all_recipients), 0)
 
 
+class WorkItemSerializerTestCase(APITestCase):
+
+    def setUp(self):
+        self.serializer = WorkItemSerializer()
+
+        factories.UserFactory.create_batch(10)
+        factories.WorkItemFactory.create_batch(10)
+        factories.JobFactory.create_batch(10)
+        factories.RepoFactory.create_batch(10)
+        factories.IssueFactory.create_batch(10)
+
+        self.jobs = Job.objects.all()
+        self.open_jobs = Job.get_jobs_open_on(datetime.date.today())
+        self.closed_jobs = Job.objects.exclude(pk__in=self.open_jobs.values_list('pk', flat=True))
+
+        self.repos = list(Repo.objects.all())
+        self.issues = list(Issue.objects.all())
+
+        for issue in self.issues:
+            if issue.repo != self.repos[0]:
+                self.repo_issue_mismatch = {'repo': self.repos[0], 'issue': issue}
+                break
+
+    def test_fixtures(self):
+        users = list(User.objects.all())
+        jobs = list(Job.objects.all())
+        repos = list(Repo.objects.all())
+        issues = list(Issue.objects.all())
+
+        self.assertNotEqual(users, [])
+        self.assertNotEqual(jobs, [])
+        self.assertNotEqual(repos, [])
+        self.assertNotEqual(issues, [])
+
+    def test_validate_job(self):
+
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job(None, 'job'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job({}, None))
+        
+        attrs = self.serializer.validate_job({'job': self.open_jobs[0]}, 'job')
+        self.assertIsNotNone(attrs)
+
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job({'job': None}, 'job'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job({'job': self.closed_jobs[0]}, 'job'))
+
+    def test_validate_hours(self):
+
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours(None, 'hours'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({}, None))
+
+        attrs = self.serializer.validate_hours({'hours': 13}, 'hours')
+        self.assertIsNotNone(attrs)
+        attrs = self.serializer.validate_hours({'hours': 13.5}, 'hours')
+        self.assertIsNotNone(attrs)
+
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({'hours': None}, 'hours'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({'hours': -1}, 'hours'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({'hours': 1.3}, 'hours'))
+
+    def test_validate_issue(self):
+
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_issue(None, 'issue'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_issue({}, None))
+
+        attrs = self.serializer.validate_issue({'repo': self.issues[0].repo, 'issue': self.issues[0]}, 'issue')
+        self.assertIsNotNone(attrs)
+
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_issue(self.repo_issue_mismatch, 'issue'))
+
+    def test_validate_text(self):
+
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_text(None, 'text'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_text({}, None))
+
+        attrs = self.serializer.validate_text({'text': 'foo bar baz qux'}, 'text')
+        self.assertIsNotNone(attrs)
+
+
+class ViewSetBaseTestCase(APITestCase):
+
+    def setUp(self):
+
+        self._factory = APIRequestFactory()
+
+        factories.UserFactory.create_batch(10)
+        factories.WorkItemFactory.create_batch(10)
+        factories.JobFactory.create_batch(10)
+        factories.RepoFactory.create_batch(10)
+        factories.IssueFactory.create_batch(10)
+
+        self.user_pks = list(User.objects.all().values_list('pk', flat=True))
+        self.workitem_pks = list(WorkItem.objects.all().values_list('pk', flat=True))
+        self.job_pks = list(Job.get_jobs_open_on(datetime.date.today()).values_list('pk', flat=True))
+        self.repo_pks = list(Repo.objects.all().values_list('pk', flat=True))
+        self.issue_pks = list(Issue.objects.all().values_list('pk', flat=True))
+
+        auth_user = User.objects.get(pk=self.user_pks[0])
+        self.client.force_authenticate(user=auth_user)
+
+    def tearDown(self):
+
+        WorkItem.objects.all().delete()
+        Job.objects.all().delete()
+        Repo.objects.all().delete()
+        Issue.objects.all().delete()
+
+    def test_get_queryset(self, query_params=None, expected_qs=None):
+
+        request = self.factory.get('')
+        request.GET = query_params
+        drf_request = Request(request)
+        self.viewset.request = drf_request
+        actual_qs = self.viewset.get_queryset().order_by('pk')
+        self.assertEqual(list(actual_qs), list(expected_qs))
+
+    @property
+    def factory(self):
+        return self._factory
+
+    @property
+    def viewset(self):
+        raise NotImplementedError("Property must be implemented in subclass.")
+    
+
+class WorkItemViewSetTestCase(ViewSetBaseTestCase):
+
+    def setUp(self):
+
+        self._viewset = WorkItemViewSet()
+
+        super(WorkItemViewSetTestCase, self).setUp()
+    
+    def test_get_queryset(self):
+
+        oldest_workitem = WorkItem.objects.all().order_by('date')[0]
+        today = datetime.date.today()
+        date_list = [today - datetime.timedelta(days=x) for x in range(0, (oldest_workitem.date - today).days)]
+
+        for date in date_list:
+            query_params = {'date': str(date)}
+            expected_qs = WorkItem.objects.filter(date=date).order_by('pk')
+            super(WorkItemViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+        for user in range(1, 30):
+            query_params = {'user': user}
+            expected_qs = WorkItem.objects.filter(user=user).order_by('pk')
+            super(WorkItemViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+        for date in date_list:
+            for user in range(1, 30):
+                query_params = {'date': str(date), 'user': user}
+                expected_qs = WorkItem.objects.filter(user=user, date=date).order_by('pk')
+                super(WorkItemViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+    def test_post(self):
+
+        data = {
+            'user': self.user_pks[0], 
+            'date': '2014-06-21', 
+            'job': self.job_pks[0],
+            'hours': 2,
+            'text': 'Dieses feld ist erforderlich'
+        }
+
+        response = self.client.post('/worklog/api/workitems/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_put(self):
+
+        data = {
+            'id': 7080,
+            'user': self.user_pks[0],
+            'date': '2014-06-11',
+            'job': self.job_pks[0],
+            'hours': 9,
+            'text': 'testing severythin news'
+        }
+
+        response = self.client.put('/worklog/api/workitems/' + str(data['id']) + '/', data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = {
+            'id': 7080,
+            'hours': 10
+        }
+
+        response = self.client.put('/worklog/api/workitems/' + str(data['id']) + '/', data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = {
+            'id': self.workitem_pks[0],
+            'user': self.user_pks[0],
+            'date': datetime.date.today(),
+            'hours': -3,
+            'job': self.job_pks[0],
+            'text': 'diese mann ist unter arrest'
+        }
+
+        response = self.client.put('/worklog/api/workitems/' + str(data['id']) + '/', data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get(self):
+
+        workitems = WorkItem.objects.all().values_list('id', flat=True)
+
+        for workitem in workitems:
+            response = self.client.get('/worklog/api/workitems/' + str(workitem) + '/')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @property
+    def viewset(self):
+        return self._viewset
+
+
+class JobViewSetTestCase(ViewSetBaseTestCase):
+
+    def setUp(self):
+
+        self._viewset = JobViewSet()
+
+        super(JobViewSetTestCase, self).setUp()
+
+    def test_get_queryset(self):
+        
+        oldest_job = Job.objects.all().order_by('open_date')[0]
+        today = datetime.date.today()
+        date_list = [today - datetime.timedelta(days=x) for x in range(0, (oldest_job.open_date - today).days)]
+
+        for date in date_list:
+            query_params = {'date': date}
+            expected_qs = Job.get_jobs_open_on(date)
+            super(JobViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+        job_names = Job.objects.all().values_list('name', flat=True)
+
+        for name in job_names:
+            query_params = {'name': name}
+            expected_qs = Job.objects.filter(name=name)
+            super(JobViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+        for user in range(1, 30):
+            query_params = {'user': user}
+            expected_qs = Job.objects.filter(Q(users__id=user) | Q(available_all_users=True)).distinct().order_by('pk')
+            super(JobViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+        for date in date_list:
+            for name in job_names:
+                for user in range(1, 30):
+                    query_params = {'date': date, 'name': name, 'user': user}
+                    expected_qs = Job.get_jobs_open_on(date)
+                    expected_qs = expected_qs.filter(name=name)
+                    expected_qs = expected_qs.filter(Q(users__id=user) | Q(available_all_users=True)).distinct().order_by('pk')
+                    super(JobViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+    def test_post(self):
+        
+        data = {
+            'id': 7114,
+            'user': 29,
+            'date': '2014-06-23',
+            'hours': 3,
+            'text': 'testing zero hours',
+            'job': self.job_pks[0],
+        }
+
+        response = self.client.post('/worklog/api/jobs/' + str(data['id']) + '/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_put(self):
+
+        data = {
+            'id': 7114,
+            'user': self.user_pks[0],
+            'date': '2014-06-23',
+            'hours': 3,
+            'text': 'testing zero hours',
+            'job': self.job_pks[0],
+        }
+
+        response = self.client.put('/worklog/api/jobs/' + str(data['id']) + '/', data)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_patch(self):
+
+        data = {
+            'id': self.job_pks[3],
+            'name': 'Bad banana on Broadway'
+        }
+
+        response = self.client.patch('/worklog/api/jobs/' + str(self.job_pks[3]) + '/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_get(self):
+
+        for job in self.job_pks:
+            response = self.client.get('/worklog/api/jobs/' + str(job) + '/')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @property
+    def viewset(self):
+        return self._viewset
+
+
+class RepoViewSetTestCase(ViewSetBaseTestCase):
+
+    def setUp(self):
+
+        self._viewset = RepoViewSet()
+
+        super(RepoViewSetTestCase, self).setUp()
+
+    def test_get_queryset(self):
+        
+        repo_names = Repo.objects.all().values_list('name', flat=True)
+
+        for name in repo_names:
+            query_params = {'name': name}
+            expected_qs = Repo.objects.filter(name=name)
+            super(RepoViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+    def test_post(self):
+        
+        for pk in self.repo_pks:
+            data = {
+                'github_id': pk,
+                'name': 'bucket o bits'
+            }
+
+            response = self.client.post('/worklog/api/repos/' + str(pk) + '/', data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_put(self):
+        
+        for pk in self.repo_pks:
+            data = {
+                'github_id': pk,
+                'name': 'renegade nuns on wheels'
+            }
+
+            response = self.client.put('/worklog/api/repos/' + str(pk) + '/', data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_patch(self):
+        
+        for pk in self.repo_pks:
+            data = {
+                'github_id': pk,
+                'name': 'beleted'
+            }
+
+            response = self.client.patch('/worklog/api/repos/' + str(pk) + '/', data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_get(self):
+        
+        for pk in self.repo_pks:
+            response = self.client.get('/worklog/api/repos/' + str(pk) + '/')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @property
+    def viewset(self):
+        return self._viewset
+
+
+class IssueViewSetTestCase(ViewSetBaseTestCase):
+
+    def setUp(self):
+
+        self._viewset = IssueViewSet()
+
+        super(IssueViewSetTestCase, self).setUp()
+
+    def test_get_queryset(self):
+
+        repos = Repo.objects.all().values_list('github_id', flat=True)
+
+        for repo in repos:
+            query_params = {'repo': repo}
+            expected_qs = Issue.objects.filter(repo=repo).order_by('pk')
+            super(IssueViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
+
+    def test_post(self):
+        
+        for pk in self.issue_pks:
+            data = {
+                'github_id': pk,
+                'name': 'bucket o bits'
+            }
+
+            response = self.client.post('/worklog/api/issues/' + str(pk) + '/', data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_put(self):
+        
+        for pk in self.issue_pks:
+            data = {
+                'github_id': pk,
+                'name': 'renegade nuns on wheels'
+            }
+
+            response = self.client.put('/worklog/api/issues/' + str(pk) + '/', data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_patch(self):
+        
+        for pk in self.issue_pks:
+            data = {
+                'github_id': pk,
+                'name': 'beleted'
+            }
+
+            response = self.client.patch('/worklog/api/issues/' + str(pk) + '/', data, format='json')
+            self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_get(self):
+
+        for pk in self.issue_pks:
+            response = self.client.get('/worklog/api/issues/' + str(pk) + '/')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @property
+    def viewset(self):
+        return self._viewset    
+        
+
 def suite():
     test_suite = unittest.TestSuite()
     loader = unittest.TestLoader()
     test_suite.addTest(loader.loadTestsFromTestCase(CreateWorkItem_TestCase))
     test_suite.addTest(loader.loadTestsFromTestCase(ViewWork_TestCase))
     test_suite.addTest(loader.loadTestsFromTestCase(SendReminderEmails_TestCase))
+    test_suite.addTest(loader.loadTestsFromTestCase(WorkItemSerializerTestCase))
+    test_suite.addTest(loader.loadTestsFromTestCase(WorkItemViewSetTestCase))
+    test_suite.addTest(loader.loadTestsFromTestCase(JobViewSetTestCase))
+    test_suite.addTest(loader.loadTestsFromTestCase(RepoViewSetTestCase))
+    test_suite.addTest(loader.loadTestsFromTestCase(IssueViewSetTestCase))
     return test_suite
