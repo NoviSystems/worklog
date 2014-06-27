@@ -1,4 +1,4 @@
-from worklog.models import WorkItem, Job, Repo, Issue
+from worklog.models import WorkDay, WorkItem, Job, Repo, Issue
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -30,6 +30,21 @@ class RepoSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Repo
+
+
+class WorkDaySerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model = WorkDay
+
+	def validate(self, attrs):
+
+		workday = WorkDay.objects.filter(date=attrs['date'], user=attrs['user'])
+
+		if workday:
+			raise serializers.ValidationError("User already has a WorkDay.")
+
+		return attrs
 
 
 class WorkItemSerializer(serializers.ModelSerializer):

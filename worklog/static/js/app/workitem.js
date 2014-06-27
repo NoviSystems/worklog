@@ -30,7 +30,7 @@ API.getJobs = function() {
             jobs[key.toString()] = jobList[i];
         }
     });  
-}
+};
 
 API.getRepos = function() { 
     return $.getJSON('/worklog/api/repos/', null, function(data, status) {
@@ -47,7 +47,7 @@ API.getRepos = function() {
             repos[key.toString()] = repoList[i];
         }
     });
-}
+};
 
 API.getIssues = function() {
     return $.getJSON('/worklog/api/issues/', null, function(data, status) {
@@ -66,7 +66,7 @@ API.getIssues = function() {
             }
         }
     });
-}
+};
 
 API.assignIssuesToRepos = function() {
     for (var i = 0; i < repoList.length; i++) {
@@ -77,7 +77,17 @@ API.assignIssuesToRepos = function() {
             }
         }
     }  
-}
+};
+
+API.getWorkDay = function() {
+    return $.getJSON('/worklog/api/workdays/?date=' + worklog.date +'&user=' + worklog.userid, null, function(data) {
+        if (data[0]) {
+            if (data[0].reconciled) {
+                $('#reconcile').attr('disabled', 'disabled');
+            }            
+        }
+    });
+};
 
 function WorkItem(workItemJSON) {
 
@@ -176,13 +186,12 @@ function Session(csrftoken) {
 }
 
 
-
 $(document).ready(function() {
 
     var currentSession = new Session($.cookie('csrftoken'));
     currentSession.setupAJAX();
 
-    var promise = $.when(API.getJobs(), API.getRepos(), API.getIssues());
+    var promise = $.when(API.getJobs(), API.getRepos(), API.getIssues(), API.getWorkDay());
 
     promise.done(function() {
 
@@ -194,7 +203,7 @@ $(document).ready(function() {
         var formRowSource = $('#modal-form-template').html();
         var formRowTemplate = Handlebars.compile(formRowSource);
 
-        displayTable = new WorkItemDisplayTable(rowTemplate);        
+        //displayTable = new WorkItemDisplayTable(rowTemplate);        
         formTable = new WorkItemFormTable(rowTemplate);
         
 
@@ -287,6 +296,29 @@ $(document).ready(function() {
                 event.preventDefault();
                 $('#submit').click();
             }
+        });
+
+        $('#reconcile').on('click', function() {
+
+            $(this).attr('disabled', 'disabled');
+
+            var data = {
+                user: worklog.userid,
+                date: worklog.date,
+                reconciled: true
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/worklog/api/workdays/',
+                cache: false,
+                data: data,
+                error: function(data, status) {
+                    console.log(data);
+                    console.log(status);
+                },
+                dataType: 'text' 
+            });
         });
     });
 });

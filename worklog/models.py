@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 
 from gh_connect import GitHubConnector
 
+import datetime
+
 
 class BiweeklyEmployee(models.Model):
     user = models.ForeignKey(User)
@@ -26,6 +28,16 @@ class Holiday(models.Model):
 
     def __unicode__(self):
         return '%s' % (self.description,)
+
+
+class WorkDay(models.Model):
+    user = models.ForeignKey(User, related_name='workdays')
+    date = models.DateField()
+    reconciled = models.BooleanField(default=False)
+
+    @property
+    def workitem_set(self):
+        return WorkItem.objects.filter(date__range=[self.date - datetime.timedelta(days=3), self.date])    
 
 
 class WorkPeriod(models.Model):

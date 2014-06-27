@@ -6,6 +6,24 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 
 
+class WorkDayViewSet(viewsets.ModelViewSet):
+	model = models.WorkDay
+	serializer_class = serializers.WorkDaySerializer
+
+	def get_queryset(self):
+		queryset = models.WorkDay.objects.all()
+		date = self.request.QUERY_PARAMS.get('date', None)
+		user = self.request.QUERY_PARAMS.get('user', None)
+
+		if date is not None:
+			queryset = queryset.filter(date=date)
+
+		if user is not None:
+			queryset = queryset.filter(user=user)
+
+		return queryset
+
+
 class WorkItemViewSet(viewsets.ModelViewSet):
 	model = models.WorkItem
 	serializer_class = serializers.WorkItemSerializer

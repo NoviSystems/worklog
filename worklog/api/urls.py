@@ -4,6 +4,7 @@ from worklog.api import views
 
 
 router = DefaultRouter()
+router.register(r'workdays', views.WorkDayViewSet)
 router.register(r'workitems', views.WorkItemViewSet)
 router.register(r'users', views.UserViewSet)
 router.register(r'jobs', views.JobViewSet)
