@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse as urlreverse
 import django.core.mail
 
-from models import WorkItem, Job, WorkPeriod
+from models import WorkItem, Job, WorkPeriod, WorkDay
 
 from gh_connect import GitHubConnector
 from models import Repo, Issue
@@ -16,9 +16,9 @@ import calendar
 import uuid
 
 email_msg = """\
-This is your friendly reminder to submit a work log for today, %(date)s. If
-you haven't done so already, you may use the following URL to submit today's
-log, but you must do so before it expires on %(expiredate)s.
+This is your friendly reminder to submit a work log for %(date)s. If
+you haven't done so already, you may use the following URL, 
+but you must do so before it expires on %(expiredate)s.
 
 URL: %(url)s
 
@@ -207,8 +207,9 @@ def send_reminder_emails():
         for user in User.objects.all():
             if not user.email or not user.is_active:
                 continue
+
             for date in date_list:
-                if not WorkItem.objects.filter(user=user, date=date) and date.isoweekday() in range(1, 6):
+                if not WorkDay.objects.filter(user=user, date=date, reconciled=True) and date.isoweekday() in range(1, 6):
                     id = str(uuid.uuid4())
                     et = compose_reminder_email(user.email, id, date)
                     datatuples = datatuples + (et,)

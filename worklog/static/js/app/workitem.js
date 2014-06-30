@@ -203,7 +203,7 @@ $(document).ready(function() {
         var formRowSource = $('#modal-form-template').html();
         var formRowTemplate = Handlebars.compile(formRowSource);
 
-        //displayTable = new WorkItemDisplayTable(rowTemplate);        
+        displayTable = new WorkItemDisplayTable(rowTemplate);        
         formTable = new WorkItemFormTable(rowTemplate);
         
 
@@ -220,6 +220,22 @@ $(document).ready(function() {
 
         $('#submit').on('click', function() {
             workItemFormSet.post();
+
+            $('#reconcile').attr('disabled', 'disabled');
+
+            var data = {
+                user: worklog.userid,
+                date: worklog.date,
+                reconciled: true
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/worklog/api/workdays/',
+                cache: false,
+                data: data,
+                dataType: 'text' 
+            });
         });
 
         $('#add-form').on('click', function() {
@@ -313,10 +329,6 @@ $(document).ready(function() {
                 url: '/worklog/api/workdays/',
                 cache: false,
                 data: data,
-                error: function(data, status) {
-                    console.log(data);
-                    console.log(status);
-                },
                 dataType: 'text' 
             });
         });

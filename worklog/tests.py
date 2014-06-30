@@ -8,7 +8,7 @@ from django.core import mail  # for testing email functionality
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from models import WorkItem, Job, Repo, Issue
+from models import WorkDay, WorkItem, Job, Repo, Issue
 import tasks
 import factories
 
@@ -286,6 +286,9 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
         for item in items:
             wi = WorkItem.objects.create(user=item[0], date=item[1], hours=item[2], text=item[3], job=item[4])
             wi.save()
+            workday, created = WorkDay.objects.get_or_create(user=item[0], date=item[1])
+            workday.reconciled = True
+            workday.save()
 
         # try to send emails
         tasks.send_reminder_emails()
@@ -339,6 +342,9 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
         for item in items:
             wi = WorkItem.objects.create(user=item[0], date=item[1], hours=item[2], text=item[3], job=item[4])
             wi.save()
+            workday, created = WorkDay.objects.get_or_create(user=item[0], date=item[1])
+            workday.reconciled = True
+            workday.save()
         
         # try to send emails
         tasks.send_reminder_emails()
