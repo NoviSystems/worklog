@@ -220,22 +220,6 @@ $(document).ready(function() {
 
         $('#submit').on('click', function() {
             workItemFormSet.post();
-
-            $('#reconcile').attr('disabled', 'disabled');
-
-            var data = {
-                user: worklog.userid,
-                date: worklog.date,
-                reconciled: true
-            };
-
-            $.ajax({
-                type: 'POST',
-                url: '/worklog/api/workdays/',
-                cache: false,
-                data: data,
-                dataType: 'text' 
-            });
         });
 
         $('#add-form').on('click', function() {
