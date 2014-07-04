@@ -1,33 +1,58 @@
 "use strict";
 
+/* global WorkItem */
+/* global JobSelectField */
+/* global HoursInputField */
+/* global RepoSelectField */
+/* global IssueSelectField */
+/* global TextTextareaField */
+/* global DeleteFormButton */
+/* global SaveEditButton */
+/* global worklog */
+/* global repos */
+/* global formTable */
+/* global displayTable */
+/* global workItemFormSet */
+
+
 function Form(properties) {
 
     if (properties) {
-        this.fields = properties['fields'];
-        this.selector = properties['selector'];        
+        this.fields = properties.fields;
+        this.selector = properties.selector;        
     }
 
     this.submit = function() {
         throw "NotImplementedError";
-    }
+    };
 }
-
-
 
 function WorkItemForm(workItem, selector, formset) {
 
-    this.selector = '#' + selector
+    this.selector = '#' + selector;
 
-    this.job = new SelectField('job', workItem.job.id, this.selector);
-    this.hours = new WorkItemInputField('hours', workItem.hours, 'text', this.selector);
-    this.repo = new SelectField('repo', workItem.repo.github_id, this.selector);
-    this.issue = new IssueSelectField('issue', workItem.issue.github_id, this.selector);
-    this.text = new WorkItemTextareaField('text', workItem.text, this.selector);
-    this.button = new ButtonField(new DeleteFormButton(this.selector));
+    this.job = new JobSelectField(workItem.job.id, this.selector);
+    this.hours = new HoursInputField(workItem.hours, this.selector);
+    this.repo = new RepoSelectField(workItem.repo.github_id, this.selector);
+    this.issue = new IssueSelectField(workItem.issue.github_id, this.selector);
+    this.text = new TextTextareaField(workItem.text, this.selector);
+    this.removeFormButton = new DeleteFormButton(this.selector);
+    this.saveFormButton = new SaveEditButton(this.selector);
 
     this.formset = formset;
 
     this.workItem = workItem;
+
+    this.flatWorkItem = {
+        id: null,
+        date: worklog.date,
+        user: worklog.userid,
+        job: null,
+        hours: null,
+        repo: null,
+        issue: null,
+        text: null
+    };
 
     var fields = {
         job: this.job,
@@ -35,82 +60,63 @@ function WorkItemForm(workItem, selector, formset) {
         repo: this.repo,
         issue: this.issue,
         text: this.text,
-        button: this.button
+        removeFormButton: this.removeFormButton,
+        saveFormButton: this.saveFormButton
     };
 
     this.context = {
         id: this.selector.substring(1, this.selector.length),
         job: {
             class: 'col-md-2',
-            value: this.job.toHtml()
+            value: this.job.html()
         },
         hours: {
             class: 'col-md-2',
-            value: this.hours.toHtml()
+            value: this.hours.html()
         },
         repo: {
             class: 'col-md-2',
-            value: this.repo.toHtml()
+            value: this.repo.html()
         },
         issue: {
             class: 'col-md-2',
-            value: this.issue.toHtml()
+            value: this.issue.html()
         },
         text: {
-            class: 'col-md-4',
-            value: this.text.toHtml()
+            class: 'col-md-3',
+            value: this.text.html()
         },
-        button: {
-            value: this.button.toHtml()
-        }
-    }
+        buttons: [
+            {
+                value: this.saveFormButton.html()
+            },
+            {
+                value: this.removeFormButton.html()
+            }
+        ]
+    };
 
     Form.call(this, {"fields": fields, "selector": this.selector});
 
-    this.populateJobs = function() {
-
-        for (var i in jobList) {
-            this.job.addOption(jobList[i].id, jobList[i].name);
-            $(this.selector + ' .job').append(this.job.options[i].toHtml());
-        }
-
-        if (this.job.value) {
-            $(this.selector + ' .job').val(this.job.value);
-        }
-    }
-
-    this.populateRepos = function() {
-
-        for (var i in repoList) {
-            this.repo.addOption(repoList[i].github_id, repoList[i].name);
-            $(this.selector + ' .repo').append(this.repo.options[i].toHtml());
-        }
-
-        if (this.repo.value) {
-            $(this.selector + ' .repo').val(this.repo.value);
-            $(this.selector + ' .repo').change();
-        }
-    }
-
     this.populateIssues = function(repo) {
         $(this.selector + ' .issue').empty();
-        this.issue.options = [];
         $(this.selector + ' .issue').append('<option value="None" selected="selected">None</option>');
         if (repo) {
 
             var issues = repos[repo].issues;
 
             issues.sort(function (a, b) {
-                if (a.number < b.number)
+                if (a.number < b.number) {
                     return -1;
-                if (a.number > b.number)
+                }
+                if (a.number > b.number) {
                     return 1;
+                }
                 return 0;
             });
 
             for (var i in issues) {
-                this.issue.addOption(issues[i].github_id, issues[i].title, issues[i].number);
-                $(this.selector + ' .issue').append(this.issue.options[i].toHtml());
+                $(this.selector + ' .issue').append('<option value="' + issues[i].github_id + '">' + issues[i].number + ': ' + issues[i].title + '</option>');
             }
             if (this.issue.value) {
 
@@ -127,35 +133,37 @@ function WorkItemForm(workItem, selector, formset) {
                 }
             }
         }
-    }
-
-    this.buildWorkItem = function() {
-        this.workItem.user = worklog.userid;
-        if (!this.workItem.date)
-            this.workItem.date = worklog.date;
-        this.workItem.job.id = $(this.selector + ' .job').val();
-        this.workItem.hours = $(this.selector + ' .hours').val();
-        this.workItem.repo.github_id = $(this.selector + ' .repo').val();
-        this.workItem.issue.github_id = $(this.selector + ' .issue').val();
-        this.workItem.text = $(this.selector + ' .text').val();
-    }
+    };
 
     this.post = function() {
 
         var selector = this.selector;
         var form = this;
 
-        this.buildWorkItem();
-
         $.ajax({
             type: 'POST',
             url: '/worklog/api/workitems/',
             cache: false,
-            data: this.workItem.flatten(),
+            data: this.flatWorkItem,
             success: function(data) {
-
                 formTable.removeForm(selector, 'slow', $(window).width() < 600);
                 displayTable.addWorkItem(new WorkItem($.parseJSON(data)));
+
+                $('#reconcile').attr('disabled', 'disabled');
+
+                var reconcile = {
+                    user: worklog.userid,
+                    date: worklog.date,
+                    reconciled: true
+                };
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/worklog/api/workdays/',
+                    cache: false,
+                    data: reconcile,
+                    dataType: 'text' 
+                });
             },
             error: function (data){
                 var response = $.parseJSON(data.responseText);
@@ -169,52 +177,25 @@ function WorkItemForm(workItem, selector, formset) {
             },
             dataType: 'text' 
         });
-    }
+    };
 
     this.put = function(errorCallback) {
 
         var selector = this.selector;
         var form = this;
 
-        this.buildWorkItem();
-
-        if (!errorCallback) {
-            var errorCallback = function(data, status) {
-                var response = $.parseJSON(data.responseText);
-                var row = displayTable.rowsBySelector[selector];
-
-                if (!row) {
-                    row = workItemFormSet.getForm(selector);
-                }
-
-
-                for (var key in response) {
-                    row.appendErrorMessageToField(response[key], key);
-                    $(selector).addClass('danger', function() {
-                        $(selector).addClass('workitem-fade', function() {
-                            $(selector).removeClass('danger', function() {
-                                window.setTimeout(function() {
-                                    $(selector).removeClass('workitem-fade');
-                                }, 2000);
-                            });
-                        });
-                    });
-                }                
-            }
-        }
-
         $.ajax({
             type: 'PUT',
             url: '/worklog/api/workitems/' + workItem.id + '/',
             cache: false,
-            data: this.workItem.flatten(),
+            data: this.flatWorkItem,
             success: function(data, status) {
 
                 if ($(this.selector).hasClass('danger')) {
                     $(this.selector).removeClass('danger');
                 }
 
-                displayTable.restoreRow(new WorkItem($.parseJSON(data)));
+                formTable.restoreRow(new WorkItem($.parseJSON(data)));
 
                 if ($(window).width() < 600) {
                     $('.bs-edit-modal-sm .modal-body').children().remove();
@@ -233,7 +214,7 @@ function WorkItemForm(workItem, selector, formset) {
             },
             error: function(data) {
                 var response = $.parseJSON(data.responseText);
-                var row = displayTable.rowsBySelector[selector];
+                var row = formTable.rowsBySelector[selector];
 
                 if (!row) {
                     row = workItemFormSet.getForm(selector);
@@ -254,11 +235,7 @@ function WorkItemForm(workItem, selector, formset) {
             },
             dataType: 'text'
         });
-    }
-
-    this.delete = function() {
-        
-    }
+    };
 
     this.appendErrorMessageToField = function(message, field) {
         var erroneousField = this.selector + ' .' + field;
@@ -270,7 +247,7 @@ function WorkItemForm(workItem, selector, formset) {
         } else {
             $(erroneousField).after('<label class="control-label" for="' + erroneousField + '" id="label-' + this.selector[13] + '">' + message + '</label>');
         }
-    } 
+    };
 }
 
 WorkItemForm.prototype = new Form();

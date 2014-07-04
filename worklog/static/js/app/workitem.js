@@ -1,5 +1,12 @@
 "use strict";
 
+/* global FormSet */
+/* global worklog */
+/* global Handlebars */
+/* global WorkItemForm */
+/* global WorkItemFormTable */
+
+
 var jobList = [];
 var repoList = [];
 var issueList = [];
@@ -10,7 +17,6 @@ var issues = {};
 var workItems = {};
 
 var formTable = null;
-var displayTable = null;
 
 var workItemFormSet = new FormSet();
 
@@ -57,11 +63,11 @@ API.getIssues = function() {
             issues[key.toString()] = issueList[i];
         }
 
-        for (var i = 0; i < repoList.length; i++) {
-            repoList[i].issues = [];
-            for (var j = 0; j < issueList.length; j++) {
-                if (repoList[i].github_id == issueList[j].repo) {
-                    repoList[i].issues.push(issueList[j]);
+        for (var j = 0; j < repoList.length; j++) {
+            repoList[j].issues = [];
+            for (var k = 0; k < issueList.length; k++) {
+                if (repoList[j].github_id == issueList[k].repo) {
+                    repoList[j].issues.push(issueList[k]);
                 }
             }
         }
@@ -84,7 +90,7 @@ API.getWorkDay = function() {
         if (data[0]) {
             if (data[0].reconciled) {
                 $('#reconcile').attr('disabled', 'disabled');
-            }            
+            }
         }
     });
 };
@@ -114,7 +120,7 @@ function WorkItem(workItemJSON) {
         this.id = workItemJSON.id;
         this.user = workItemJSON.user;
         this.date = workItemJSON.date;
-        this.job.id = workItemJSON.job
+        this.job.id = workItemJSON.job;
         this.job.name = jobs[workItemJSON.job.toString()].name;
         this.hours = workItemJSON.hours;
         if (workItemJSON.repo) {
@@ -141,16 +147,15 @@ function WorkItem(workItemJSON) {
             repo: this.repo.github_id,
             issue: this.issue.github_id,
             text: this.text
-        }
-    }
+        };
+    };
 }
 
 function Session(csrftoken) {
-    var csrftoken = csrftoken;
 
     this.getCSRFToken = function() {
         return csrftoken;
-    }
+    };
 
     this.setupAJAX = function() {
         function csrfSafeMethod(method) {
@@ -182,7 +187,7 @@ function Session(csrftoken) {
                 }
             }
         });         
-    }
+    };
 }
 
 
@@ -203,9 +208,7 @@ $(document).ready(function() {
         var formRowSource = $('#modal-form-template').html();
         var formRowTemplate = Handlebars.compile(formRowSource);
 
-        displayTable = new WorkItemDisplayTable(rowTemplate);        
         formTable = new WorkItemFormTable(rowTemplate);
-        
 
         $('.table tbody').on('change', '.repo', function() {
             var form = $(this).data('row');
@@ -219,30 +222,15 @@ $(document).ready(function() {
         });
 
         $('#submit').on('click', function() {
+
             workItemFormSet.post();
-
-            $('#reconcile').attr('disabled', 'disabled');
-
-            var data = {
-                user: worklog.userid,
-                date: worklog.date,
-                reconciled: true
-            };
-
-            $.ajax({
-                type: 'POST',
-                url: '/worklog/api/workdays/',
-                cache: false,
-                data: data,
-                dataType: 'text' 
-            });
         });
 
         $('#add-form').on('click', function() {
             formTable.addForm();
         });
 
-        $('#display-table tbody').on('click', '.edit', function() {
+        $('#form-table tbody').on('click', '.edit', function() {
             if ($(window).width() < 600) {
                 var workItem = $(this).data('workitem');
                 var newForm = new WorkItemForm(workItems[workItem], 'modal-' + workItem, null);
@@ -271,16 +259,16 @@ $(document).ready(function() {
                 newForm.populateJobs();
                 newForm.populateRepos();
             } else {
-                displayTable.editRow($(this).data('workitem'));            
+                formTable.editRow($(this).data('workitem'));            
             }
         });
 
-        $('#display-table tbody').on('click', '.delete', function() {
+        $('#form-table tbody').on('click', '.delete', function() {
             $('.modal #delete').attr('data-workitem', $(this).data('workitem'));
         });
 
         $('.bs-delete-modal-sm').on('click', '#delete', function() {
-            displayTable.deleteWorkItem($(this).attr('data-workitem'));
+            formTable.deleteWorkItem($(this).attr('data-workitem'));
             $('.bs-delete-modal-sm').modal('toggle');
         });
 
@@ -297,12 +285,12 @@ $(document).ready(function() {
             $('.bs-edit-modal-sm .modal-body').children().remove();  
         });
 
-        $('#display-table tbody').on('click', ' .save', function() {
+        $('#form-table tbody').on('click', ' .save', function() {
             workItemFormSet.saveWorkItem('#' + $(this).data('workitem'));
         });
 
-        $('#display-table tbody').on('click', ' .cancel', function() {
-            displayTable.restoreRow(workItems[$(this).data('workitem')]);
+        $('#form-table tbody').on('click', ' .cancel', function() {
+            formTable.restoreRow(workItems[$(this).data('workitem')]);
         });
 
         $('.alert').alert();

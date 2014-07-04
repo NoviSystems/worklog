@@ -14,55 +14,55 @@
     <div style="padding:10px"></div>
 {% endif %}
     <h4>Work Items Submitted on {{ date|date:"DATE_FORMAT" }}:</h4>
-        <div class="table-responsive">
-            <table class="table table-hover" id="display-table">
-                <thead>
-                    <tr>
-                        <th>Job</th>
-                        <th>Hours</th>
-                        <th>Repo</th>
-                        <th>Issue</th>
-                        <th>Task</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <div class="modal fade bs-delete-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-                      <div class="modal-dialog modal-sm">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
-                            </div>
-                            <div class="modal-body">
-                                Please confirm your choice.
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
-                                <button type="button" class="btn btn-danger" id="delete">Delete</button>
-                            </div>
+    <div class="table-responsive">
+        <table class="table table-hover" id="display-table">
+            <thead>
+                <tr>
+                    <th>Job</th>
+                    <th>Hours</th>
+                    <th>Repo</th>
+                    <th>Issue</th>
+                    <th>Task</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <div class="modal fade bs-delete-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
                         </div>
-                      </div>
-                    </div>
-                    <div class="modal fade bs-edit-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-                      <div class="modal-dialog modal-sm">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="myModalLabel">Edit Work Item</h4>
-                            </div>
-                            <div class="modal-body">
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-success" id="save">Save</button>
-                                <button type="button" class="btn btn-danger" data-dismiss="modal" id="cancel">Cancel</button>
-                            </div>
+                        <div class="modal-body">
+                            Please confirm your choice.
                         </div>
-                      </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
+                            <button type="button" class="btn btn-danger" id="delete">Delete</button>
+                        </div>
                     </div>
-                </tbody>
-            </table>
-        </div>
+                  </div>
+                </div>
+                <div class="modal fade bs-edit-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="myModalLabel">Edit Work Item</h4>
+                        </div>
+                        <div class="modal-body">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-success" id="save">Save</button>
+                            <button type="button" class="btn btn-danger" data-dismiss="modal" id="cancel">Cancel</button>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+            </tbody>
+        </table>
+    </div>
 
     {% verbatim %}
     <!-- Please note that the Django templating language will not be rendered a verbatim block. -->
@@ -104,9 +104,9 @@
                     <th class="col-md-2">Hours</th>
                     <th class="col-md-2">Repo</th>
                     <th class="col-md-2">Issue</th>
-                    <th class="col-md-4">Description</th>
-                    <th id="button-head">
-                        <button class="btn btn-primary btn-xs" type="button" id="add-form">+</button>
+                    <th class="col-md-3">Description</th>
+                    <th id="button-head" style="text-align:right">
+                        <button class="btn btn-link btn-xs" type="button" id="add-form"><span class="glyphicon glyphicon-plus"></span></button>
                     </th>
                 </tr>
             </thead>
@@ -124,7 +124,11 @@
             <td class={{repo.class}}{{#if repo.name}} name={{repo.name}}{{/if}}>{{{repo.value}}}</td>
             <td class={{issue.class}}{{#if issue.name}} name={{issue.name}}{{/if}}>{{{issue.value}}}</td>
             <td class={{text.class}}{{#if text.name}} name={{text.name}}{{/if}}>{{{text.value}}}</td>
-            <td{{#if button.class}} class={{button.class}}{{/if}}>{{{button.value}}}</td>
+            <td{{#if button.class}} class={{button.class}}{{/if}} align="right">
+                {{#each buttons}}
+                    {{{this.value}}}
+                {{/each}}
+            </td>
         </tr>
     </script>
 
@@ -161,6 +165,49 @@
             </tbody>
         </table>
     </script>
+
+    <script id="job-field-template" type="text/x-handlebars-template">
+        <div class="form-group">
+            <select class="form-control input-sm job" data-row={{row.id}} rv-value="workitem.job">
+                {{#each options}}
+                    <option value={{this.value}}>{{this.text}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </script>
+
+    <script id="hours-field-template" type="text/x-handlebars-template">
+        <div class="form-group">
+            <input class="form-control input-sm hours" placeholder="Hours Worked" type="text" data-row={{row.id}} {{#if value}} value={{value}}{{/if}} rv-value="workitem.hours">
+        </div>
+    </script>
+
+    <script id="repo-field-template" type="text/x-handlebars-template">
+        <div class="form-group">
+            <select class="form-control input-sm repo" data-row={{row.id}} rv-value="workitem.repo">
+                {{#each options}}
+                    <option value={{this.value}}>{{this.text}}</option>
+                {{/each}}
+            </select>
+        </div>    
+    </script>
+
+    <script id="issue-field-template" type="text/x-handlebars-template">
+        <div class="form-group">
+            <select class="form-control input-sm issue" data-row={{row.id}} rv-value="workitem.issue">
+                {{#each options}}
+                    <option value={{this.value}}>{{this.text}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </script>
+
+    <script id="text-field-template" type="text/x-handlebars-template">
+        <div class="form-group">
+            <textarea class="form-control input-sm text" cols="40" placeholder="Work Description" rows="1" data-row={{row.id}} rv-value="workitem.text">{{value}}</textarea>
+        </div>
+    </script>
+
     {% endverbatim %}
 
     {% endblock %}

@@ -1,49 +1,20 @@
 "use strict";
 
-function Field(name, value) {
+function Field(name, value, context) {
     this.name = name;
     this.value = value;
 
-    this.toHtml = function() {
-        throw "NotImplementedError";
+    var source = $('#' + name + '-field-template').html();
+    var template = Handlebars.compile(source);
+    var html = template(context);
+
+    this.html = function() {
+        return html;
     }
 }
 
-
-function SelectField(name, value, data) {
-    Field.call(this, name, value);
-    this.options = [];
-
-    this.addOption = function(value, text) {
-        this.options.push(new Option(value, text));
-    }
-
-    this.addOptionsFromArray = function(optionsArray) {
-        for (var i = 0; i < this.optionsArray.length; i++) {
-            this.addOption(optionsArray[i]);
-        }
-    }
-
-    this.toHtml = function() {
-
-        var htmlString = '<div class="form-group"><select class="form-control input-sm ' + name + '" data-row="' + data +'"><option value="None" selected="selected">None</option>'
-
-        for (var i = 0; i < this.options.length; i++) {
-            htmlString += options[i].toHtml();
-        }
-
-        htmlString += '</select></div>';
-        return htmlString;
-    }
-
-    function Option(value, text) {
-        this.value = value;
-        this.text = text;
-
-        this.toHtml = function() {
-            return '<option value=' + this.value + '>' + this.text + '</option>';
-        }
-    }
+function SelectField(name, value, data, context) {
+    Field.call(this, name, value, context);
 }
 
 SelectField.prototype = new Field();
@@ -51,7 +22,24 @@ SelectField.prototype.constructor = SelectField;
 
 
 function JobSelectField(value, data) {
-    SelectField.call(this, 'job', value, data);
+
+    var options = [{value: '', text: 'None'}];
+
+    for (var i in jobList) {
+        options.push({ 
+            value: jobList[i].id,
+            text: jobList[i].name
+        });
+    }
+
+    var context = {
+        row: {
+            id: data
+        },
+        options: options
+    };
+
+    SelectField.call(this, 'job', value, data, context);
 }
 
 JobSelectField.prototype = new SelectField();
@@ -59,36 +47,47 @@ JobSelectField.prototype.constructor = JobSelectField;
 
 
 function RepoSelectField(value, data) {
-    SelectField.call(this, 'repo', value, data);
+
+    var options = [{value: '', text: 'None'}];
+
+    for (var i in repoList) {
+        options.push({
+            value: repoList[i].github_id,
+            text: repoList[i].name
+        });
+    }
+
+    var context = {
+        row: {
+            id: data
+        },
+        options: options
+    };
+
+    SelectField.call(this, 'repo', value, data, context);
 }
 
 RepoSelectField.prototype = new RepoSelectField();
 RepoSelectField.prototype.constructor = RepoSelectField;
 
-function IssueSelectField(name, value, data) {
-    SelectField.call(this, name, value, data);
+function IssueSelectField(value, data) {
 
-    this.addOption = function(value, text, number) {
-        this.options.push(new Option(value, text, number));
+    var context = {
+        row: {
+            id: data
+        },
+        options: [{value: '', text: 'None'}]
     }
 
-    function Option(value, text, number) {
-        this.value = value;
-        this.text = text;
-        this.number = number;
-
-        this.toHtml = function() {
-            return '<option value=' + this.value + '>' + this.number + ': ' + this.text + '</option>';
-        }
-    }
+    SelectField.call(this, 'issue', value, data, context);
 }
 
 IssueSelectField.prototype = new SelectField();
 IssueSelectField.prototype.constructor = IssueSelectField;
 
 
-function InputField(name, value, type) {
-    Field.call(this, name, value);
+function InputField(name, value, type, context) {
+    Field.call(this, name, value, context);
     this.type = type;
 }
 
@@ -96,8 +95,8 @@ InputField.prototype = new Field();
 InputField.prototype.constructor = InputField;
 
 
-function TextareaField(name, value) {
-    Field.call(this, name, value);
+function TextareaField(name, value, context) {
+    Field.call(this, name, value, context);
 }
 
 TextareaField.prototype = new Field();
@@ -116,31 +115,35 @@ ButtonField.prototype = new Field();
 ButtonField.prototype.constructor = ButtonField;
 
 
-function WorkItemInputField(name, value, type, data) {
-    InputField.call(this, name, value, type);
+function HoursInputField(value, data) {
 
-    this.toHtml = function() {
-        return '<div class="form-group">\
-                    <input class="form-control input-sm ' + name + '" placeholder="Hours Worked" type="' + type + '" data-row="' + data + '" value="' + (value ? value : '') + '">\
-                </div>';
-    }
+    var context = {
+        row: {
+            id: data
+        },
+        value: value
+    };
+
+    InputField.call(this, 'hours', value, 'text', context);
 }
 
-WorkItemInputField.prototype = new InputField();
-WorkItemInputField.prototype.constructor = WorkItemInputField;
+HoursInputField.prototype = new InputField();
+HoursInputField.prototype.constructor = HoursInputField;
 
 
-function WorkItemTextareaField(name, value, data) {
-    TextareaField.call(this, name, value);
-    
-    this.toHtml = function() {
-        return '<div class="form-group">\
-                    <textarea class="form-control input-sm ' + name + '" cols="40" placeholder="Work Description" rows="1" data-row="' + data + '">' + (value ? value : '') + '</textarea>\
-                </div>';
-    }
+function TextTextareaField(value, data) {
+
+    var context = {
+        row: {
+            id: data
+        },
+        value: value
+    };
+
+    TextareaField.call(this, 'text', value, context);
 }
 
-WorkItemTextareaField.prototype = new TextareaField();
-WorkItemTextareaField.prototype.constructor = WorkItemTextareaField;
+TextTextareaField.prototype = new TextareaField();
+TextTextareaField.prototype.constructor = TextTextareaField;
 
 
