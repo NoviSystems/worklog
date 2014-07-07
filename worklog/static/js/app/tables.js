@@ -55,7 +55,11 @@ function WorkItemFormTable(rowTemplate) {
     this.addForm = function() {
         var selector = 'new-workitem-' + workItemFormSet.count;
         var newForm = new WorkItemForm(new WorkItem(null), selector, workItemFormSet);
+        var tail = workItemFormSet.tail();
         workItemFormSet.addForm(newForm);
+        if (!tail) {
+            tail = workItemFormSet.tail();
+        }
 
         this.rows.push(newForm);
         this.rowsBySelector['#' + selector] = newForm;
@@ -63,8 +67,8 @@ function WorkItemFormTable(rowTemplate) {
         if (workItemFormSet.count === 1) {
             $(rowTemplate(newForm.context)).appendTo('#form-table tbody').hide().fadeIn('fast');
         } else {
-            console.log(workItemFormSet.tail().selector);
-            $(rowTemplate(newForm.context)).insertAfter(workItemFormSet.tail().selector).hide().fadeIn('fast');            
+            console.log(tail.selector);
+            $(rowTemplate(newForm.context)).insertAfter(tail.selector).hide().fadeIn('fast');            
         }
         rivets.bind($(newForm.selector), {
             workitem: newForm.flatWorkItem

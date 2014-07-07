@@ -1,16 +1,22 @@
 "use strict";
 
+/* global Handlebars */
+/* global jobList */
+/* global repoList */
+
 function Field(name, value, context) {
     this.name = name;
     this.value = value;
 
     var source = $('#' + name + '-field-template').html();
-    var template = Handlebars.compile(source);
-    var html = template(context);
+    if (source) {
+        var template = Handlebars.compile(source);
+        var html = template(context);        
+    }
 
     this.html = function() {
         return html;
-    }
+    };
 }
 
 function SelectField(name, value, data, context) {
@@ -77,7 +83,7 @@ function IssueSelectField(value, data) {
             id: data
         },
         options: [{value: '', text: 'None'}]
-    }
+    };
 
     SelectField.call(this, 'issue', value, data, context);
 }
@@ -108,7 +114,7 @@ function ButtonField(button) {
 
     this.toHtml = function() {
         return button.toHtml();
-    }
+    };
 }
 
 ButtonField.prototype = new Field();

@@ -273,7 +273,7 @@ $(document).ready(function() {
 
         $('.bs-edit-modal-sm').on('click', '#save', function() {
             var id = $(this).attr('data-workitem');
-            workItemFormSet.saveWorkItem('#modal-' + id);
+            workItemFormSet.putWorkItem('#modal-' + id);
         });
 
         $('.bs-edit-modal-sm').on('click', '#cancel', function() {
@@ -285,7 +285,7 @@ $(document).ready(function() {
         });
 
         $('#form-table tbody').on('click', ' .save', function() {
-            workItemFormSet.saveWorkItem('#' + $(this).data('workitem'));
+            workItemFormSet.postWorkItem($(this).data('workitem'));
         });
 
         $('#form-table tbody').on('click', ' .cancel', function() {

@@ -170,12 +170,10 @@ function WorkItemForm(workItem, selector, formset) {
         });
     };
 
-    this.put = function(errorCallback) {
+    this.put = function() {
 
         var selector = this.selector;
         var form = this;
-
-        console.log(this.flatWorkItem);
 
         $.ajax({
             type: 'PUT',
