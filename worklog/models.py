@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from gh_connect import GitHubConnector
 
 import datetime
+import string
 
 
 class BiweeklyEmployee(models.Model):
@@ -134,8 +135,10 @@ class WorkItem(models.Model):
             if(not self.job.users.filter(id=self.user.id).exists()):
                 return         
 
+        commit,hash,text = string.split(self.text, None, 2)
+
         # If the text begins with "commit <sha1>", we'll sub in the actual commit message
-        if (self.text[0:6] == "commit" and self.repo):
+        if (commit == "commit" and self.repo):
 
             ghc = GitHubConnector()
             repos = ghc.get_all_repos()
@@ -144,9 +147,9 @@ class WorkItem(models.Model):
 
                 if repo.id == self.repo.github_id:
 
-                    msg = repo.commit(self.text[7:]).commit.message
+                    msg = repo.commit(hash).commit.message
 
-                    self.text = '%s for commit %s' % (msg, self.text[7:])
+                    self.text = '%s %s' % (msg, text)
                     break                
 
         super(WorkItem, self).save(*args, **kwargs) 
