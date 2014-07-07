@@ -43,16 +43,7 @@ function WorkItemForm(workItem, selector, formset) {
 
     this.workItem = workItem;
 
-    this.flatWorkItem = {
-        id: null,
-        date: worklog.date,
-        user: worklog.userid,
-        job: null,
-        hours: null,
-        repo: null,
-        issue: null,
-        text: null
-    };
+    this.flatWorkItem = workItem.flatten();
 
     var fields = {
         job: this.job,
@@ -183,6 +174,8 @@ function WorkItemForm(workItem, selector, formset) {
 
         var selector = this.selector;
         var form = this;
+
+        console.log(this.flatWorkItem);
 
         $.ajax({
             type: 'PUT',

@@ -1,9 +1,11 @@
 function FormSet() {
     this.forms = {};
     this.count = 0;
+    var formList = [];
 
     this.addForm = function(form) {
         this.forms[form.selector] = form;
+        formList.push(form);
         this.count++;
     }
 
@@ -24,5 +26,9 @@ function FormSet() {
 
     this.saveWorkItem = function(selector, errorCallback) {
         this.forms[selector].put(errorCallback);
+    }
+
+    this.tail = function() {
+        return formList[this.count - 2];            
     }
 }

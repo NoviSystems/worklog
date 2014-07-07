@@ -98,8 +98,8 @@ API.getWorkDay = function() {
 function WorkItem(workItemJSON) {
 
     this.id = null;
-    this.user = null;
-    this.date = null;
+    this.user = worklog.userid;
+    this.date = worklog.date;
     this.job = {
         id: null,
         name: null,

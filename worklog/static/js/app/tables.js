@@ -60,7 +60,12 @@ function WorkItemFormTable(rowTemplate) {
         this.rows.push(newForm);
         this.rowsBySelector['#' + selector] = newForm;
 
-        $(rowTemplate(newForm.context)).appendTo('#form-table tbody').hide().fadeIn('fast');
+        if (workItemFormSet.count === 1) {
+            $(rowTemplate(newForm.context)).appendTo('#form-table tbody').hide().fadeIn('fast');
+        } else {
+            console.log(workItemFormSet.tail().selector);
+            $(rowTemplate(newForm.context)).insertAfter(workItemFormSet.tail().selector).hide().fadeIn('fast');            
+        }
         rivets.bind($(newForm.selector), {
             workitem: newForm.flatWorkItem
         });
@@ -119,9 +124,7 @@ function WorkItemFormTable(rowTemplate) {
         workItemObj = workItems[workItem];
 
         var newForm = new WorkItemForm(workItemObj, selector, workItemFormSet);
-        rivets.bind($('#' + workItem), {
-            workitem: newForm.flatWorkItem
-        });
+
         newForm.formset.addForm(newForm);
         this.rowsBySelector[newForm.selector] = newForm;
 
@@ -141,6 +144,10 @@ function WorkItemFormTable(rowTemplate) {
 
         $('#' + selector).replaceWith((this.rowTemplate(newForm.context)));
         $('#' + selector + ' .job').val(workItemObj.job.id);
+
+        rivets.bind($('#' + workItem), {
+            workitem: newForm.flatWorkItem
+        });
 
         if (workItemObj.repo) {
             $('#' + selector + ' .repo').val(workItemObj.repo.github_id);
@@ -242,10 +249,9 @@ function WorkItemDisplayTable(rowTemplate) {
 
         $('#' + selector).replaceWith((this.rowTemplate(newForm.context)));
 
-        newForm.populateJobs();
-        newForm.populateRepos();
-        if (workItemObj.repo)
-            newForm.populateIssues(workItemObj.repo.github_id);
+        rivets.bind($('#' + workItem), {
+            workitem: newForm.flatWorkItem
+        });
     };
 
     this.restoreRow = function(workItem) {
