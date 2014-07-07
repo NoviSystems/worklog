@@ -15,7 +15,7 @@ function WorkItemTable(type) {
     this.appendRowToBody = function(row) {
         this.rows.push(row);
         this.rowsBySelector[row.selector] = row;
-    }
+    };
 }
 WorkItemTable.prototype = new Table();
 WorkItemTable.prototype.constructor = WorkItemTable;
@@ -64,7 +64,7 @@ function WorkItemFormTable(rowTemplate) {
 
         newForm.populateJobs();
         newForm.populateRepos();
-    }
+    };
 
     if ($(window).width() > 600)
         this.addForm();
@@ -82,7 +82,7 @@ function WorkItemFormTable(rowTemplate) {
             $('.issue').val('None');
             $('.text').val('');
         }
-    }
+    };
 }
 WorkItemFormTable.prototype = new WorkItemTable();
 WorkItemFormTable.prototype.constructor = WorkItemFormTable;
@@ -118,11 +118,11 @@ function WorkItemDisplayTable(rowTemplate) {
         $(this.rowTemplate(context)).appendTo('#display-table tbody').hide().fadeIn('slow');
         if ($(window).width() < 600)
             $('#' + workItem.id + ' .edit').attr('data-toggle', 'modal');
-    }
+    };
 
     this.editRow = function(workItem) {
 
-        var selector = workItem
+        var selector = workItem;
         workItemObj = workItems[workItem];
 
         var newForm = new WorkItemForm(workItemObj, selector, workItemFormSet);
@@ -132,11 +132,11 @@ function WorkItemDisplayTable(rowTemplate) {
         newForm.context.text = {
             class: 'col-md-3',
             value: newForm.text.toHtml()
-        }
+        };
         newForm.context.button = {
             class: 'controls',
             value: (new SaveEditButton(workItem)).toHtml() + (new CancelEditButton(workItem)).toHtml()
-        }
+        };
 
 
         $('#' + selector).replaceWith((this.rowTemplate(newForm.context)));
@@ -145,7 +145,7 @@ function WorkItemDisplayTable(rowTemplate) {
         newForm.populateRepos();
         if (workItemObj.repo)
             newForm.populateIssues(workItemObj.repo.github_id);
-    }
+    };
 
     this.restoreRow = function(workItem) {
         workItems[workItem.id] = workItem;
@@ -155,7 +155,7 @@ function WorkItemDisplayTable(rowTemplate) {
         if ($(window).width() < 600) {
             $('#display-table #' + workItem.id + ' .edit').replaceWith(boundEdit);
         }
-    }
+    };
 
 
     this.deleteWorkItem = function(workItem) {
@@ -182,7 +182,7 @@ function WorkItemDisplayTable(rowTemplate) {
             },
             dataType: 'text'
         });
-    } 
+    };
 }
 WorkItemDisplayTable.prototype = new WorkItemTable();
 WorkItemDisplayTable.prototype.constructor = WorkItemDisplayTable;
@@ -218,4 +218,4 @@ WorkItemDisplayTable.buildContext = function(workItem) {
             value: (new EditWorkItemButton(workItem.id)).toHtml() + (new DeleteWorkItemButton(workItem.id)).toHtml(),
         }
     };  
-}
+};
