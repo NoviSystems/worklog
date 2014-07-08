@@ -135,7 +135,17 @@ class WorkItem(models.Model):
             if(not self.job.users.filter(id=self.user.id).exists()):
                 return         
 
-        commit,hash,text = string.split(self.text, None, 2)
+        commit,hash,text = ['','','']
+
+        text_string = string.split(self.text)
+
+        if len(text_string) == 2:
+            commit = text_string[0]
+            hash = text_string[1]
+        elif len(text_string) == 1:
+            commit = text_string[0]
+        else:
+            commit,hash,text = string.split(self.text, None, 2)
 
         # If the text begins with "commit <sha1>", we'll sub in the actual commit message
         if (commit == "commit" and self.repo):
