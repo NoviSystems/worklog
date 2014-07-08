@@ -3,6 +3,7 @@ celery
 django-celery
 xhtml2pdf
 pisa
+reportlab==2.7
 south
 gunicorn
 pytz
