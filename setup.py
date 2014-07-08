@@ -20,7 +20,6 @@ setup(
         "Topic :: Utilities","License :: OSI Approved :: BSD License", 
     ],
     install_requires=[
-        "django>=1.4.1",
         "celery>=3.0.9",
         "django-celery>=3.0.9",
         "xhtml2pdf",
