@@ -256,6 +256,7 @@ function WorkItemDisplayTable(rowTemplate) {
         rivets.bind($('#' + workItem), {
             workitem: newForm.flatWorkItem
         });
+
     };
 
     this.restoreRow = function(workItem) {

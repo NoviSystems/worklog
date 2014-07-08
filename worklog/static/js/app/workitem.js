@@ -193,6 +193,9 @@ function Session(csrftoken) {
 
 $(document).ready(function() {
 
+    $("[data-toggle=tooltip]").tooltip();
+
+
     var currentSession = new Session($.cookie('csrftoken'));
     currentSession.setupAJAX();
 
