@@ -23,6 +23,7 @@ setup(
         "celery>=3.0.9",
         "django-celery>=3.0.9",
         "xhtml2pdf",
+        "reportlab==2.7",
         "pisa",
         "south",
         "pytz",
