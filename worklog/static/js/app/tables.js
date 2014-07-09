@@ -55,20 +55,27 @@ function WorkItemFormTable(rowTemplate) {
     this.addForm = function() {
         var selector = 'new-workitem-' + workItemFormSet.count;
         var newForm = new WorkItemForm(new WorkItem(null), selector, workItemFormSet);
-        var tail = workItemFormSet.tail();
         workItemFormSet.addForm(newForm);
-        if (!tail) {
-            tail = workItemFormSet.tail();
-        }
+
+        var rows = $('#form-table tbody').children();
+        var tail = null;
+
+        $.each(rows, function(index, value) {
+            if (value.id[0] !== 'n' && index !== 0) {
+                tail = rows[index - 1];
+                return false;
+            } else if (value.id[0] !== 'n' && index === 0) {
+                return false;
+            }
+        });
 
         this.rows.push(newForm);
         this.rowsBySelector['#' + selector] = newForm;
 
-        if (workItemFormSet.count === 1) {
-            $(rowTemplate(newForm.context)).appendTo('#form-table tbody').hide().fadeIn('fast');
+        if (tail === null) {
+            $(rowTemplate(newForm.context)).prependTo('#form-table tbody').hide().fadeIn('fast');
         } else {
-            console.log(tail.selector);
-            $(rowTemplate(newForm.context)).insertAfter(tail.selector).hide().fadeIn('fast');            
+            $(rowTemplate(newForm.context)).insertAfter(tail).hide().fadeIn('fast');            
         }
         rivets.bind($(newForm.selector), {
             workitem: newForm.flatWorkItem

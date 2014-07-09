@@ -21,6 +21,8 @@ function FormSet() {
         for (var i in this.forms) {
             if (this.forms[i].selector[1] === 'n')
                 this.forms[i].post();
+            else
+                this.forms[i].put();
         }
     };
 

@@ -37,7 +37,7 @@ function WorkItemForm(workItem, selector, formset) {
     this.issue = new IssueSelectField(workItem.issue.github_id, this.selector);
     this.text = new TextTextareaField(workItem.text, this.selector);
     this.removeFormButton = new DeleteFormButton(this.selector);
-    this.saveFormButton = new SaveEditButton(this.selector);
+    this.saveFormButton = new SaveFormButton(this.selector);
 
     this.formset = formset;
 
@@ -138,7 +138,7 @@ function WorkItemForm(workItem, selector, formset) {
             data: this.flatWorkItem,
             success: function(data) {
                 formTable.removeForm(selector, 'slow', $(window).width() < 600);
-                displayTable.addWorkItem(new WorkItem($.parseJSON(data)));
+                formTable.addWorkItem(new WorkItem($.parseJSON(data)));
 
                 $('#reconcile').attr('disabled', 'disabled');
 

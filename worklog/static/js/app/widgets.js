@@ -6,7 +6,15 @@ function DeleteFormButton(row) {
     Button.call(this);
 
     this.html = function() {
-        return '<button class="btn btn-link btn-xs delete" type="button" data-row="' + row + '"><span class="glyphicon glyphicon-remove"></span></button>';
+        return '<button class="btn btn-danger btn-xs delete" type="button" data-row="' + row + '"><span class="glyphicon glyphicon-remove"></span></button>';
+    };
+}
+
+function SaveFormButton(row) {
+    Button.call(this);
+
+    this.html = function() {
+        return '<button type="button" class="btn btn-success btn-xs save" data-workitem="' + row + '" data-method="post"><span class="glyphicon glyphicon-ok"></span></button>';
     };
 }
 
@@ -14,7 +22,7 @@ function DeleteWorkItemButton(workItem) {
     Button.call(this);
 
     this.html = function() {
-        return '<button type="button" class="btn btn-link btn-xs delete" data-toggle="modal" data-target=".bs-delete-modal-sm" data-workitem="' + workItem + '"><span class="glyphicon glyphicon-trash"></span></button>';
+        return '<button type="button" class="btn btn-danger btn-xs delete" data-toggle="modal" data-target=".bs-delete-modal-sm" data-workitem="' + workItem + '"><span class="glyphicon glyphicon-trash"></span></button>';
     };
 }
 
@@ -26,7 +34,7 @@ function EditWorkItemButton(workItem) {
     Button.call(this);
 
     this.html = function() {
-        return '<button type="button" class="btn btn-link btn-xs edit" data-target=".bs-edit-modal-sm" data-workitem="' + workItem + '"><span class="glyphicon glyphicon-pencil"></span></button>';
+        return '<button type="button" class="btn btn-info btn-xs edit" data-target=".bs-edit-modal-sm" data-workitem="' + workItem + '"><span class="glyphicon glyphicon-pencil"></span></button>';
     };
 }
 
@@ -38,7 +46,7 @@ function SaveEditButton(workItem) {
     Button.call(this);
 
     this.html = function() {
-        return '<button type="button" class="btn btn-link btn-xs save" data-workitem="' + workItem + '"><span class="glyphicon glyphicon-ok"></span></button>';
+        return '<button type="button" class="btn btn-link btn-xs save" data-workitem="' + workItem + '" data-method="put"><span class="glyphicon glyphicon-ok"></span></button>';
     };
 }
 

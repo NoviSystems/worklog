@@ -288,7 +288,13 @@ $(document).ready(function() {
         });
 
         $('#form-table tbody').on('click', ' .save', function() {
-            workItemFormSet.postWorkItem($(this).data('workitem'));
+            var method = $(this).data('method');
+
+            if (method === 'post') {
+                workItemFormSet.postWorkItem($(this).data('workitem'));
+            } else if (method === 'put') {
+                workItemFormSet.putWorkItem('#' + $(this).data('workitem'));
+            }
         });
 
         $('#form-table tbody').on('click', ' .cancel', function() {

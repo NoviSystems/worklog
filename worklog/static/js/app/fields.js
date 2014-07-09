@@ -73,7 +73,7 @@ function RepoSelectField(value, data) {
     SelectField.call(this, 'repo', value, data, context);
 }
 
-RepoSelectField.prototype = new RepoSelectField();
+RepoSelectField.prototype = new SelectField();
 RepoSelectField.prototype.constructor = RepoSelectField;
 
 function IssueSelectField(value, data) {
