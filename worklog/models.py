@@ -38,7 +38,7 @@ class WorkDay(models.Model):
 
     @property
     def workitem_set(self):
-        return WorkItem.objects.filter(date__range=[self.date - datetime.timedelta(days=3), self.date])    
+        return WorkItem.objects.filter(date__range=[self.date - datetime.timedelta(days=3), self.date])
 
 
 class WorkPeriod(models.Model):
@@ -125,7 +125,7 @@ class WorkItem(models.Model):
     # see worklog.admin_filter
     date.year_month_filter = True
     user.user_filter = True
-    invoiced.is_invoiced_filter = True 
+    invoiced.is_invoiced_filter = True
 
     def __str__(self):
         return '%s on %s work %d hours on %s' % (self.user, self.date, self.hours, self.text)
@@ -133,9 +133,9 @@ class WorkItem(models.Model):
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):
             if(not self.job.users.filter(id=self.user.id).exists()):
-                return         
+                return
 
-        commit,hash,text = ['','','']
+        commit, hash, text = ['', '', '']
 
         text_string = string.split(self.text)
 
@@ -145,7 +145,7 @@ class WorkItem(models.Model):
         elif len(text_string) == 1:
             commit = text_string[0]
         else:
-            commit,hash,text = string.split(self.text, None, 2)
+            commit, hash, text = string.split(self.text, None, 2)
 
         # If the text begins with "commit <sha1>", we'll sub in the actual commit message
         if (commit == "commit" and self.repo):
@@ -154,12 +154,9 @@ class WorkItem(models.Model):
             repos = ghc.get_all_repos()
 
             for repo in repos:
-
                 if repo.id == self.repo.github_id:
-
                     msg = repo.commit(hash).commit.message
-
                     self.text = '%s %s' % (msg, text)
-                    break                
+                    break
 
-        super(WorkItem, self).save(*args, **kwargs) 
+        super(WorkItem, self).save(*args, **kwargs)

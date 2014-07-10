@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from django import forms
-from models import WorkItem, Job, Repo, Issue 
+from models import WorkItem, Job, Repo, Issue
 from django.db.models import Q
 # define the custom formset here
 from django.forms.formsets import BaseFormSet
@@ -27,7 +27,7 @@ class BadWorkItemForm(Exception):
 
 class WorkItemForm(ModelForm):
 
-    job = forms.ModelChoiceField(queryset=Job.objects.none(), empty_label="None")  # empty queryset, overridden in ctor   
+    job = forms.ModelChoiceField(queryset=Job.objects.none(), empty_label="None")  # empty queryset, overridden in ctor
     repo = forms.ModelChoiceField(queryset=Repo.objects.all(), empty_label="None", required=False)
     issue = forms.ModelChoiceField(queryset=Issue.objects.all(), empty_label="None", required=False)
 
@@ -57,7 +57,7 @@ class WorkItemForm(ModelForm):
 
         self.fields["text"].widget.attrs['rows'] = '6'
 
-        if args: 
+        if args:
             data = args[0]
         else:
             data = kwargs.get('data')
@@ -95,9 +95,9 @@ class WorkItemForm(ModelForm):
 
         # Only allows non-zero, non-negative hours to be entered in half hour increments.
         if (hours % 1 != 0.5) and (hours % 1 != 0):
-            message_list = ["Please, Hammer, don't hurt 'em! Use half-hour increments.", 
-                            "All your mantissa are belong to us. Half hour increments only. Please.", 
-                            "You thought we wouldn't notice that you didn't use half hour increments. You were wrong. Try again, jerk.", 
+            message_list = ["Please, Hammer, don't hurt 'em! Use half-hour increments.",
+                            "All your mantissa are belong to us. Half hour increments only. Please.",
+                            "You thought we wouldn't notice that you didn't use half hour increments. You were wrong. Try again, jerk.",
                             "Ceterum censeo numerum esse tibi delendum! Dimidiae incrementuli horae uti, amabo.",
                             "Hey buddy. How's it going? Listen, not a huge deal, but we've got this thing where we use half hour increments.",
                             "If you could go ahead and use half hour increments, that would be grrrreeaat."]

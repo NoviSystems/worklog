@@ -46,7 +46,7 @@ class Worklog_TestCaseBase(TestCase):
         self.tomorrow =     self.today + datetime.timedelta(days=1)
         self.today_minus_2 = self.today - datetime.timedelta(days=2)
         self.today_minus_3 = self.today - datetime.timedelta(days=3)
-        
+
         job = Job.objects.create(name="Job_Today",open_date=today)
         job.save()
         job = Job.objects.create(name="Job_OneDay",open_date=today,close_date=today)
@@ -55,24 +55,24 @@ class Worklog_TestCaseBase(TestCase):
         job.save()
         job = Job.objects.create(name="Job_LastWeek2",open_date=last_week, close_date=today)
         job.save()
-        
+
         job = Job.objects.create(name="Job_Future",open_date=next_week)
         job.save()
         job = Job.objects.create(name="Job_Old",open_date=last_2week, close_date=last_week)
         job.save()
-        
+
         self.user = User.objects.create_user(username="master", email="master@example.com", password="password")
         self.user2 = User.objects.create_user(username="user2", email="user2@example.com", password="password")
 
     def tearDown(self):
-        # Clean up all test data.  This does not affect the 'real' database, 
+        # Clean up all test data.  This does not affect the 'real' database,
         # only the test database
         Job.objects.all().delete()
         WorkItem.objects.all().delete()
         # Delete all test users.
         self.user.delete()
         self.user2.delete()
-        
+
     # for use in 'with' statements
     def scoped_login(self, username, password):
         return UserLogin_Context(self.client, username, password)
@@ -83,48 +83,48 @@ def get_month_end(d):
 
 
 class CreateWorkItem_TestCase(Worklog_TestCaseBase):
-        
+
     def test_basic_get(self):
         with self.scoped_login('master', 'password'):
             response = self.client.get('/worklog/' + str(self.today) + '/')
-            
+
             qs = Job.get_jobs_open_on(self.today)
-            
+
             self.assertEquals(qs.count(),4)
             names = list(job.name for job in qs)
             self.assertTrue("Job_Today" in names)
             self.assertTrue("Job_OneDay" in names)
             self.assertTrue("Job_LastWeek" in names)
             self.assertTrue("Job_LastWeek2" in names)
-            
+
             self.assertEquals(len(response.context['items']),0)
-    
+
     def test_badUser(self):
         uuidstr = '00001111000011110000111100001111'
         id = str(uuid.UUID(uuidstr))
-        
+
         # NOTE: login user does not match user associated with the reminder
         with self.scoped_login(username='master', password='password'):
             response = self.client.get('/worklog/view/{0}/'.format(id))
 
             self.assertEquals(response.status_code, 404)
-            
+
     def test_previousItemsTable(self):
         job = Job.objects.filter(name="Job_Today")[0]
-        item = WorkItem(user=self.user, date=self.today, hours=3, 
+        item = WorkItem(user=self.user, date=self.today, hours=3,
                         text='My work today.', job=job)
         item.save()
-        
+
         with self.scoped_login('master', 'password'):
             response = self.client.get('/worklog/' + str(self.today) + '/')
 
             self.assertEquals(len(response.context['items']),1)
             items = response.context['items']
-            
+
             # order of columns depends on configuration, so just check that they exist
-            self.assertTrue(job in items[0])        
-            self.assertTrue(self.user in items[0])  
-            self.assertTrue(3 in items[0])        
+            self.assertTrue(job in items[0])
+            self.assertTrue(self.user in items[0])
+            self.assertTrue(3 in items[0])
 
 
 class ViewWork_TestCase(Worklog_TestCaseBase):
@@ -136,117 +136,117 @@ class ViewWork_TestCase(Worklog_TestCaseBase):
             (self.user, self.today, 1, "item1", Job.objects.filter(name="Job_Today")[0]),
             (self.user, self.today, 2, "item2", Job.objects.filter(name="Job_OneDay")[0]),
             (self.user, self.today, 3, "item3", Job.objects.filter(name="Job_LastWeek2")[0]),
-            
+
             (self.user, self.yesterday, 4, "item4", Job.objects.filter(name="Job_OneDay")[0]),
             (self.user, self.tomorrow, 5, "item5", Job.objects.filter(name="Job_LastWeek2")[0]),
             (self.user, self.last_week, 6, "item6", Job.objects.filter(name="Job_Today")[0]),
-            
+
             (self.user2, self.today, 7, "item7", Job.objects.filter(name="Job_Today")[0]),
             ]
         for item in items:
             wi = WorkItem.objects.create(user=item[0], date=item[1], hours=item[2], text=item[3], job=item[4])
             wi.save()
-    
+
     def test_basic(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/')
             self.assertEquals(len(response.context['items']),7)
             self.assertEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),0)
-    
+
     def test_badDate(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/9876-22-33_/')
             self.assertEquals(len(response.context['items']),7)
             self.assertNotEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),1)
-    
+
     def test_badUser(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/?user=999')
             self.assertEquals(len(response.context['items']),0)
             self.assertEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),1)
-    
+
     def test_badUser2(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/badusername/')
             self.assertEquals(len(response.context['items']),0)
             self.assertNotEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),1)
-    
+
     def test_badJob(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/?job=999')
             self.assertEquals(len(response.context['items']),0)
             self.assertEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),1)
-    
+
     def test_today(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/today/')
             self.assertEquals(len(response.context['items']),4)
             self.assertNotEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),2)  # 2, one for datemin, one for datemax
-            
+
             i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
             texts = list(x[i] for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item1','item2','item3','item7',])
-    
+
     def test_today2(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/?datemin={0}&datemax={0}'.format(self.today))
             self.assertEquals(len(response.context['items']),4)
             self.assertEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),2)  # 2, one for datemin, one for datemax
-            
+
             i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
             texts = list(x[i] for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item1','item2','item3','item7',])
-    
+
     def test_user(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/user2/')
             self.assertEquals(len(response.context['items']),1)
             self.assertNotEquals(response.context['menulink_base'],'')
-            self.assertEquals(len(response.context['current_filters']),1) 
-            
+            self.assertEquals(len(response.context['current_filters']),1)
+
             i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
             texts = list(x[i] for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item7',])
-    
+
     def test_userToday(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/master/today/')
             self.assertEquals(len(response.context['items']),3)
             self.assertNotEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),3)
-            
+
             i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
             texts = list(x[i] for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item1','item2','item3',])
-    
+
     def test_dateRange(self):
         with self.scoped_login(username='master', password='password'):
-        
+
             response = self.client.get('/worklog/view/?datemin={0}&datemax={1}'.format(self.last_week,self.yesterday))
             self.assertEquals(len(response.context['items']),2)
             self.assertEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),2)  # 2, one for datemin, one for datemax
-            
+
             i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
             texts = list(x[i] for x in response.context['items'])
             texts.sort()
@@ -259,14 +259,14 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
         self.user3 = User.objects.create_user(username="user3", email="user3@example.com", password="password")
         self.user4 = User.objects.create_user(username="user4", email="user4@example.com", password="password")
         self.user5 = User.objects.create_user(username="user5", email="user5@example.com", password="password")
-        
+
     def tearDown(self):
         # Delete all test users.
         self.user3.delete()
         self.user4.delete()
         self.user5.delete()
         super(SendReminderEmails_TestCase,self).tearDown()
-        
+
     def test_basic(self):
         # create some work items
         items = [
@@ -297,14 +297,14 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
             1: 6,
             2: 5,
             3: 8,
-            4: 11, 
+            4: 11,
             5: 11,
             6: 0,
             7: 0
         }
 
         emails_sent = email_count[datetime.date.today().isoweekday()]
-        
+
         self.assertEquals(len(mail.outbox), emails_sent)  # user3, user4, user5
         all_recipients = list(m.to[0] for m in mail.outbox)
         self.assertEquals(len(all_recipients), emails_sent)
@@ -312,7 +312,7 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
             self.assertTrue("user3@example.com" in all_recipients)
             self.assertTrue("user4@example.com" in all_recipients)
             self.assertTrue("user5@example.com" in all_recipients)
-        
+
     def test_empty(self):
         # create some work items
         items = [
@@ -345,10 +345,10 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
             workday, created = WorkDay.objects.get_or_create(user=item[0], date=item[1])
             workday.reconciled = True
             workday.save()
-        
+
         # try to send emails
         tasks.send_reminder_emails()
-        
+
         self.assertEquals(len(mail.outbox), 0)
         all_recipients = list(m.to[0] for m in mail.outbox)
         self.assertEquals(len(all_recipients), 0)
@@ -392,7 +392,7 @@ class WorkItemSerializerTestCase(APITestCase):
 
         self.assertRaises(ValidationError, lambda: self.serializer.validate_job(None, 'job'))
         self.assertRaises(ValidationError, lambda: self.serializer.validate_job({}, None))
-        
+
         attrs = self.serializer.validate_job({'job': self.open_jobs[0]}, 'job')
         self.assertIsNotNone(attrs)
 
@@ -476,7 +476,7 @@ class ViewSetBaseTestCase(APITestCase):
     @property
     def viewset(self):
         raise NotImplementedError("Property must be implemented in subclass.")
-    
+
 
 class WorkItemViewSetTestCase(ViewSetBaseTestCase):
 
@@ -485,7 +485,7 @@ class WorkItemViewSetTestCase(ViewSetBaseTestCase):
         self._viewset = WorkItemViewSet()
 
         super(WorkItemViewSetTestCase, self).setUp()
-    
+
     def test_get_queryset(self):
 
         oldest_workitem = WorkItem.objects.all().order_by('date')[0]
@@ -511,8 +511,8 @@ class WorkItemViewSetTestCase(ViewSetBaseTestCase):
     def test_post(self):
 
         data = {
-            'user': self.user_pks[0], 
-            'date': '2014-06-21', 
+            'user': self.user_pks[0],
+            'date': '2014-06-21',
             'job': self.job_pks[0],
             'hours': 2,
             'text': 'Dieses feld ist erforderlich'
@@ -577,7 +577,7 @@ class JobViewSetTestCase(ViewSetBaseTestCase):
         super(JobViewSetTestCase, self).setUp()
 
     def test_get_queryset(self):
-        
+
         oldest_job = Job.objects.all().order_by('open_date')[0]
         today = datetime.date.today()
         date_list = [today - datetime.timedelta(days=x) for x in range(0, (oldest_job.open_date - today).days)]
@@ -609,7 +609,7 @@ class JobViewSetTestCase(ViewSetBaseTestCase):
                     super(JobViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
 
     def test_post(self):
-        
+
         data = {
             'id': 7114,
             'user': 29,
@@ -666,7 +666,7 @@ class RepoViewSetTestCase(ViewSetBaseTestCase):
         super(RepoViewSetTestCase, self).setUp()
 
     def test_get_queryset(self):
-        
+
         repo_names = Repo.objects.all().values_list('name', flat=True)
 
         for name in repo_names:
@@ -675,7 +675,7 @@ class RepoViewSetTestCase(ViewSetBaseTestCase):
             super(RepoViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
 
     def test_post(self):
-        
+
         for pk in self.repo_pks:
             data = {
                 'github_id': pk,
@@ -686,7 +686,7 @@ class RepoViewSetTestCase(ViewSetBaseTestCase):
             self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_put(self):
-        
+
         for pk in self.repo_pks:
             data = {
                 'github_id': pk,
@@ -697,7 +697,7 @@ class RepoViewSetTestCase(ViewSetBaseTestCase):
             self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_patch(self):
-        
+
         for pk in self.repo_pks:
             data = {
                 'github_id': pk,
@@ -708,7 +708,7 @@ class RepoViewSetTestCase(ViewSetBaseTestCase):
             self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_get(self):
-        
+
         for pk in self.repo_pks:
             response = self.client.get('/worklog/api/repos/' + str(pk) + '/')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -736,7 +736,7 @@ class IssueViewSetTestCase(ViewSetBaseTestCase):
             super(IssueViewSetTestCase, self).test_get_queryset(query_params=query_params, expected_qs=expected_qs)
 
     def test_post(self):
-        
+
         for pk in self.issue_pks:
             data = {
                 'github_id': pk,
@@ -747,7 +747,7 @@ class IssueViewSetTestCase(ViewSetBaseTestCase):
             self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_put(self):
-        
+
         for pk in self.issue_pks:
             data = {
                 'github_id': pk,
@@ -758,7 +758,7 @@ class IssueViewSetTestCase(ViewSetBaseTestCase):
             self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_patch(self):
-        
+
         for pk in self.issue_pks:
             data = {
                 'github_id': pk,
@@ -776,8 +776,8 @@ class IssueViewSetTestCase(ViewSetBaseTestCase):
 
     @property
     def viewset(self):
-        return self._viewset    
-        
+        return self._viewset
+
 
 def suite():
     test_suite = unittest.TestSuite()
