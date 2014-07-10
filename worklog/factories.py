@@ -76,3 +76,4 @@ class WorkItemFactory(DjangoModelFactory):
     hours = factory.LazyAttribute(lambda p: random.randint(1, 24))
     repo = factory.SubFactory(RepoFactory)
     issue = factory.SubFactory(IssueFactory, repo=factory.SelfAttribute('..repo'))
+    text = factory.LazyAttribute(lambda p: faker.sentence())
