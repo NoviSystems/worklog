@@ -8,6 +8,8 @@ from django.core import mail  # for testing email functionality
 from django.contrib.auth.models import User
 from django.db.models import Q
 
+from gh_connect import GitHubConnector
+
 from models import WorkDay, WorkItem, Job, Repo, Issue
 import tasks
 import factories
@@ -18,6 +20,9 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.serializers import ValidationError
 from rest_framework.test import APITestCase, APIRequestFactory
+
+from faker.factory import Factory as FakeFactory
+faker = FakeFactory.create()
 
 
 class UserLogin_Context(object):
@@ -352,6 +357,58 @@ class SendReminderEmails_TestCase(Worklog_TestCaseBase):
         self.assertEquals(len(mail.outbox), 0)
         all_recipients = list(m.to[0] for m in mail.outbox)
         self.assertEquals(len(all_recipients), 0)
+
+
+class WorkItemCommitHashSwapTestCase(TestCase):
+
+    def setUp(self):
+        self.ghc = GitHubConnector()
+        self.repos = self.ghc.get_all_repos()
+
+        for repo in self.repos:
+            new_repo = Repo(github_id=repo.id, name=repo.name)
+            new_repo.save()
+
+        factories.UserFactory.create_batch(10)
+        factories.JobFactory.create_batch(10)
+
+    def test_commit_hash_swap(self):
+        
+        for repo in self.repos:
+
+            commits = list(repo.iter_commits())
+            repo_obj = Repo()
+            repo_obj.github_id = repo.id
+            repo_obj.name = repo.name
+            repo_obj.save()
+
+            workitem = WorkItem()
+            workitem.user = User.objects.all()[0]
+            workitem.job = Job.objects.filter(available_all_users=True)[0]
+            workitem.hours = 10
+            workitem.date = datetime.date.today()
+            workitem.repo = repo_obj
+            workitem.text = 'commit ' + commits[0].sha + ' extra text'
+            workitem.save()
+
+            self.assertEquals(workitem.text, commits[0].commit.message + ' extra text')
+
+    def test_no_commit(self):
+        
+        for i in range(0, 30):
+
+            repo = Repo.objects.all()[0]
+            workitem = WorkItem()
+            workitem.user = User.objects.all()[0]
+            workitem.job = Job.objects.filter(available_all_users=True)[0]
+            workitem.hours = 10
+            workitem.date = datetime.date.today()
+            workitem.repo = repo
+            text = faker.sentence()
+            workitem.text = text
+            workitem.save()
+
+            self.assertEquals(workitem.text, text)
 
 
 class WorkItemSerializerTestCase(APITestCase):
@@ -787,6 +844,7 @@ def suite():
     test_suite.addTest(loader.loadTestsFromTestCase(SendReminderEmails_TestCase))
     test_suite.addTest(loader.loadTestsFromTestCase(WorkItemSerializerTestCase))
     test_suite.addTest(loader.loadTestsFromTestCase(WorkItemViewSetTestCase))
+    test_suite.addTest(loader.loadTestsFromTestCase(WorkItemCommitHashSwapTestCase))    
     test_suite.addTest(loader.loadTestsFromTestCase(JobViewSetTestCase))
     test_suite.addTest(loader.loadTestsFromTestCase(RepoViewSetTestCase))
     test_suite.addTest(loader.loadTestsFromTestCase(IssueViewSetTestCase))
