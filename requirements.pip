@@ -1,4 +1,5 @@
 django<1.6
+django-discover-runner
 celery
 django-celery
 xhtml2pdf

@@ -130,6 +130,9 @@ class WorkItem(models.Model):
     def __str__(self):
         return '%s on %s work %d hours on %s' % (self.user, self.date, self.hours, self.text)
 
+    def __unicode__(self):
+        return u'%s on %s work %d hours on %s' % (self.user, self.date, self.hours, self.text)
+
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):
             if(not self.job.users.filter(id=self.user.id).exists()):
