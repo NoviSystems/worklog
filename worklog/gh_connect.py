@@ -1,4 +1,4 @@
-from github3 import GitHub
+from github3 import GitHub, GitHubError
 from django.conf import settings
 
 
@@ -31,8 +31,11 @@ class GitHubConnector(object):
         for org in self.orgs:
             org_repos = org.iter_repos()
             for repo in org_repos:
-                issues += list(repo.iter_issues(state='open'))
-                issues += list(repo.iter_issues(state='closed'))
+                try:
+                    issues += list(repo.iter_issues(state='open'))
+                    issues += list(repo.iter_issues(state='closed'))
+                except GitHubError:
+                    continue
         return issues
 
     def get_repos_for_org(self, org_login=None, org_id=None):
