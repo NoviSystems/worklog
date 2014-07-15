@@ -29,6 +29,7 @@ function WorkItemFormTable(rowTemplate) {
     var context = {
         tableID: 'form-table',
         smallWindow: $(window).width() < 600,
+        headerText: 'New Work Item',
         row: {
             id: 'new-workitem-0',
             job: newForm.job.html(),
@@ -39,18 +40,19 @@ function WorkItemFormTable(rowTemplate) {
         }
     };
 
-    var source = $('#form-table-template').html();
-    var template = Handlebars.compile(source);
-    var html = template(context);
-
-    $(html).insertBefore('#submit');
-
-    if ($(window).width() < 600) {
-        newForm.populateJobs();
-        newForm.populateRepos(); 
-        workItemFormSet.addForm(newForm);  
+    if ($(window).width() < 600) { 
+        var html = rowTemplate(context);
+        workItemFormSet.addForm(newForm);
+        $(html).prependTo('#accordion');
+        rivets.bind($(newForm.selector), {
+            workitem: newForm.flatWorkItem
+        });
+    } else {
+        var source = $('#form-table-template').html();
+        var template = Handlebars.compile(source);
+        var html = template(context);
+        $(html).insertBefore('#submit');
     }
-
 
     this.addForm = function() {
         var selector = 'new-workitem-' + workItemFormSet.count;
@@ -71,6 +73,8 @@ function WorkItemFormTable(rowTemplate) {
 
         this.rows.push(newForm);
         this.rowsBySelector['#' + selector] = newForm;
+
+        console.log(rowTemplate(newForm.context));
 
         if (tail === null) {
             $(rowTemplate(newForm.context)).prependTo('#form-table tbody').hide().fadeIn('fast');
@@ -121,12 +125,49 @@ function WorkItemFormTable(rowTemplate) {
     });
 
     this.addWorkItem = function(workItem) {
-        
-        var context = WorkItemDisplayTable.buildContext(workItem);
 
-        $(this.rowTemplate(context)).appendTo('#form-table tbody').hide().fadeIn('slow');
-        if ($(window).width() < 600)
-            $('#' + workItem.id + ' .edit').attr('data-toggle', 'modal');
+        if ($(window).width() < 600) {
+            var newForm = new WorkItemForm(new WorkItem(null), workItem.id, null);
+            newForm.workItem = workItem;
+            newForm.flatWorkItem = workItem.flatten();
+            workItemFormSet.addForm(newForm);
+
+            context = {
+                headerText: workItem.hours + ' hours on ' + workItem.text,
+                row: {
+                    id: workItem.id,
+                    job: newForm.job.html(),
+                    hours: newForm.hours.html(),
+                    repo: newForm.repo.html(),
+                    issue: newForm.issue.html(),
+                    text: newForm.text.html()
+                }
+            };
+            $(this.rowTemplate(context)).appendTo('#accordion').hide().fadeIn('slow');
+            $(newForm.selector).on('change', '.repo', function() {
+                var form = $(this).data('row');
+                var repo = $(this).val();
+                workItemFormSet.forms[form].populateIssues(repo);
+            });
+            $('#' + workItem.id + ' .job').val(workItem.job.id);
+            $('#' + workItem.id + ' .hours').val(workItem.hours);
+            $('#' + workItem.id + ' .repo').val(workItem.repo.github_id);
+            $('#' + workItem.id + ' .repo').change();
+            $('#' + workItem.id + ' .issue').val(workItem.issue.github_id);
+            $('#' + workItem.id + ' .text').val(workItem.text);
+
+            rivets.bind($(newForm.selector), {
+                workitem: newForm.flatWorkItem
+            });
+
+            $('.panel-heading').on('click', '#save', function(event) {
+                event.stopPropagation();
+                workItemFormSet.postOrPut($(this).parent().data('target'));
+            });
+        } else {
+            context = WorkItemDisplayTable.buildContext(workItem);
+            $(this.rowTemplate(context)).appendTo('#form-table tbody').hide().fadeIn('slow');
+        }
     };
 
     this.editRow = function(workItem) {
@@ -340,5 +381,5 @@ WorkItemDisplayTable.buildContext = function(workItem) {
                 value: (new DeleteWorkItemButton(workItem.id)).html()
             }
         ]
-    };  
+    };         
 };

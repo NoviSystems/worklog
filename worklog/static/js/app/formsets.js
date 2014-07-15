@@ -26,6 +26,14 @@ function FormSet() {
         }
     };
 
+    this.postOrPut = function(selector) {
+        if (selector[1] === 'n') {
+            this.forms[selector].post();
+        } else {
+            this.forms[selector].put();
+        }
+    };
+
     this.postWorkItem = function(selector) {
         this.forms[selector].post();
     };

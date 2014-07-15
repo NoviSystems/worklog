@@ -205,13 +205,18 @@ $(document).ready(function() {
 
         API.assignIssuesToRepos();
 
+        if ($(window).width() < 600) {
+            $('#bottom').before('<div class="panel-group" id="accordion"></div>');
+        }
+
         var rowSource = $('#row-template').html();
         var rowTemplate = Handlebars.compile(rowSource);
 
-        var formRowSource = $('#modal-form-template').html();
+        var formRowSource = $('#mobile-form-table-template').html();
         var formRowTemplate = Handlebars.compile(formRowSource);
 
-        formTable = new WorkItemFormTable(rowTemplate);
+        var template = ($(window).width() < 600 ? formRowTemplate : rowTemplate);
+        formTable = new WorkItemFormTable(template);
 
         $('.table tbody').on('change', '.repo', function() {
             var form = $(this).data('row');
@@ -308,6 +313,12 @@ $(document).ready(function() {
                 event.preventDefault();
                 $('#submit').click();
             }
+        });
+
+        $('.panel-heading').on('click', '#save', function(event) {
+            event.stopPropagation();
+            console.log(workItemFormSet.forms);
+            workItemFormSet.postOrPut($(this).parent().data('target'));
         });
 
         $('#reconcile').on('click', function() {

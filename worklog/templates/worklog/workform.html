@@ -26,80 +26,21 @@
 {% endif %} 
 <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
 
+    <div style="padding:10px" id="bottom"></div>
+
     <button class='btn btn-success' type="button" id="submit">Submit All</button>
     <button class='btn btn-primary' type="button" id="reconcile">Reconcile</button>
     <button class='btn btn-link' type="button" data-toggle="tooltip" data-placement="right" title="Click Reconcile when all work items have been entered. You will still be able to enter work items, but you will not receive reminder emails for this date."><span class="glyphicon glyphicon-question-sign"></span></button>
 
-    <div style="padding:10px"></div>
+    <div style="padding:10px" id="bottom"></div>
+
 {% endif %}
-    <div class="modal fade bs-delete-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
-            </div>
-            <div class="modal-body">
-                Please confirm your choice.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
-                <button type="button" class="btn btn-danger" id="delete">Delete</button>
-            </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal fade bs-edit-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Edit Work Item</h4>
-            </div>
-            <div class="modal-body">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" id="save">Save</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal" id="cancel">Cancel</button>
-            </div>
-        </div>
-      </div>
-    </div>
+
 
     {% verbatim %}
     <!-- Please note that the Django templating language will not be rendered a verbatim block. -->
     <script id="form-table-template" type="text/x-handlebars-template">
         <table class="table table-hover" id={{tableID}}>
-        {{#if smallWindow}}
-            <thead>
-                <tr>
-                    <th class="col-xs-3">Field</th>
-                    <th class="col-xs-15">Value</th>
-                </tr>
-            </thead>
-            <tbody id={{row.id}}>
-                <tr>
-                    <td class="col-xs-3">Job</td>
-                    <td class="col-xs-15">{{{row.job}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Hours</td>
-                    <td class="col-xs-15">{{{row.hours}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Repo</td>
-                    <td class="col-xs-15">{{{row.repo}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Issue</td>
-                    <td class="col-xs-15">{{{row.issue}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Description</td>
-                    <td class="col-xs-15">{{{row.text}}}</td>
-                </tr>
-            </tbody>
-        {{else}}
             <thead>
                 <tr>
                     <th class="col-md-2">Job</th>
@@ -114,8 +55,6 @@
             </thead>
             <tbody>
             </tbody>
-        {{/if}}
-
         </table>
     </script>
 
@@ -134,38 +73,47 @@
         </tr>
     </script>
 
-    <script id="modal-form-template" type="text/x-handlebars-template">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th class="col-xs-3">Field</th>
-                    <th class="col-xs-15">Value</th>
-                </tr>
-            </thead>
-            <tbody id={{row.id}}>
-
-                <tr>
-                    <td class="col-xs-3">Job</td>
-                    <td class="col-xs-15">{{{row.job}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Hours</td>
-                    <td class="col-xs-15">{{{row.hours}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Repo</td>
-                    <td class="col-xs-15">{{{row.repo}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Issue</td>
-                    <td class="col-xs-15">{{{row.issue}}}</td>
-                </tr>
-                <tr>
-                    <td class="col-xs-3">Description</td>
-                    <td class="col-xs-15">{{{row.text}}}</td>
-                </tr>
-            </tbody>
-        </table>
+    <script id="mobile-form-table-template" type="text/x-handlebars-template">
+        <div class="panel panel-default">
+            <div class="panel-heading" data-toggle="collapse" data-parent="accordion" data-target="#{{row.id}}">
+                {{headerText}}
+                <button class="btn btn-primary btn-xs pull-right" id="save">Save</button>
+            </div>
+            <div id="{{row.id}}" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="col-xs-3">Field</th>
+                                <th class="col-xs-15">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="col-xs-3">Job</td>
+                                <td class="col-xs-15">{{{row.job}}}</td>
+                            </tr>
+                            <tr>
+                                <td class="col-xs-3">Hours</td>
+                                <td class="col-xs-15">{{{row.hours}}}</td>
+                            </tr>
+                            <tr>
+                                <td class="col-xs-3">Repo</td>
+                                <td class="col-xs-15">{{{row.repo}}}</td>
+                            </tr>
+                            <tr>
+                                <td class="col-xs-3">Issue</td>
+                                <td class="col-xs-15">{{{row.issue}}}</td>
+                            </tr>
+                            <tr>
+                                <td class="col-xs-3">Description</td>
+                                <td class="col-xs-15">{{{row.text}}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </script>
 
     <script id="job-field-template" type="text/x-handlebars-template">

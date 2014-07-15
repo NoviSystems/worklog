@@ -139,31 +139,19 @@ function WorkItemForm(workItem, selector, formset) {
             success: function(data) {
                 formTable.removeForm(selector, 'slow', $(window).width() < 600);
                 formTable.addWorkItem(new WorkItem($.parseJSON(data)));
-
-                $('#reconcile').attr('disabled', 'disabled');
-
-                var reconcile = {
-                    user: worklog.userid,
-                    date: worklog.date,
-                    reconciled: true
-                };
-
-                $.ajax({
-                    type: 'POST',
-                    url: '/worklog/api/workdays/',
-                    cache: false,
-                    data: reconcile,
-                    dataType: 'text' 
-                });
             },
             error: function (data){
                 var response = $.parseJSON(data.responseText);
                 for (var key in response) {
                     form.appendErrorMessageToField(response[key], key);
-                    $(selector).addClass('danger');
-                    $(selector).on('click', function() {
-                        $(this).removeClass('danger');
-                    });
+                    if ($(window).width() > 600) {
+                        $(selector).addClass('danger');
+                        $(selector).on('click', function() {
+                            $(this).removeClass('danger');
+                        });                        
+                    } else {
+                        $(selector).parent().addClass('panel-danger');
+                    }
                 }
             },
             dataType: 'text' 
@@ -177,7 +165,7 @@ function WorkItemForm(workItem, selector, formset) {
 
         $.ajax({
             type: 'PUT',
-            url: '/worklog/api/workitems/' + workItem.id + '/',
+            url: '/worklog/api/workitems/' + form.workItem.id + '/',
             cache: false,
             data: this.flatWorkItem,
             success: function(data, status) {
@@ -186,11 +174,16 @@ function WorkItemForm(workItem, selector, formset) {
                     $(this.selector).removeClass('danger');
                 }
 
+                if ($(selector).parent().hasClass('panel-danger')) {
+                    $(selector).parent().removeClass('panel-danger');
+                }
+
                 formTable.restoreRow(new WorkItem($.parseJSON(data)));
 
                 if ($(window).width() < 600) {
                     $('.bs-edit-modal-sm .modal-body').children().remove();
                     $('.bs-edit-modal-sm').modal('toggle');
+                    $(selector).parent().addClass('panel-success');
                 }
 
                 $(selector).addClass('success', function() {
@@ -209,6 +202,10 @@ function WorkItemForm(workItem, selector, formset) {
 
                 if (!row) {
                     row = workItemFormSet.getForm(selector);
+                }
+
+                if ($(window).width() < 600) {
+                    $(selector).parent().addClass('panel-danger');
                 }
 
                 for (var key in response) {
