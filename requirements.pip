@@ -1,7 +1,7 @@
 django<1.6
 django-discover-runner
-celery
-django-celery
+celery==3.0.19
+django-celery==3.0.11
 xhtml2pdf
 pisa
 reportlab==2.7
@@ -10,4 +10,4 @@ gunicorn
 pytz
 flake8
 github3.py
-django_dajax
+djangorestframework
