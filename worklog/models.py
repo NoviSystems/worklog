@@ -19,7 +19,7 @@ class BiweeklyEmployee(models.Model):
         return '%s, %s' % (self.user.last_name, self.user.first_name,)
 
     def __unicode__(self):
-        return '%s' % self.user.get_full_name()
+        return u'%s' % self.user.get_full_name()
 
 
 class Holiday(models.Model):
@@ -28,7 +28,7 @@ class Holiday(models.Model):
     end_date = models.DateField()
 
     def __unicode__(self):
-        return '%s' % (self.description,)
+        return u'%s' % (self.description,)
 
 
 class WorkDay(models.Model):
@@ -49,7 +49,7 @@ class WorkPeriod(models.Model):
     pay_day = models.DateField()
 
     def __unicode__(self):
-        return '%s' % (self.payroll_id,)
+        return u'%s' % (self.payroll_id,)
 
 
 class Job(models.Model):
@@ -63,7 +63,7 @@ class Job(models.Model):
     available_all_users = models.BooleanField(default=True)
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
     @staticmethod
     def get_jobs_open_on(date):
@@ -81,7 +81,7 @@ class Repo(models.Model):
     name = models.CharField(max_length=256)
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
 
 class Issue(models.Model):
@@ -91,7 +91,7 @@ class Issue(models.Model):
     repo = models.ForeignKey(Repo, related_name='issues')
 
     def __unicode__(self):
-        return str(self.number) + ': ' + str(self.title)
+        return unicode(self.number) + u': ' + unicode(self.title)
 
 
 class BillingSchedule(models.Model):
@@ -99,7 +99,7 @@ class BillingSchedule(models.Model):
     date = models.DateField()
 
     def __unicode__(self):
-        return 'Billing for %s' % self.job
+        return u'Billing for %s' % self.job
 
 
 class Funding(models.Model):
@@ -108,7 +108,7 @@ class Funding(models.Model):
     date_available = models.DateField()
 
     def __unicode__(self):
-        return 'Funding for %s' % self.job
+        return u'Funding for %s' % self.job
 
 
 class WorkItem(models.Model):
@@ -127,11 +127,8 @@ class WorkItem(models.Model):
     user.user_filter = True
     invoiced.is_invoiced_filter = True
 
-    def __str__(self):
-        return '%s on %s work %d hours on %s' % (self.user, self.date, self.hours, self.text)
-
     def __unicode__(self):
-        return u'%s on %s work %d hours on %s' % (self.user, self.date, self.hours, self.text)
+        return u'{user} on {date} work {hours} hours on {item}'.format(user=self.user, date=self.date, hours=self.hours, item=self.text)
 
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):
