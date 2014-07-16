@@ -52,16 +52,16 @@ class UserFilterSpec(SimpleListFilter):
 
         values_list = model.objects.values_list(f.name, flat=True)
 
-        self.lookup_choices = list((x.pk,x.username) for x in User.objects.all())
+        self.lookup_choices = list((x.pk, x.username) for x in User.objects.all())
         self.lookup_choices.sort(key=operator.itemgetter(0))
 
     def choices(self, cl):
         yield {'selected': self.lookup_val is None,
                'query_string': cl.get_query_string({}, [self.lookup_kwarg]),
                'display': _('All')}
-        for id, name in self.lookup_choices:
-            yield {'selected': smart_unicode(id) == self.lookup_val,
-                   'query_string': cl.get_query_string({self.lookup_kwarg: id}),
+        for ID, name in self.lookup_choices:
+            yield {'selected': self.lookup_val == smart_unicode(ID),
+                   'query_string': cl.get_query_string({self.lookup_kwarg: ID}),
                    'display': smart_unicode(name)}
 
 
