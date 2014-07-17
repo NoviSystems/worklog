@@ -94,13 +94,12 @@ class WorkItemForm(ModelForm):
             issue = None
 
         # Only allows non-zero, non-negative hours to be entered in half hour increments.
-        if (hours % 1 != 0.5) and (hours % 1 != 0):
-            message_list = ["Please, Hammer, don't hurt 'em! Use half-hour increments.",
-                            "All your mantissa are belong to us. Half hour increments only. Please.",
-                            "You thought we wouldn't notice that you didn't use half hour increments. You were wrong. Try again, jerk.",
-                            "Ceterum censeo numerum esse tibi delendum! Dimidiae incrementuli horae uti, amabo.",
-                            "Hey buddy. How's it going? Listen, not a huge deal, but we've got this thing where we use half hour increments.",
-                            "If you could go ahead and use half hour increments, that would be grrrreeaat."]
+        if (hours % 1 != 0) and (hours % 1 % .25 != 0):
+            message_list = ["Please, Hammer, don't hurt 'em! Use 15-minute increments.",
+                            "All your mantissa are belong to us. 15-minute increments only. Please.",
+                            "You thought we wouldn't notice that you didn't use 15-minute increments. You were wrong. Try again, jerk.",
+                            "Hey buddy. How's it going? Listen, not a huge deal, but we've got this thing where we use 15-minute increments.",
+                            "If you could go ahead and use 15-minute increments, that would be grrrreeaat."]
             error_message = message_list[random.randint(0, len(message_list) - 1)]
             self._errors["hours"] = self.error_class([error_message])
             if hours:
