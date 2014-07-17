@@ -1,13 +1,17 @@
-django<1.6
-django-discover-runner
-celery==3.0.19
-django-celery==3.0.11
-xhtml2pdf
-pisa
-reportlab==2.7
-south
-gunicorn
-pytz
-flake8
-github3.py
+# project requirements - these should be in setup.py
+celery
 djangorestframework
+xhtml2pdf
+reportlab==2.7
+pisa
+pytz
+south
+
+# testing requirements
+django-discover-runner
+coverage
+flake8
+factory_boy
+fake-factory
+webtest
+django-webtest
