@@ -1,10 +1,11 @@
 from django.conf import settings
+from django.template import Template, Context
 
 from celery.task import task
 
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse as urlreverse
-import django.core.mail
+import django.core.mail as mail
 
 from models import WorkItem, Job, WorkPeriod, WorkDay
 
@@ -13,16 +14,45 @@ from models import Repo, Issue
 
 import datetime
 import calendar
-import uuid
 
-email_msg = """\
-This is your friendly reminder to submit a work log for %(date)s. If
-you haven't done so already, you may use the following URL, 
-but you must do so before it expires on %(expiredate)s.
 
-URL: %(url)s
+email_msg = Template("""
+This is your friendly reminder to submit a work log for {{ date }}. If
+you haven't done so already, you may use the following URL,
+but you must do so before it expires on {{ exp_date }}.
 
-"""
+URL: {{ url }}
+
+{% if url_list %}
+    Remaining unlogged days:
+    {% for url in url_list %}
+        {{ url }}
+    {% endfor %}
+{% endif %}
+""")
+
+
+html_email_msg = Template("""
+<html>
+    <body>
+        <br /> This is your friendly reminder to submit a work log for {{ date }}. If
+        <br /> you haven't done so already, you may use the following URL,
+        <br /> but you must do so before it expires on {{ exp_date }}.
+        <p>
+        URL: {{ url }}
+        </p>
+        {% if url_list %}
+            <p>
+            Remaining unlogged days:
+            {% for url in url_list %}
+                <br /> {{ url }}
+            {% endfor %}
+            </p>
+        {% endif %}
+    </body>
+<html>
+""")
+
 
 #registry = TaskRegistry()
 
@@ -42,7 +72,7 @@ def generate_timesheets():
             recipients.append(admin[1])
 
         from_email = settings.DEFAULT_FROM_EMAIL
-        django.core.mail.send_mail(subject, msg, from_email, recipients)
+        mail.send_mail(subject, msg, from_email, recipients)
 
         #timesheet.run(WorkPeriod.objects.get(due_date=datetime.date.today()).pk)
 
@@ -156,7 +186,7 @@ def generate_invoice(default_date=None):
             recipients.append(admin[1])
 
         from_email = settings.DEFAULT_FROM_EMAIL
-        django.core.mail.send_mail(sub, msg, from_email, recipients)
+        mail.send_mail(sub, msg, from_email, recipients)
 
 
 # Generate invoices at 2 AM daily if they are needed
@@ -175,46 +205,63 @@ def generate_invoice_email():
             recipients.append(admin[1])
 
         from_email = settings.DEFAULT_FROM_EMAIL
-        django.core.mail.send_mail(sub, msg, from_email, recipients)
+        mail.send_mail(sub, msg, from_email, recipients)
 
 
-def compose_reminder_email(email_address, id, date):
-    subj = "Remember to Submit Today's Worklog (%s)" % str(date)
+def create_reminder_email(email_address, date, date_list=[]):
     expire_days = settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER
-    expiredate = date + datetime.timedelta(days=expire_days)
-    url = create_reminder_url(id, date)
-    msg = email_msg % {'url': url, 'expiredate': str(expiredate), 'date': str(date)}
+    exp_date = date + datetime.timedelta(days=expire_days)
+    url = create_reminder_url(date)
+    url_list = [create_reminder_url(rem_date) for rem_date in date_list]
+
+    msg = email_msg.render(Context({'url': url, 'url_list': url_list, 'exp_date': str(exp_date), 'date': str(date)}))
+    html_msg = html_email_msg.render(Context({'url': url, 'url_list': url_list, 'exp_date': str(exp_date), 'date': str(date)}))
+
+    subj = "Worklog reminder for %s" % str(date)
     from_email = settings.DEFAULT_FROM_EMAIL
     recipients = [email_address]
 
-    return (subj, msg, from_email, recipients)
+    email = mail.EmailMultiAlternatives(subj, msg, from_email, recipients)
+    email.attach_alternative(html_msg, 'text/html')
+    return email
 
 
-def create_reminder_url(id, date):
+def create_reminder_url(date):
     path = '/worklog/' + str(date) + '/'
     return settings.SITE_URL + path
+
+
+def get_reminder_dates_for_user(user):
+    today = datetime.date.today()
+    date_list = [today - datetime.timedelta(days=x) for x in range(0, settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER)]
+    rem_dates = []
+    for date in date_list:
+        if not WorkDay.objects.filter(user=user, date=date, reconciled=True) and date.isoweekday() in range(1, 6):
+            rem_dates.append(date)
+    return rem_dates
 
 
 # periodic task -- by default: M-F at 6:00pm
 # Crontab in settings.py
 @task
 def send_reminder_emails():
-    base = datetime.date.today()
-    send_emails = settings.WORKLOG_SEND_REMINDERS and base.isoweekday() in range(1, 6)
+    today = datetime.date.today()
+    send_emails = settings.WORKLOG_SEND_REMINDERS and today.isoweekday() in range(1, 6)
     if send_emails:
-        datatuples = ()  # one tuple for each email to send... contains subj, msg, recipients, etc...
-        date_list = [base - datetime.timedelta(days=x) for x in range(0, settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER)]
+        email_list = []
         for user in User.objects.all():
             if not user.email or not user.is_active:
                 continue
 
+            date_list = get_reminder_dates_for_user(user)
+
             for date in date_list:
-                if not WorkDay.objects.filter(user=user, date=date, reconciled=True) and date.isoweekday() in range(1, 6):
-                    id = str(uuid.uuid4())
-                    et = compose_reminder_email(user.email, id, date)
-                    datatuples = datatuples + (et,)
-        if datatuples:
-            django.core.mail.send_mass_mail(datatuples, fail_silently=False)
+                email_list.append(create_reminder_email(user.email, date, date_list))
+        if email_list:
+            connection = mail.get_connection(fail_silently=False)
+            for email in email_list:
+                email.connection = connection
+                email.send()
         print "Reminder emails sent"
     else:
         print "Reminder emails turned off, not sent."
@@ -223,12 +270,9 @@ def send_reminder_emails():
 def test_send_reminder_email(username, date=datetime.date.today()):
     # For debugging purposes: sends a reminder email
     user = User.objects.filter(username=username)[0]
-
-    id = str(uuid.uuid4())
-    et = compose_reminder_email(user.email, id, date)
-    subj, msg, from_email, recipients = et
-
-    django.core.mail.send_mail(subj, msg, from_email, recipients, fail_silently=False)
+    date_list = get_reminder_dates_for_user(user)
+    email = create_reminder_email(user.email, date, date_list)
+    email.send()
 
 
 # Crontab in settings.py
