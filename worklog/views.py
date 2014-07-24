@@ -1,6 +1,7 @@
 import datetime
 import calendar
 import time
+import collections
 
 from django.utils import simplejson
 from django.core import serializers
@@ -136,7 +137,9 @@ class HomepageView(TemplateView):
         total_hours = sum([hours for date, hours in hours_per_date.items()])
         assigned_issues = None
 
-        hours_per_day = {'monday': 0, 'tuesday': 0, 'wednesday': 0, 'thursday': 0, 'friday': 0, 'saturday': 0, 'sunday': 0}
+        hours_per_day = collections.OrderedDict([(day_list[-1], 0)])
+        hours_per_day.update([(day, 0) for day in day_list[:-1]])
+
         for date, hours in hours_per_date.items():
             day_name = day_list[date.weekday()]
             hours_per_day.update({day_name: hours})
