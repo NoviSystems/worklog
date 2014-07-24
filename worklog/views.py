@@ -2,7 +2,6 @@ import datetime
 import calendar
 import time
 
-
 from django.utils import simplejson
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect
@@ -17,7 +16,7 @@ from django.core.urlresolvers import reverse
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
 from django.forms.models import modelformset_factory
 from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee
-from worklog.tasks import generate_invoice
+from worklog.tasks import generate_invoice, get_reminder_dates_for_user, create_reminder_url
 
 from labsite import settings
 
@@ -43,6 +42,124 @@ def _itercolumns(item):
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
 
 
+def get_users_workitems_from_workweek(user):
+    """ Return the work week for a user, starting with the past sunday """
+
+    # def get_last_sunday(date):
+    #     dow = date.isoweekday()
+    #     if dow == 7:
+    #         last_sunday = date
+    #     else:
+    #         last_sunday = date - datetime.timedelta(days=dow)
+    #     return last_sunday
+
+    # day_list = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    # work_week = {}
+    # today = datetime.date.today()
+    # start_of_week = get_last_sunday(today)
+    # date_ptr = start_of_week
+
+    # for day in day_list:
+    #     work_items = WorkItem.objects.filter(date=date_ptr, user=user)
+    #     hours = sum([item.hours for item in work_items])
+    #     work_week.update({day: hours})
+    #     if date_ptr >= today:
+    #         work_week.update({day: 0})
+    #     date_ptr += datetime.timedelta(days=1)
+
+    # return work_week
+
+    def get_last_sunday(date):
+        dow = date.isoweekday()
+        if dow == 7:
+            last_sunday = date
+        else:
+            last_sunday = date - datetime.timedelta(days=dow)
+        return last_sunday
+
+    today = datetime.date.today()
+    start_of_week = get_last_sunday(today)
+    date_ptr = start_of_week
+
+    items_list = []
+
+    while date_ptr <= today:
+        work_items = WorkItem.objects.filter(date=date_ptr, user=user)
+        for item in work_items:
+            items_list.append(item)
+        date_ptr += datetime.timedelta(days=1)
+
+    return items_list
+
+
+def get_hours_per_job_from_workitems(workitems):
+    """ Given a list of work items, returns a dictionary of job: hours spent on job """
+    jobs = {}
+    for item in workitems:
+        if item.job.name in jobs:
+            jobs[item.job.name] += item.hours
+        else:
+            jobs[item.job.name] = item.hours
+
+    return jobs
+
+
+def get_hours_per_date_from_workitems(workitems):
+    """ Given a list of work items, return a dictionary of date: hours worked """
+    hours = {}
+
+    for item in workitems:
+        if item.date in hours:
+            hours[item.date] += item.hours
+        else:
+            hours[item.date] = item.hours
+
+    return hours
+
+
+class HomepageView(TemplateView):
+    template_name = 'worklog/home.html'
+
+    # def get(self):
+    #     pass
+
+    def get_context_data(self, **kwargs):
+        context = super(HomepageView, self).get_context_data()
+        ## The order of this list is important, and should not be changed ##
+        day_list = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        user = self.request.user
+        work_week = get_users_workitems_from_workweek(user)
+
+        outstanding_work = {str(day): create_reminder_url(day) for day in get_reminder_dates_for_user(user)}
+        hours_per_job = get_hours_per_job_from_workitems(work_week)
+        hours_per_date = get_hours_per_date_from_workitems(work_week)
+        total_hours = sum([hours for date, hours in hours_per_date.items()])
+        assigned_issues = None
+
+        hours_per_day = {'monday': 0, 'tuesday': 0, 'wednesday': 0, 'thursday': 0, 'friday': 0, 'saturday': 0, 'sunday': 0}
+        for date, hours in hours_per_date.items():
+            day_name = day_list[date.weekday()]
+            hours_per_day.update({day_name: hours})
+
+        context.update({'outstanding_work': outstanding_work})
+        context.update({'hours_per_day': hours_per_day})
+        context.update({'total_hours': total_hours})
+        context.update({'hours_per_job': hours_per_job})
+        # context.update({'assigned_issues': {}})
+        # print context
+        return context
+
+    # def get_queryset(self):
+    #     pass
+
+
+class HomepageRedirectView(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        return reverse('worklog-home')
+
+
 class WorkItemView(TemplateView):
     pass
 
@@ -51,7 +168,7 @@ class CurrentDateRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        return reverse('worklog-current-date', kwargs={'date': str(datetime.date.today())})
+        return reverse('worklog-date', kwargs={'date': str(datetime.date.today())})
 
 
 def createWorkItem(request, date='today'):

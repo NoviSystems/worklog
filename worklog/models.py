@@ -3,8 +3,6 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 
 from gh_connect import GitHubConnector
-
-import datetime
 import string
 
 
@@ -38,7 +36,7 @@ class WorkDay(models.Model):
 
     @property
     def workitem_set(self):
-        return WorkItem.objects.filter(date__range=[self.date - datetime.timedelta(days=3), self.date])
+        return WorkItem.objects.filter(date=self.date, user=self.user)
 
 
 class WorkPeriod(models.Model):
@@ -128,7 +126,8 @@ class WorkItem(models.Model):
     invoiced.is_invoiced_filter = True
 
     def __unicode__(self):
-        return u'{user} on {date} work {hours} hours on {item}'.format(user=self.user, date=self.date, hours=self.hours, item=self.text)
+        return u'{user} on {date} worked {hours} hours on {item} for job {job}'.format(
+            user=self.user, date=self.date, hours=self.hours, item=self.text, job=self.job)
 
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):

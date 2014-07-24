@@ -1,0 +1,35 @@
+{% extends "worklog/base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+    <!-- Outstanding Work -->
+    <div>
+        <h2>Outstanding Work Days:</h2>
+        <p>
+            {% for date, url in outstanding_work.items %}
+                <a href="{% url 'worklog-date' date %}">{{ date }}</a>
+                <br></br>
+            {% endfor %}
+        </p>
+    </div>
+
+    <!-- Total Hours -->
+    <div>
+
+    </div>
+
+    <!-- Work Chart -->
+    <div>
+
+    </div>
+
+    <!-- Assigned Issues -->
+    <div>
+
+    </div>
+
+    <!-- TBD -->
+    <div>
+
+    </div>
+{% endblock %}
