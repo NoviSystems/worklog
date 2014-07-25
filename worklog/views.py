@@ -3,6 +3,7 @@ import calendar
 import time
 import collections
 import itertools
+import random
 
 from django.utils import simplejson
 from django.core import serializers
@@ -45,30 +46,6 @@ no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that 
 
 def get_users_workitems_from_workweek(user):
     """ Return the work week for a user, starting with the past sunday """
-
-    # def get_last_sunday(date):
-    #     dow = date.isoweekday()
-    #     if dow == 7:
-    #         last_sunday = date
-    #     else:
-    #         last_sunday = date - datetime.timedelta(days=dow)
-    #     return last_sunday
-
-    # day_list = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-    # work_week = {}
-    # today = datetime.date.today()
-    # start_of_week = get_last_sunday(today)
-    # date_ptr = start_of_week
-
-    # for day in day_list:
-    #     work_items = WorkItem.objects.filter(date=date_ptr, user=user)
-    #     hours = sum([item.hours for item in work_items])
-    #     work_week.update({day: hours})
-    #     if date_ptr >= today:
-    #         work_week.update({day: 0})
-    #     date_ptr += datetime.timedelta(days=1)
-
-    # return work_week
 
     def get_last_sunday(date):
         dow = date.isoweekday()
@@ -128,12 +105,13 @@ class HomepageView(TemplateView):
         context = super(HomepageView, self).get_context_data()
 
         ## The order of this list is important, and should not be changed ##
-        day_list = ['Monday', 'Tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        day_list = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         user = self.request.user
         work_week = get_users_workitems_from_workweek(user)
 
-         # blue, green, yellow, orange, red, purple, darker blue
-        color_list = ['#6699FF', '#66FF66u', '#FFFF00', '#FFCC00', '#FF3030', '#CC3399', '#0099CC']
+         # blue, green, orange, yellow, red, purple, darker blue
+        color_list = ['#6699FF', '#66FF66', '#FFCC00', '#FFFF42', '#FF3030', '#CC3399', '#0099CC']
+        random.shuffle(color_list)
         color_pool = itertools.cycle(color_list)
 
         outstanding_work = {str(day): create_reminder_url(day) for day in get_reminder_dates_for_user(user)}
@@ -153,7 +131,7 @@ class HomepageView(TemplateView):
         context.update({'hours_per_day': hours_per_day})
         context.update({'total_hours': total_hours})
         context.update({'hours_per_job': hours_per_job})
-        context.update({'color_picker': color_pool})
+        context.update({'color_pool': color_pool})
         # context.update({'assigned_issues': {}})
         # print context
         return context
