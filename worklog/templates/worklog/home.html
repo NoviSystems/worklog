@@ -2,7 +2,7 @@
 {% load staticfiles %}
 
 {% block content %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/chart.js"></script>
+    <script type="text/javascript" src="https://raw.githubusercontent.com/nnnick/Chart.js/master/Chart.js"></script>
 
     <!-- Outstanding Work -->
     <div>
@@ -46,8 +46,31 @@
 
     </div>
 
-    <!-- TBD -->
+    <!-- Job Time Chart -->
     <div>
+        <h2>Hours per job breakdown:</h2>
+        <canvas id="jobChart" width="350" height="350"></canvas>
 
+        <script type="text/javascript">
+            var data = [
+                {% for job, hours in hours_per_job.items %}
+                    {
+                        value: {{ hours }},
+                        color: "{{ color_picker.next }}",
+                        label: "{{ job }}"
+                    },
+                {% endfor %}
+
+
+            ]
+
+            var options = {
+                segmentShowStroke : true,
+                animateScale : true
+            }
+
+            var ctx = document.getElementById('jobChart').getContext('2d');
+            new Chart(ctx).Doughnut(data, options);
+        </script>
     </div>
 {% endblock %}

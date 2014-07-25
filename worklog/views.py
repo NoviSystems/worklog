@@ -2,6 +2,7 @@ import datetime
 import calendar
 import time
 import collections
+import itertools
 
 from django.utils import simplejson
 from django.core import serializers
@@ -20,7 +21,6 @@ from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user, create_reminder_url
 
 from labsite import settings
-
 from django.conf.urls.defaults import url
 
 # 'columns' determines the layout of the view table
@@ -126,10 +126,15 @@ class HomepageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(HomepageView, self).get_context_data()
+
         ## The order of this list is important, and should not be changed ##
-        day_list = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        day_list = ['Monday', 'Tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         user = self.request.user
         work_week = get_users_workitems_from_workweek(user)
+
+         # blue, green, yellow, orange, red, purple, darker blue
+        color_list = ['#6699FF', '#66FF66u', '#FFFF00', '#FFCC00', '#FF3030', '#CC3399', '#0099CC']
+        color_pool = itertools.cycle(color_list)
 
         outstanding_work = {str(day): create_reminder_url(day) for day in get_reminder_dates_for_user(user)}
         hours_per_job = get_hours_per_job_from_workitems(work_week)
@@ -148,6 +153,7 @@ class HomepageView(TemplateView):
         context.update({'hours_per_day': hours_per_day})
         context.update({'total_hours': total_hours})
         context.update({'hours_per_job': hours_per_job})
+        context.update({'color_picker': color_pool})
         # context.update({'assigned_issues': {}})
         # print context
         return context
