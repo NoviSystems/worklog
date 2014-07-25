@@ -12,6 +12,6 @@ router.register(r'repos', views.RepoViewSet)
 router.register(r'issues', views.IssueViewSet)
 
 urlpatterns = patterns('',
-	(r'^', include(router.urls)),
-	(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    (r'^', include(router.urls)),
+    (r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 )
