@@ -58,25 +58,6 @@ html_email_msg = Template("""
 
 ##submit_log_url = "http://opus-dev.cnl.ncsu.edu:7979/worklog/add/reminder_%s"
 
-
-# Generate at 2 AM daily and check if the work period is over
-# Crontab in settings.py
-@task
-def generate_timesheets():
-    if WorkPeriod.objects.filter(due_date=datetime.date.today()).count() > 0:
-        subject = 'Timesheets are due'
-        msg = 'Please visit: %s?date=%s' % (settings.SITE_URL + urlreverse('timesheet_url'), datetime.date.today())
-        recipients = []
-
-        for admin in settings.ADMINS:
-            recipients.append(admin[1])
-
-        from_email = settings.DEFAULT_FROM_EMAIL
-        mail.send_mail(subject, msg, from_email, recipients)
-
-        #timesheet.run(WorkPeriod.objects.get(due_date=datetime.date.today()).pk)
-
-
 @task
 def generate_invoice(default_date=None):
     if default_date is None:
