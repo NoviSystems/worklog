@@ -43,6 +43,10 @@ def _itercolumns(item):
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
 
 
+class EmberView(TemplateView):
+    template_name = "worklog/application.html"
+
+
 class WorkItemView(TemplateView):
     pass
 

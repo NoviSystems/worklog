@@ -2,7 +2,7 @@ from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView
+from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView, EmberView
 from timesheet import TimesheetView
 
 DATEMIN = r'(?P<datemin>\d{4}-\d{2}-\d{2})'
@@ -15,7 +15,7 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 ##JOBID = r'(?:_job_(?P<jobid>[0-9]+))'
 
 urlpatterns = patterns('worklog',
-    (r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
+    #(r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
     (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem), {}, 'worklog-current-date'),
     (r'^today/$', CurrentDateRedirectView.as_view(), {}, 'worklog-today'),
     (r'^add/$', CurrentDateRedirectView.as_view(), {}, 'worklog-add'),
@@ -33,6 +33,8 @@ urlpatterns = patterns('worklog',
     (r'^view/'+USERNAME+'/'+DATERANGE2+'/$', login_required(viewWork)),
 
     (r'^api/', include('worklog.api.urls')),
+
+    (r'^$', EmberView.as_view(), {}, 'ember-view'),
 )
 
 urlpatterns += patterns('worklog',

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="shortcut icon" href="../../docs-assets/ico/favicon.png">
+
+        <title>{% block title %}Worklog{% endblock %}</title>
+
+        {% load staticfiles %}
+        <!-- Loading everything off BootstrapCDN -->
+        <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+        <!-- Load JQuery from Google's CDN, and BootstrapCDN -->
+        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+
+        <style type="text/css">
+            .table .form-group {
+                margin-bottom: 0;
+            }
+            tr.workitem-fade  td{
+                background-color: white;
+                -webkit-transition: background-color 1s ease-in-out;
+                -moz-transition: background-color 1s ease-in-out;
+                -o-transition: background-color 1s ease-in-out;
+                transition: background-color 1s ease-in-out;
+            }
+        </style>
+
+    </head>
+
+    <body>
+
+        <script type="text/x-handlebars" data-template-name="worklog">
+            <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/worklog/">
+                            <span class="label label-danger">Worklog <i class="fa fa-flask"></i>
+                            </span>
+                        </a>
+                    </div>
+                    <div class="navbar-collapse collapse">
+                        {% if user.is_authenticated %}
+                        <ul class="nav navbar-nav">
+                            <li><a href="/worklog/today">New Work Item <i class="fa fa-tags"></i></a>
+                            </li>
+                            <li><a href="/worklog/chart">Chart <i class="fa fa-book"></i></a>
+                            </li>
+                            <li><a href="/worklog/view/{{ user }}">My Work <i class="fa fa-folder"></i></a>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li><a href="/worklog/add">{{ user }}</i></a>
+                            </li>
+                            <li>
+                                <a href="/lunch">
+                                    <span class="label label-success">Lunch</span>
+                                </a>
+                            </li>
+                            <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i></a>
+                            </li>
+                        </ul>
+                        {% endif %}
+                    </div>
+                    <!--/.nav-collapse -->
+                </div>
+            </div>
+
+            <div class="container" style="padding-top: 50px">
+
+                {{outlet}}
+
+            </div>
+        </script>
+
+
+        <script>
+            var worklog = {
+                date: '{{ date.isoformat }}',
+                csrfToken: '{{ csrf_token }}',
+                username: '{{ user.username }}',
+                userid: '{{ user.id }}',
+            };
+        </script>
+
+        <script src="{% static 'js/lib/jquery.cookie.js' %}"></script>
+        <script src="{% static 'js/lib/jquery-ui-1.10.4.custom.min.js' %}"></script>
+        <script src="{% static 'js/lib/handlebars-v1.3.0.js' %}"></script>
+        <script src="{% static 'js/lib/rivets.min.js' %}"></script>
+        <script src="{% static 'js/lib/ember.js' %}"></script>
+        <script src="{% static 'js/lib/ember-data.js' %}"></script>
+        <script src="{% static 'js/app/worklog.js' %}"></script>
+        <script src="{% static 'js/app/router.js' %}"></script>
+    </body>
+
+</html>
