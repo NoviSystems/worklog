@@ -15,10 +15,8 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 ##JOBID = r'(?:_job_(?P<jobid>[0-9]+))'
 
 urlpatterns = patterns('worklog',
-    (r'^$', HomepageView.as_view(), {}, 'worklog-home'),
-    ##
-    ## (r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
-    ##
+    (r'^$', login_required(HomepageView.as_view()), {}, 'worklog-home'),
+    #(r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
     (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem), {}, 'worklog-date'),
     (r'^today/$', CurrentDateRedirectView.as_view(), {}, 'worklog-today'),
     (r'^add/$', CurrentDateRedirectView.as_view(), {}, 'worklog-add'),

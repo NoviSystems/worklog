@@ -15,6 +15,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.views.generic import View, TemplateView, RedirectView
 from django.core.urlresolvers import reverse
+from django.db.models import Sum
 
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
 from django.forms.models import modelformset_factory
@@ -22,7 +23,6 @@ from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user, create_reminder_url
 
 from labsite import settings
-from django.conf.urls.defaults import url
 
 # 'columns' determines the layout of the view table
 _column_layout = [
@@ -47,7 +47,8 @@ no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that 
 def get_users_workitems_from_workweek(user):
     """ Return the work week for a user, starting with the past sunday """
 
-    def get_last_sunday(date):
+    def get_workweek_start_date(date):
+        """ Returns the date the current workweek started on (currently Sunday) """
         dow = date.isoweekday()
         if dow == 7:
             last_sunday = date
@@ -56,50 +57,53 @@ def get_users_workitems_from_workweek(user):
         return last_sunday
 
     today = datetime.date.today()
-    start_of_week = get_last_sunday(today)
-    date_ptr = start_of_week
+    start_of_week = get_workweek_start_date(today)
+    end_of_week = start_of_week + datetime.timedelta(days=7)
 
-    items_list = []
-
-    while date_ptr <= today:
-        work_items = WorkItem.objects.filter(date=date_ptr, user=user)
-        for item in work_items:
-            items_list.append(item)
-        date_ptr += datetime.timedelta(days=1)
-
-    return items_list
+    return get_users_workitems_in_daterange(user, start_of_week, end_of_week)
 
 
-def get_hours_per_job_from_workitems(workitems):
-    """ Given a list of work items, returns a dictionary of job: hours spent on job """
-    jobs = {}
-    for item in workitems:
-        if item.job.name in jobs:
-            jobs[item.job.name] += item.hours
-        else:
-            jobs[item.job.name] = item.hours
+def get_users_workitems_in_daterange(user, start_date, end_date):
+    """ Returns the workitems for a user between params start_date and end_date, inclusive at both ends """
+    return WorkItem.objects.filter(user=user, date__gte=start_date, date__lte=end_date)
 
-    return jobs
+
+def get_users_workitems_for_date(user, date):
+    """ Returns the workitems for a given user on a given date """
+    return WorkItem.objects.filter(user=user, date=date)
 
 
 def get_hours_per_date_from_workitems(workitems):
     """ Given a list of work items, return a dictionary of date: hours worked """
-    hours = {}
+    hours_per_date = {item.date: 0 for item in workitems}  # create a dictionary of dates with workitems for them
 
-    for item in workitems:
-        if item.date in hours:
-            hours[item.date] += item.hours
-        else:
-            hours[item.date] = item.hours
+    # For every date in that dictionary, filter the workitems by date, and sum up the total hours in that list
+    for date, hours in hours_per_date.items():
+        hours_per_date[date] = workitems.filter(date=date).aggregate(Sum('hours'))['hours__sum']
 
-    return hours
+    return hours_per_date
+
+
+# def get_hours_per_job_from_workitems(workitems):
+#     """ Given a list of work items, returns a dictionary of job: hours spent on job """
+#     jobs = {}
+#     for item in workitems:
+#         if item.job.name in jobs:
+#             jobs[item.job.name] += item.hours
+#         else:
+#             jobs[item.job.name] = item.hours
+
+#     return jobs
+
+# def get_users_workitems_from_month(user, month=datetime.date.today().month):
+#     """ Return the workitems for a user in a given month, defaulting to the current one """
+#     current_month = datetime.date.today().month
+
+#     return WorkItem.objects.filter(user=user, date__month=current_month)
 
 
 class HomepageView(TemplateView):
     template_name = 'worklog/home.html'
-
-    # def get(self):
-    #     pass
 
     def get_context_data(self, **kwargs):
         context = super(HomepageView, self).get_context_data()
@@ -109,17 +113,14 @@ class HomepageView(TemplateView):
         user = self.request.user
         work_week = get_users_workitems_from_workweek(user)
 
-         # blue, green, orange, yellow, red, purple, darker blue
-        color_list = ['#6699FF', '#66FF66', '#FFCC00', '#FFFF42', '#FF3030', '#CC3399', '#0099CC']
-        random.shuffle(color_list)
-        color_pool = itertools.cycle(color_list)
-
-        outstanding_work = {str(day): create_reminder_url(day) for day in get_reminder_dates_for_user(user)}
-        hours_per_job = get_hours_per_job_from_workitems(work_week)
-        hours_per_date = get_hours_per_date_from_workitems(work_week)
-        total_hours = sum([hours for date, hours in hours_per_date.items()])
+        outstanding_work = {str(day): create_reminder_url(day) for day in get_reminder_dates_for_user(user)}  # dictionary of date: url
+        # hours_per_job = get_hours_per_job_from_workitems(work_week)  # dictionary of job: hours (from week)
+        hours_per_date = get_hours_per_date_from_workitems(work_week)  # dictionary of date: hours (from week)
+        total_hours = sum([hours for date, hours in hours_per_date.items()])  # float of total worked during week
         assigned_issues = None
 
+        # datetime.weekday returns an int for weekday of a date starting with 0 on monday
+        # Thus, in order to make the sunday-saturday view work, we have to use an ordered-dict and add sunday first, then mon-sat
         hours_per_day = collections.OrderedDict([(day_list[-1], 0)])
         hours_per_day.update([(day, 0) for day in day_list[:-1]])
 
@@ -130,9 +131,9 @@ class HomepageView(TemplateView):
         context.update({'outstanding_work': outstanding_work})
         context.update({'hours_per_day': hours_per_day})
         context.update({'total_hours': total_hours})
-        context.update({'hours_per_job': hours_per_job})
-        context.update({'color_pool': color_pool})
-        # context.update({'assigned_issues': {}})
+        # context.update({'hours_per_job': hours_per_job})
+        # context.update({'color_pool': color_pool})
+        context.update({'assigned_issues': assigned_issues})
         # print context
         return context
 

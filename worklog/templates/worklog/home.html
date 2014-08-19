@@ -2,13 +2,12 @@
 {% load staticfiles %}
 
 {% block content %}
-    <script type="text/javascript" src="{% static 'js/lib/chart.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/lib/chart.legend.js' %}"></script>
+    <!-- <script type="text/javascript" src="{% static 'js/lib/highcharts/highcharts.js' %}"></script> -->
 
     <!-- Outstanding Work -->
-    <div>
-        <h2>Outstanding Work Days:</h2>
-        <p>
+    <div id="outstanding-work" style="margin: 0 auto; vertical-align: top; padding-top: 60px;">
+        <h2 style="text-align: center">Outstanding Work Days</h2>
+        <p style="text-align: center; padding-top: 20px">
             {% for date, url in outstanding_work.items %}
                 <a href="{% url 'worklog-date' date %}">{{ date }}</a>
                 <br></br>
@@ -16,89 +15,77 @@
         </p>
     </div>
 
-    <!-- Total Hours -->
-    <div>
-        <h2>Total hours this week:</h2>
-        <h1>{{ total_hours }}</h1>
-    </div>
-
-    <!-- Work Chart -->
-    <div class="row">
-        <div class="col-md-6">
-            <h2>Total hours per day:</h2>
-            <table class="table table-bordered">
-                <tr> <!-- Print column titles (days of week) -->
-                    {% for day, hours in hours_per_day.iteritems %}
-                        <th>{{ day }}</th>
-                    {% endfor %}
-                </tr>
-
-                <tr>  <!-- Print hours for each day -->
-                    {% for day, hours in hours_per_day.iteritems %}
-                        <td>{{ hours }}</td>
-                    {% endfor %}
-                </tr>
-            </table>
-        </div>
-    </div>
-
-    <!-- Assigned Issues -->
-    <div>
+        <!-- Assigned Issues -->
+    <div id="github-issues" style="vertical-align: middle">
 
     </div>
 
-    <!-- Job Time Chart -->
-    <div>
-        <h2>Hours per job breakdown:</h2>
-        <style>
-        #fork {
-            position: absolute;
-            top: 0;
-            right: 0;
-            border: 0;
-        }
-
-        .legend {
-            width: 10em;
-            border: 1px solid black;
-        }
-
-        .legend .title {
-            display: block;
-            margin: 0.5em;
-            border-style: solid;
-            border-width: 0 0 0 1em;
-            padding: 0 0.3em;
-        }
-        </style>
-        <canvas id="jobChart" width="300" height="300"></canvas>
-        <div id="jobLegend" width="100" height="200"></div>
-
-        <script type="text/javascript">
-            var data = [
-                {% for job, hours in hours_per_job.items %}
-                    {
-                        value: {{ hours }},
-                        color: "{{ color_pool.next }}",
-                        label: "{{ job }}",
-                        title: "{{ job }}"
-                    },
+    <!-- Work Chart + total -->
+    <div id="daily-chart" style="margin: 0 auto; vertical-align: bottom">
+        <h2 style="text-align: center">Hours this week</h2>
+        <table class="table table-bordered" style="">
+            <tr> <!-- Print column titles (days of week) -->
+                {% for day, hours in hours_per_day.iteritems %}
+                    <th style="width: 100px; text-align: center">{{ day }}</th>
                 {% endfor %}
-            ]
+            </tr>
 
-            var options = {
-                segmentShowStroke : true,
-                segmentStrokeWidth : 4,
-                percentageInnerCutout : 50,
-                tooltipFontSize: 16,
-                animateScale : false,
-                animationSteps : 75,
-                animationEasing : "easeOutBounce",
-            }
+            <tr>  <!-- Print hours for each day -->
+                {% for day, hours in hours_per_day.iteritems %}
+                    <td style="text-align: center">{{ hours }}</td>
+                {% endfor %}
+            </tr>
+        </table>
 
-            var ctx = document.getElementById('jobChart').getContext('2d');
-            var jobChart = new Chart(ctx).Doughnut(data, options);
-            legend(document.getElementById('jobLegend'), data);
-        </script>
+        <h1 style="text-align: center">= {{ total_hours }}</h1>
     </div>
+
+    <!-- Job Time Chart (Abandoned for the time being, values are hardcoded example values)-->
+    <!-- <div>
+        <div id="container" style="min-width: 300px; max-width: 600px; height: 400px; margin: 0 auto"></div>
+        <script type='text/javascript'>
+            $(function () {
+                $('#container').highcharts({
+                    chart: {
+                        type: 'bar'
+                    },
+                    title: {
+                        text: 'Monthly Overview',
+                        style: { fontSize: "30px" }
+                    },
+                    xAxis: {
+                        categories: ['Apples', 'Oranges', 'Pears', 'Grapes'],
+                        style: { fontSize: "22px" }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'Total fruit consumption',
+                            style: { fontSize: "22px" }
+                        }
+                    },
+                    legend: {
+                        reversed: true
+                    },
+                    plotOptions: {
+                        series: {
+                            stacking: 'normal'
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'John',
+                            data: [5, 3, 4, 7]
+                        }, {
+                            name: 'Jane',
+                            data: [2, 2, 3, 2]
+                        }, {
+                            name: 'Joe',
+                            data: [3, 4, 4, 2]
+                        }
+                    ]
+                    });
+            });
+            </script>
+    </div> -->
 {% endblock %}
