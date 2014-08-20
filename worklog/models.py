@@ -19,7 +19,7 @@ class BiweeklyEmployee(models.Model):
         return '%s, %s' % (self.user.last_name, self.user.first_name,)
 
     def __unicode__(self):
-        return '%s' % self.user.get_full_name()
+        return u'%s' % self.user.get_full_name()
 
 
 class Holiday(models.Model):
@@ -28,7 +28,7 @@ class Holiday(models.Model):
     end_date = models.DateField()
 
     def __unicode__(self):
-        return '%s' % (self.description,)
+        return u'%s' % (self.description,)
 
 
 class WorkDay(models.Model):
@@ -38,7 +38,7 @@ class WorkDay(models.Model):
 
     @property
     def workitem_set(self):
-        return WorkItem.objects.filter(date__range=[self.date - datetime.timedelta(days=3), self.date])    
+        return WorkItem.objects.filter(date__range=[self.date - datetime.timedelta(days=3), self.date])
 
 
 class WorkPeriod(models.Model):
@@ -49,7 +49,7 @@ class WorkPeriod(models.Model):
     pay_day = models.DateField()
 
     def __unicode__(self):
-        return '%s' % (self.payroll_id,)
+        return u'%s' % (self.payroll_id,)
 
 
 class Job(models.Model):
@@ -63,7 +63,7 @@ class Job(models.Model):
     available_all_users = models.BooleanField(default=True)
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
     @staticmethod
     def get_jobs_open_on(date):
@@ -81,7 +81,7 @@ class Repo(models.Model):
     name = models.CharField(max_length=256)
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
 
 class Issue(models.Model):
@@ -91,7 +91,7 @@ class Issue(models.Model):
     repo = models.ForeignKey(Repo, related_name='issues')
 
     def __unicode__(self):
-        return str(self.number) + ': ' + str(self.title)
+        return unicode(self.number) + u': ' + unicode(self.title)
 
 
 class BillingSchedule(models.Model):
@@ -99,7 +99,7 @@ class BillingSchedule(models.Model):
     date = models.DateField()
 
     def __unicode__(self):
-        return 'Billing for %s' % self.job
+        return u'Billing for %s' % self.job
 
 
 class Funding(models.Model):
@@ -108,7 +108,7 @@ class Funding(models.Model):
     date_available = models.DateField()
 
     def __unicode__(self):
-        return 'Funding for %s' % self.job
+        return u'Funding for %s' % self.job
 
 
 class WorkItem(models.Model):
@@ -125,17 +125,17 @@ class WorkItem(models.Model):
     # see worklog.admin_filter
     date.year_month_filter = True
     user.user_filter = True
-    invoiced.is_invoiced_filter = True 
+    invoiced.is_invoiced_filter = True
 
-    def __str__(self):
-        return '%s on %s work %d hours on %s' % (self.user, self.date, self.hours, self.text)
+    def __unicode__(self):
+        return u'{user} on {date} work {hours} hours on {item}'.format(user=self.user, date=self.date, hours=self.hours, item=self.text)
 
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):
             if(not self.job.users.filter(id=self.user.id).exists()):
-                return         
+                return
 
-        commit,hash,text = ['','','']
+        commit, hash, text = ['', '', '']
 
         text_string = string.split(self.text)
 
@@ -145,7 +145,7 @@ class WorkItem(models.Model):
         elif len(text_string) == 1:
             commit = text_string[0]
         else:
-            commit,hash,text = string.split(self.text, None, 2)
+            commit, hash, text = string.split(self.text, None, 2)
 
         # If the text begins with "commit <sha1>", we'll sub in the actual commit message
         if (commit == "commit" and self.repo):
@@ -154,12 +154,9 @@ class WorkItem(models.Model):
             repos = ghc.get_all_repos()
 
             for repo in repos:
-
                 if repo.id == self.repo.github_id:
-
                     msg = repo.commit(hash).commit.message
-
                     self.text = '%s %s' % (msg, text)
-                    break                
+                    break
 
-        super(WorkItem, self).save(*args, **kwargs) 
+        super(WorkItem, self).save(*args, **kwargs)

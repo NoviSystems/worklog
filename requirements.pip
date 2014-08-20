@@ -1,12 +1,17 @@
-django<1.6
+# project requirements - these should be in setup.py
 celery
-django-celery
+djangorestframework
 xhtml2pdf
-pisa
 reportlab==2.7
-south
-gunicorn
+pisa
 pytz
+south
+
+# testing requirements
+django-discover-runner
+coverage
 flake8
-github3.py
-django_dajax
+factory_boy
+fake-factory
+webtest
+django-webtest

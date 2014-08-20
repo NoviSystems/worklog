@@ -31,38 +31,40 @@ mark_not_invoiceable.short_description = "Mark selected items as 'Do Not Invoice
 
 
 class WorkItemAdmin(admin.ModelAdmin):
-    list_display = ('user','date','hours','text','job','invoiced','do_not_invoice')
-    list_filter = ('user','date','job', 'invoiced','do_not_invoice')
+    list_display = ('user', 'date', 'hours', 'text', 'job', 'invoiced', 'do_not_invoice')
+    list_filter = ('user', 'date', 'job', 'invoiced', 'do_not_invoice')
     actions = [mark_invoiced, mark_not_invoiced, mark_invoiceable, mark_not_invoiceable]
-    #sort the items by time in descending order 
-    ordering = ['-date']    
+    #sort the items by time in descending order
+    ordering = ['-date']
 
     def changelist_view(self, request, extra_context=None):
-        # Look for 'export_as_csv' in the HTTP Request header.  If it is found, 
+        # Look for 'export_as_csv' in the HTTP Request header.  If it is found,
         # we export CSV.  If it is not found, defer to the super class.
         if 'export_as_csv' in request.POST:
             def getusername(item):
                 if item.user.last_name:
-                    return '{0} {1}'.format(item.user.first_name,item.user.last_name)
+                    return '{0} {1}'.format(item.user.first_name, item.user.last_name)
                 # if no first/last name available, fall back to username
                 else:
                     return item.user.username
 
             csvfields = [
                 # Title, function on item returning value
-                ('User Key',operator.attrgetter('user.pk')),
-                ('User Name',getusername),
-                ('Job',operator.attrgetter('job.name')),
-                ('Date',operator.attrgetter('date')),
-                ('Hours',operator.attrgetter('hours')),
-                ('Task',operator.attrgetter('text')),
+                ('User Key', operator.attrgetter('user.pk')),
+                ('User Name', getusername),
+                ('Job', operator.attrgetter('job.name')),
+                ('Date', operator.attrgetter('date')),
+                ('Hours', operator.attrgetter('hours')),
+                ('Task', operator.attrgetter('text')),
                 ]
 
             ChangeList = self.get_changelist(request)
 
             # see django/contrib/admin/views/main.py  for ChangeList class.
-            cl = ChangeList(request, self.model, self.list_display, self.list_display_links, self.list_filter,
-                self.date_hierarchy, self.search_fields, self.list_select_related, self.list_per_page, self.list_max_show_all, self.list_editable, self) 
+            cl = ChangeList(request, self.model, self.list_display, self.list_display_links,
+                            self.list_filter, self.date_hierarchy, self.search_fields,
+                            self.list_select_related, self.list_per_page, self.list_max_show_all,
+                            self.list_editable, self)
 
             header = list(s[0] for s in csvfields)
             rows = [header]
@@ -85,14 +87,16 @@ class WorkItemAdmin(admin.ModelAdmin):
             ChangeList = self.get_changelist(request)
 
             # see django/contrib/admin/views/main.py  for ChangeList class.
-            cl = ChangeList(request, self.model, self.list_display, self.list_display_links, self.list_filter,
-                self.date_hierarchy, self.search_fields, self.list_select_related, self.list_per_page, self.list_max_show_all, self.list_editable, self)
+            cl = ChangeList(request, self.model, self.list_display, self.list_display_links,
+                            self.list_filter, self.date_hierarchy, self.search_fields,
+                            self.list_select_related, self.list_per_page, self.list_max_show_all,
+                            self.list_editable, self)
         if not extra_context:
             extra_context = cl.get_query_set(request).aggregate(Sum('hours'))
         else:
             extra_context.update(cl.get_query_set(request).aggregate(Sum('hours')))
 
-        return super(WorkItemAdmin,self).changelist_view(request, extra_context)
+        return super(WorkItemAdmin, self).changelist_view(request, extra_context)
 
 
 class BillingScheduleInline(admin.StackedInline):
@@ -104,7 +108,7 @@ class FundingInline(admin.StackedInline):
 
 
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('name','open_date','close_date','do_not_invoice')
+    list_display = ('name', 'open_date', 'close_date', 'do_not_invoice')
     actions = [mark_invoiceable, mark_not_invoiceable]
 
     inlines = [

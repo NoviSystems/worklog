@@ -26,19 +26,19 @@ from django.conf.urls.defaults import url
 # 'columns' determines the layout of the view table
 _column_layout = [
     # key, title
-    ('user','User'),
-    ('date','Date'),
-    ('hours','Hours'),
-    ('job','Job'),
-    ('repo','Repo'),
-    ('issue','Issue'),
-    ('text','Task'),
+    ('user', 'User'),
+    ('date', 'Date'),
+    ('hours', 'Hours'),
+    ('job', 'Job'),
+    ('repo', 'Repo'),
+    ('issue', 'Issue'),
+    ('text', 'Task'),
     ]
 
 
 def _itercolumns(item):
-    for key,title in _column_layout:
-        yield getattr(item,key)
+    for key, title in _column_layout:
+        yield getattr(item, key)
 
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
 
@@ -102,8 +102,8 @@ def createWorkItem(request, date='today'):
 
     return render_to_response('worklog/workform.html',
             {'open': formset, 'date': date,
-             'items': rawitems, 
-             'column_names': list(t for k,t in _column_layout),
+             'items': rawitems,
+             'column_names': list(t for k, t in _column_layout),
              'holidays': holidays
             },
             context_instance=RequestContext(request)
@@ -164,7 +164,7 @@ class WorkViewerFilter(object):
         return value
 
     def get_query_string(self):
-        return "{0}={1}".format(self.key,self.value) if self.value is not None else ""
+        return "{0}={1}".format(self.key, self.value) if self.value is not None else ""
 
     def get_query_info(self):
         if self.value is not None:
@@ -173,7 +173,7 @@ class WorkViewerFilter(object):
                 name = getattr(qs[0], self.name_attr) if qs.exists() else self.error_name
             else:
                 name = self.value
-            return (self.title,"{0}".format(name))
+            return (self.title, "{0}".format(name))
         return None
 
     def apply_filter(self, items):
@@ -190,21 +190,21 @@ class WorkViewerDateFilter(WorkViewerFilter):
     def validate(self, value):
         if not isinstance(value, datetime.date):
             try:
-                return datetime.date(*time.strptime(value,"%Y-%m-%d")[:3])
+                return datetime.date(*time.strptime(value, "%Y-%m-%d")[:3])
             except ValueError:
                 return self.error_value
         return value
 
 
 class WorkViewer(object):
-    keys = ["user","job","datemin","datemax"]
+    keys = ["user", "job", "datemin", "datemax"]
 
     def __init__(self, request, username, datemin, datemax):
         self.filters = {}
-        self.filters["user"] = WorkViewerFilter("user","User","user",model=User,error_name="<unknown_user>",name_attr="username")
-        self.filters["job"] = WorkViewerFilter("job","Job","job",model=Job,error_name="<unknown_job>",name_attr="name")
-        self.filters["datemin"] = WorkViewerDateFilter("datemin","Date minimum","date__gte",error_value=datetime.date.min)
-        self.filters["datemax"] = WorkViewerDateFilter("datemax","Date maximum","date__lte",error_value=datetime.date.max)
+        self.filters["user"] = WorkViewerFilter("user", "User", "user", model=User, error_name="<unknown_user>", name_attr="username")
+        self.filters["job"] = WorkViewerFilter("job", "Job", "job", model=Job, error_name="<unknown_job>", name_attr="name")
+        self.filters["datemin"] = WorkViewerDateFilter("datemin", "Date minimum", "date__gte", error_value=datetime.date.min)
+        self.filters["datemax"] = WorkViewerDateFilter("datemax", "Date maximum", "date__lte", error_value=datetime.date.max)
 
         userid = None
         # convert username to userid
@@ -213,11 +213,11 @@ class WorkViewer(object):
             userid = qs[0].pk if qs.exists() else -1
         # raw HTTP request info
         for key in self.keys:
-            if key in request.GET: 
+            if key in request.GET:
                 self.filters[key].set_value(request.GET[key])
         # also process arguments
-        for key,val in [("user",userid),("datemin",datemin),("datemax",datemax)]:
-            if val is not None: 
+        for key, val in [("user", userid), ("datemin", datemin), ("datemax", datemax)]:
+            if val is not None:
                 self.filters[key].set_value(val)
 
         self.current_queries = {}
@@ -228,7 +228,7 @@ class WorkViewer(object):
                 self.current_queries[filter.key] = q
 
         self.menu = WorkViewMenu()
-        allsubmenu = WorkViewMenu.SubMenu("",[WorkViewMenu.MenuItem("","all")])
+        allsubmenu = WorkViewMenu.SubMenu("", [WorkViewMenu.MenuItem("", "all")])
         self.menu.submenus.append(allsubmenu)
 
         # build the links
@@ -252,7 +252,7 @@ class WorkViewer(object):
         # The basequery includes all current queries except for 'user'
         basequery = '&'.join(v for k,v in self.current_queries.iteritems() if k != "user")
         alllink = (basequery,'all users')
-        if basequery: 
+        if basequery:
             basequery += '&'
         links = list(("{1}user={0}".format(user.pk,basequery),user.username) for user in User.objects.all())
         links = [alllink] + links
@@ -261,7 +261,7 @@ class WorkViewer(object):
     def build_yearmonth_links(self):
         basequery = '&'.join(v for k,v in self.current_queries.iteritems() if k != "datemin" and k != "datemax")
         alllink = (basequery,'all dates')
-        if basequery: 
+        if basequery:
             basequery += '&'
 
         # get all dates
@@ -281,7 +281,7 @@ class WorkViewer(object):
     def build_job_links(self):
         basequery = '&'.join(v for k,v in self.current_queries.iteritems() if k != "job")
         alllink = (basequery,'all jobs')
-        if basequery: 
+        if basequery:
             basequery += '&'
         links = list(("{1}job={0}".format(job.pk,basequery),job.name) for job in Job.objects.all())
         links = [alllink] + links
@@ -289,9 +289,9 @@ class WorkViewer(object):
 
 
 def viewWork(request, username=None, datemin=None, datemax=None):
-    if datemin == 'today':  
+    if datemin == 'today':
         datemin = datetime.date.today()
-    if datemax == 'today':  
+    if datemax == 'today':
         datemax = datetime.date.today()
 
     viewer = WorkViewer(request,username,datemin,datemax)
@@ -302,15 +302,15 @@ def viewWork(request, username=None, datemin=None, datemax=None):
     # menulink_base must either be blank, or include a trailing slash.
     # menulink_base is the part of the URL in the menu links that will precede the '?'
     menulink_base = ''
-    if username is not None: 
+    if username is not None:
         menulink_base += '../'
 
-    if datemin or datemax: 
+    if datemin or datemax:
         menulink_base += '../'
 
     rawitems = list(tuple(_itercolumns(item)) for item in items)
 
-    return render_to_response('worklog/viewwork.html', 
+    return render_to_response('worklog/viewwork.html',
             {'items': rawitems,
              'filtermenu': viewer.menu,
              'menulink_base': menulink_base,
@@ -401,7 +401,7 @@ class ChartView(TemplateView):
             return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs);
+        context = self.get_context_data(**kwargs)
 
         job_id = request.POST['job_id']
         start_date = None
@@ -533,7 +533,7 @@ class ChartView(TemplateView):
                     if funding is not None:
                         funding_date = funding.order_by('date_available')[0].date_available
                     else:
-                        funding_date = None    
+                        funding_date = None
 
                     if work_date is not None and funding_date is not None:
                         if funding_date < work_date:
@@ -594,16 +594,16 @@ class ChartView(TemplateView):
             return self.error('That job does not exist')
             #error = { }
             #error['error'] = 'That job does not exist'
-            #return HttpResponse(simplejson.dumps(error), mimetype='application/json')  
+            #return HttpResponse(simplejson.dumps(error), mimetype='application/json')
 
     def error(self, message):
         error = {}
         error['error'] = message
-        return HttpResponse(simplejson.dumps(error), mimetype='application/json')  
+        return HttpResponse(simplejson.dumps(error), mimetype='application/json')
 
     def get_context_data(self, **kwargs):
         context = super(ChartView, self).get_context_data()
-        context['open_jobs'] = (Job.objects.filter(close_date__gt=datetime.date.today()) 
+        context['open_jobs'] = (Job.objects.filter(close_date__gt=datetime.date.today())
             | Job.objects.filter(close_date=None)).order_by('name')
         context['closed_jobs'] = Job.objects.filter(close_date__lte=datetime.date.today()).order_by('name')
 
