@@ -5,39 +5,85 @@
     <!-- <script type="text/javascript" src="{% static 'js/lib/highcharts/highcharts.js' %}"></script> -->
 
     <!-- Outstanding Work -->
-    <div id="outstanding-work" style="margin: 0 auto; vertical-align: top; padding-top: 60px;">
-        <h2 style="text-align: center">Outstanding Work Days</h2>
+    <div id="outstanding-work" style="margin: 0 auto; vertical-align: top; padding-top: 20px;">
+        <h2 style="text-align: center">Outstanding work days</h2>
+        {% if outstanding_work %}
         <p style="text-align: center; padding-top: 20px">
             {% for date, url in outstanding_work.items %}
                 <a href="{% url 'worklog-date' date %}">{{ date }}</a>
                 <br></br>
             {% endfor %}
         </p>
+        {% endif %}
     </div>
 
-        <!-- Assigned Issues -->
-    <div id="github-issues" style="vertical-align: middle">
-
+    <!-- Assigned Issues -->
+    <div id="github-issues" style="width: 65%; margin: 0 auto">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseIssues">
+                        Your assigned issues
+                    </a>
+                </h4>
+            </div>
+            <div id="collapseIssues" class="panel-collapse collapse in">
+                <div class="panel-body">
+                    {% if assigned_issues %}
+                    <!-- placeholder -->
+                    {% else %} <h3 style="text-align: center; padding-top: 30">No open issues assigned</h3>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Work Chart + total -->
-    <div id="daily-chart" style="margin: 0 auto; vertical-align: bottom">
-        <h2 style="text-align: center">Hours this week</h2>
-        <table class="table table-bordered" style="">
-            <tr> <!-- Print column titles (days of week) -->
-                {% for day, hours in hours_per_day.iteritems %}
-                    <th style="width: 100px; text-align: center">{{ day }}</th>
-                {% endfor %}
-            </tr>
+    <div id="workchart" style="width: 65%; margin: 0 auto">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseChart">
+                        Hours worked this week
+                    </a>
+                </h4>
+            </div>
+            <div id="collapseChart" class="panel-collapse collapse out">
+                <div class="panel-body">
+                    <script type="text/javascript">
+                        if ($(window).width() > 600) {
+                            document.write('\
+                                <table class="table table-bordered" style="">\
+                                    <tr> <!-- Print column titles (days of week) -->\
+                                        {% for day, hours in hours_per_day.iteritems %}\
+                                            <th style="text-align: center">{{ day }}</th>\
+                                        {% endfor %}\
+                                    </tr>\
+                                    <tr>  <!-- Print hours for each day -->\
+                                        {% for day, hours in hours_per_day.iteritems %}\
+                                            <td style="text-align: center">{{ hours }}</td>\
+                                        {% endfor %}\
+                                    </tr>\
+                                </table>\
+                                <h2 style="text-align: center">= {{ total_hours }}</h2>\
+                            ');
+                        } else {
+                            document.write('<h2 style="text-align: center">{{ total_hours }}</h2>');
+                        };
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <tr>  <!-- Print hours for each day -->
-                {% for day, hours in hours_per_day.iteritems %}
-                    <td style="text-align: center">{{ hours }}</td>
-                {% endfor %}
-            </tr>
-        </table>
+    <div id="button-block" style="text-align: center; padding-top: 25px; padding-bottom: 28px">
+        <!-- Go to Github button -->
+        <button class='btn btn-primary' type="button" id="gotoGithub" style=""
+            onclick="window.location='https://github.com/ITNG'">Go to Github</button>
 
-        <h1 style="text-align: center">= {{ total_hours }}</h1>
+        <!-- Go to Crucible button -->
+        <button class='btn btn-primary' type="button" id="gotoCrucible" style=""
+            onclick="window.location='https://crucible.oscar.ncsu.edu'">Go to Crucible</button>
     </div>
 
     <!-- Job Time Chart (Abandoned for the time being, values are hardcoded example values)-->
