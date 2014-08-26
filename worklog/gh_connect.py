@@ -20,11 +20,11 @@ class GitHubConnector(object):
             raise Exception('You have only 500 GitHub requests left for this hour')
 
     def get_issues_for_repo(self, repo_name=None, github_id=None):
-        """ Returns all the issues for a given repo name or id in the users account (not organization)
+        """ Returns all the issues for a given repo name or id in the user's account (not organization)
 
         Kwargs:
             repo_name (str, optional): The name of a repo
-            github_id (str, optional): The github id of a repo
+            github_id (int, optional): The github id of a repo
         """
         repos = self.git_hub.iter_all_repos()
         for repo in repos:
