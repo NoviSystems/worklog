@@ -73,17 +73,15 @@
             <div class="navbar-collapse collapse">
                 {% if user.is_authenticated %}
                 <ul class="nav navbar-nav">
-                    <li><a href="/worklog/today">New Work Item <i class="fa fa-tags"></i></a>
+                    <li><a href="/worklog/today">New Work Item</a>
                     </li>
-                    <li><a href="/worklog/chart">Chart <i class="fa fa-book"></i></a>
+                    <li><a href="/worklog/chart">Chart</a>
                     </li>
-                    <li><a href="/worklog/view/{{ user }}">My Work <i class="fa fa-folder"></i></a>
-                    </li>
-                    <li><a href="https://kaba.oit.ncsu.edu/WebTimeClock/main/index.jsp?actionEvent=cmd://startdialog" target="_blank">KABA <i class="fa fa-list-alt"></i></a>
+                    <li><a href="/worklog/view/{{ user }}">My Work</a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a href="/worklog/add">{{ user }}</i></a>
+                    <li><a href="/worklog/add">{{ user }}</a>
                     </li>
                     <li>
                         <a href="/lunch">
