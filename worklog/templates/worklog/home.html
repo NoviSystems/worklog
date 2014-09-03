@@ -2,15 +2,13 @@
 {% load staticfiles %}
 
 {% block content %}
-    <!-- <script type="text/javascript" src="{% static 'js/lib/highcharts/highcharts.js' %}"></script> -->
-
-    <div id="button-block" style="text-align: center; padding-top: 30px">
+    <div id="button-block" style="text-align: center; vertical-align: top; padding-top: 30px; padding-bottom: 50px">
         <button class='btn btn-primary' type="button" id="gotoCrucible" style="test-align: center"
-            onclick="window.location='https://kaba.oit.ncsu.edu/WebTimeClock/main/index.jsp?actionEvent=cmd://startdialog'">Go to KABA</button>
+            onclick="window.open('https://kaba.oit.ncsu.edu/WebTimeClock/main/index.jsp?actionEvent=cmd://startdialog')">Go to KABA</button>
     </div>
 
     <!-- Outstanding Work -->
-    <div id="outstanding-work" style="margin: 0 auto; vertical-align: top; padding-top: 20px; padding-bottom: 30px">
+ <!--    <div id="outstanding-work" style="margin: 0 auto; vertical-align: top; padding-top: 20px; padding-bottom: 30px">
         {% if outstanding_work %}
             <h2 style="text-align: center">Outstanding work days</h2>
             <p style="text-align: center; padding-top: 20px">
@@ -22,63 +20,69 @@
         {% else %}
              <h2 style="text-align: center">No unlogged work!</h2>
         {% endif %}
-    </div>
+    </div> -->
 
 
     <div id="work-pane" style="width: 50%; float: left">
         <div class="panel panel-default" style="width: 90%; margin: 0 auto">
             <div class="panel-heading">Work</div>
-            <div class="panel-body">
-                <ul class="list-group">
-                    <div class="panel panel-default">
-                    <table class="table table-bordered" style="">
-                        {% for date, day_name, hours in past_seven_days %}
-                            <tr>
-                                <th style="width: 50%; text-align: center">{{ day_name }},&nbsp;&nbsp;{{ date }}</th>
-                                <td style="width: 50%; text-align: center">{{ hours }}</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </ul>
-                <h2 style="text-align: center">= {{ total_hours }} hours</h2>
-            </div>
+
+            {% if outstanding_work %}
+                <h3 style="text-align: center">Outstanding work days</h3>
+                <p style="text-align: center; padding-top: 20px">
+                    {% for date, url in outstanding_work.items %}
+                        <a href="{% url 'worklog-date' date %}">{{ date }}</a>
+                        <br></br>
+                    {% endfor %}
+                </p>
+            {% else %}
+                 <h3 style="text-align: center">No unlogged work!</h3>
+            {% endif %}
+
+
+            <ul class="list-group">
+                <div class="panel panel-default">
+                <table class="table table-bordered" style="">
+                    {% for date, day_name, hours in past_seven_days %}
+                        <tr>
+                            <th style="width: 50%; text-align: center">{{ day_name }},&nbsp;&nbsp;{{ date }}</th>
+                            <td style="width: 50%; text-align: center">{{ hours }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </ul>
+            <h2 style="text-align: center">= {{ total_hours }} hours</h2>
         </div>
     </div>
 
     <div id="github-pane" style="width: 50%; float: right">
         <div class="panel panel-default" style="width: 90%; margin: 0 auto">
             <div class="panel-heading">Github Issues</div>
-            <div class="panel-body">
-                {% if repos_with_issues %}
-                    <!-- <div class="panel-group"> -->
-                        {% for repo, issues in repos_with_issues.items %}
-                            <div class="panel panel-default" id="repo_{{ repo }}">
-                                <div class="panel-heading">
-                                    <h4 class="panel-title">
-                                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#repo_{{ repo }}" href="#{{ repo }}">{{ repo }}
-                                            <span href="#" class="badge" style="float: right">{{ issues|length }}</span>
-                                        </a>
-                                    </h4>
-                                </div>
-                                <div class="panel-collapse collapse out" id="{{ repo }}">
-                                    <!-- <div class="list-group"> -->
-                                        {% for issue in issues %}
-                                            <li class="list-group-item">
-                                                <h4>{{ issue.number }} - {{ issue.title }}</h4>
-                                                <p>{{ issue.body }}</p>
-                                                <br/>
-                                            </li>
-                                        {% endfor %}
-                                   <!--  </div> -->
-                                </div>
+            {% if repos_with_issues %}
+                <div class="list-group" id="repos">
+                    {% for repo, issues in repos_with_issues.items %}
+                        <div class="list-group-item accordion-toggle" href="#{{ repo }}_issues" data-toggle="collapse">
+                            <h4>{{ repo }}
+                                <span href="#" class="badge" style="float: right">{{ issues|length }}</span>
+                            </h4>
+
+                            <div class="list-group collapse out" id="{{ repo }}_issues">
+                                {% for issue in issues %}
+                                    <li class="list-group-item">
+                                        <h4>{{ issue.number }} - {{ issue.title }}</h4>
+                                        <p>{{ issue.body }}</p>
+                                        <br/>
+                                    </li>
+                                {% endfor %}
                             </div>
-                        {% endfor %}
-                    <!-- </div> -->
-                {% else %}
-                    <li class="list-group-item">
-                        <h3 style="text-align: center; padding-top: 30">No open issues assigned</h3>
-                    </li>
-                {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <li class="list-group-item">
+                    <h3 style="text-align: center; padding-top: 30">No open issues assigned</h3>
+                </li>
+            {% endif %}
             </div>
         </div>
     </div>
