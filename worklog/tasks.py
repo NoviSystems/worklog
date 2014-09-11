@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse as urlreverse
 import django.core.mail as mail
 
-from models import WorkItem, Job, WorkPeriod, WorkDay
+from models import WorkItem, Job, WorkDay, BiweeklyEmployee
 
 from gh_connect import GitHubConnector
 from models import Repo, Issue
@@ -260,8 +260,8 @@ def test_send_reminder_email(username, date=datetime.date.today()):
 @task
 def reconcile_db_with_gh(*args, **kwargs):
     ghc = GitHubConnector()
-    issues = ghc.get_all_issues()
     repos = ghc.get_all_repos()
+    issues = ghc.get_all_issues()
 
     for repo in repos:
         r = Repo(github_id=repo.id, name=repo.name)
@@ -272,6 +272,13 @@ def reconcile_db_with_gh(*args, **kwargs):
         i.title = issue.title
         i.number = issue.number
         i.repo = Repo.objects.get(name=issue.repository[1])
+        i.open = not issue.is_closed()
+        if issue.assignee:
+            try:
+                i.assignee = BiweeklyEmployee.objects.get(github_user=issue.assignee).user
+            except BiweeklyEmployee.DoesNotExist:
+                print "No BiweeklyEmployee with github_user '%s' exists" % issue.assignee
+        i.body = issue.body
         i.save()
 
     print "Not only did your task run successfully, but you're damned good looking too."

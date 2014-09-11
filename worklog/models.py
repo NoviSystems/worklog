@@ -9,6 +9,7 @@ import string
 class BiweeklyEmployee(models.Model):
     user = models.ForeignKey(User)
     univ_id = models.CharField(max_length=9, verbose_name='University ID')
+    github_user = models.CharField(max_length=16, null=True, blank=True)
     project_num = models.CharField(max_length=255, blank=True, verbose_name='Project #')
     obj_code = models.CharField(max_length=255, blank=True, verbose_name='Obj Code')
     hourly_pay = models.DecimalField(max_digits=5, decimal_places=2)
@@ -85,8 +86,11 @@ class Repo(models.Model):
 class Issue(models.Model):
     github_id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=256, null=True)
+    body = models.TextField(null=True)
     number = models.IntegerField()
     repo = models.ForeignKey(Repo, related_name='issues')
+    open = models.BooleanField(default=False)
+    assignee = models.ForeignKey(User, null=True)
 
     def __unicode__(self):
         return unicode(self.number) + u': ' + unicode(self.title)
