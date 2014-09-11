@@ -2,67 +2,48 @@
 {% load staticfiles %}
 
 {% block content %}
-    <div id="button-block" style="text-align: center; vertical-align: top; padding-top: 30px; padding-bottom: 50px">
-        <button class='btn btn-primary' type="button" id="gotoCrucible" style="test-align: center"
-            onclick="window.open('https://kaba.oit.ncsu.edu/WebTimeClock/main/index.jsp?actionEvent=cmd://startdialog')">Go to KABA</button>
-    </div>
+    <!--  -->
+    <div style="text-align: center; vertical-align: top; padding-top: 70px"></div>
 
-    <!-- Outstanding Work -->
- <!--    <div id="outstanding-work" style="margin: 0 auto; vertical-align: top; padding-top: 20px; padding-bottom: 30px">
-        {% if outstanding_work %}
-            <h2 style="text-align: center">Outstanding work days</h2>
-            <p style="text-align: center; padding-top: 20px">
-                {% for date, url in outstanding_work.items %}
-                    <a href="{% url 'worklog-date' date %}">{{ date }}</a>
-                    <br></br>
-                {% endfor %}
-            </p>
-        {% else %}
-             <h2 style="text-align: center">No unlogged work!</h2>
-        {% endif %}
-    </div> -->
-
-
-    <div id="work-pane" style="width: 50%; float: left">
+    <!-- Pane for outstanding work days, etc -->
+    <div id="work-pane" style="width: 50%; min-width: 280px; float: left; padding-bottom: 30px">
         <div class="panel panel-default" style="width: 90%; margin: 0 auto">
             <div class="panel-heading">Work</div>
 
-            {% if outstanding_work %}
-                <h3 style="text-align: center">Outstanding work days</h3>
-                <p style="text-align: center; padding-top: 20px">
-                    {% for date, url in outstanding_work.items %}
-                        <a href="{% url 'worklog-date' date %}">{{ date }}</a>
-                        <br></br>
-                    {% endfor %}
-                </p>
-            {% else %}
-                 <h3 style="text-align: center">No unlogged work!</h3>
-            {% endif %}
+                <table class="table table-bordered">
+                    {% for datestring, date, hours, show_link in past_seven_days %}
+                        <tr style="{%if 'Saturday' in datestring %}border-bottom: 2px solid black;{% else %}{% endif %}">
+                            {% if "Saturday" in datestring or "Sunday" in datestring %}
+                                <th style="width: 50%; text-align: center" class="text-muted">{{ datestring }}</th>
+                            {% else %}
+                                <th style="width: 50%; text-align: center">{{ datestring }}</th>
+                            {% endif %}
 
-
-            <ul class="list-group">
-                <div class="panel panel-default">
-                <table class="table table-bordered" style="">
-                    {% for date, day_name, hours in past_seven_days %}
-                        <tr>
-                            <th style="width: 50%; text-align: center">{{ day_name }},&nbsp;&nbsp;{{ date }}</th>
-                            <td style="width: 50%; text-align: center">{{ hours }}</td>
+                            {% if show_link %}
+                                <td style="width: 50%; text-align: center">
+                                {{ hours }}&nbsp;&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Add Item</a>)</small>
+                                </td>
+                            {% else %}
+                                <td style="width: 50%; text-align: center">{{ hours }}</td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </table>
-            </ul>
-            <h2 style="text-align: center">= {{ total_hours }} hours</h2>
+            <h3 style="text-align: center">{{ total_hours }} hours worked this week</h3>
         </div>
     </div>
 
-    <div id="github-pane" style="width: 50%; float: right">
+    <!-- Pane for the github issue listings -->
+    <div id="github-pane" style="width: 50%; min-width: 280px; float: left; padding-bottom: 30px">
         <div class="panel panel-default" style="width: 90%; margin: 0 auto">
             <div class="panel-heading">Github Issues</div>
             {% if repos_with_issues %}
                 <div class="list-group" id="repos">
                     {% for repo, issues in repos_with_issues.items %}
-                        <div class="list-group-item accordion-toggle" href="#{{ repo }}_issues" data-toggle="collapse">
-                            <h4>{{ repo }}
+                        <div class="list-group-item accordion-toggle">
+                            <h4>
+                                {{ repo }}&nbsp;&nbsp;
+                                <small>(<a href='#{{ repo }}_issues' data-toggle="collapse">show</a>)</small>
                                 <span href="#" class="badge" style="float: right">{{ issues|length }}</span>
                             </h4>
 
@@ -86,53 +67,4 @@
             </div>
         </div>
     </div>
-
-    <!-- Job Time Chart (Abandoned for the time being, values are hardcoded example values)-->
-    <!-- <div>
-        <div id="container" style="min-width: 300px; max-width: 600px; height: 400px; margin: 0 auto"></div>
-        <script type='text/javascript'>
-            $(function () {
-                $('#container').highcharts({
-                    chart: {
-                        type: 'bar'
-                    },
-                    title: {
-                        text: 'Monthly Overview',
-                        style: { fontSize: "30px" }
-                    },
-                    xAxis: {
-                        categories: ['Apples', 'Oranges', 'Pears', 'Grapes'],
-                        style: { fontSize: "22px" }
-                    },
-                    yAxis: {
-                        min: 0,
-                        title: {
-                            text: 'Total fruit consumption',
-                            style: { fontSize: "22px" }
-                        }
-                    },
-                    legend: {
-                        reversed: true
-                    },
-                    plotOptions: {
-                        series: {
-                            stacking: 'normal'
-                        }
-                    },
-                    series: [
-                        {
-                            name: 'John',
-                            data: [5, 3, 4, 7]
-                        }, {
-                            name: 'Jane',
-                            data: [2, 2, 3, 2]
-                        }, {
-                            name: 'Joe',
-                            data: [3, 4, 4, 2]
-                        }
-                    ]
-                    });
-            });
-            </script>
-    </div> -->
 {% endblock %}
