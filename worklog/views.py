@@ -1,9 +1,6 @@
 import datetime
 import calendar
 import time
-import collections
-import itertools
-import random
 
 from django.utils import simplejson
 from django.core import serializers
@@ -20,7 +17,7 @@ from django.db.models import Sum
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
 from django.forms.models import modelformset_factory
 from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue
-from worklog.tasks import generate_invoice, get_reminder_dates_for_user, create_reminder_url
+from worklog.tasks import generate_invoice, get_reminder_dates_for_user
 
 from labsite import settings
 
@@ -44,11 +41,14 @@ def _itercolumns(item):
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
 
 
-# def get_users_workitems_from_past_week(user):
-#     today = datetime.date.today()
-#     seven_days_ago = today - datetime.timedelta(days=7)
-
-#     return get_users_workitems_in_daterange(user, seven_days_ago, today)
+def find_previous_sunday(date):
+    """ Returns the most recent sunday"""
+    dow = date.isoweekday()
+    if dow == 7:
+        last_sunday = date
+    else:
+        last_sunday = date - datetime.timedelta(days=dow)
+    return last_sunday
 
 
 def get_users_workitems_in_daterange(user, start_date, end_date):
@@ -61,22 +61,12 @@ def get_users_workitems_for_date(user, date):
     return WorkItem.objects.filter(user=user, date=date)
 
 
-# def get_hours_per_date_from_workitems(workitems):
-#     """ Given a list of work items, return a dictionary of date: hours worked """
-#     hours_per_date = {item.date: 0 for item in workitems}  # create a dictionary of dates with workitems for them
-
-#     # For every date in that dictionary, filter the workitems by date, and sum up the total hours in that list
-#     for date, hours in hours_per_date.items():
-#         hours_per_date[date] = workitems.filter(date=date).aggregate(Sum('hours'))['hours__sum']
-
-#     return hours_per_date
-
-
-def get_past_week():
+def get_past_week_dates():
+    """ Gets the dates for the past week and returns them in a list ordered from most recent to least recent """
     today = datetime.date.today()
     past_week_dates = []
 
-    for i in range(1, 8):
+    for i in range(0, 7):
         date = today - datetime.timedelta(days=i)
         past_week_dates.append(date)
 
@@ -84,7 +74,11 @@ def get_past_week():
 
 
 def get_total_hours_from_workitems(workitems):
-    return workitems.aggregate(Sum('hours'))['hours__sum']
+    """ Sums up the total hours worked in a list of workitems """
+    total = workitems.aggregate(Sum('hours'))['hours__sum']
+    if total is None:
+        return 0
+    return total
 
 
 class HomepageView(TemplateView):
@@ -96,49 +90,35 @@ class HomepageView(TemplateView):
         ## The order of this list is important (based on date.weekday() implementation), and should not be changed ##
         day_list = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         user = self.request.user
+        today = datetime.date.today()
 
-        outstanding_work = {str(day): create_reminder_url(day) for day in get_reminder_dates_for_user(user)}  # dictionary of date: url
+        # an ordered dictionary of unreconciled/empty work dates
+        outstanding_work = [date for date in reversed(get_reminder_dates_for_user(user))]
 
         past_seven_days = []
-        for date in get_past_week():
-            datestring = str(date)[5:].lstrip('0')  # get the year-month-date representation, strip off the year and 0 in front of month
-            weekday = day_list[date.weekday()]      # get the day name (eg. 'Monday') for that date
-            hours = get_total_hours_from_workitems(get_users_workitems_for_date(user, date))  # get the total hours for that day's workitems
+        for date in get_past_week_dates():
+            # get the year-month-date representation, strip off the year and any 0's in front of the month
+            datestring = day_list[date.weekday()] + "   " + str(date)[5:].lstrip('0')
+            # get the total hours for that day's workitems
+            hours = get_total_hours_from_workitems(get_users_workitems_for_date(user, date))
 
-            tup = (datestring, weekday, hours)
+            show_link = date in outstanding_work
+
+            tup = (datestring, date, hours, show_link)
             past_seven_days.append(tup)
 
-        total_hours = sum([item[2] for item in past_seven_days if item[2] is not None])  # float of total worked during week
+        # float of total worked during week
+        total_hours = get_total_hours_from_workitems(get_users_workitems_in_daterange(user, find_previous_sunday(today), today))
 
-        test_issue = Issue(1734605)
-        test_issue.title = "Homepage"
-        test_issue.number = 22
-        test_issue.open = True
-        test_issue.body = """
-        Going to /worklog currently defaults to redirecting to /worklog/today/. The worklog main page should instead contain useful information.
+        open_assigned_issues = Issue.objects.filter(assignee=user, open=True)
+        repos_with_assigned_issues = {}
+        for issue in open_assigned_issues:
+            if issue.repo:
+                if issue.repo not in repos_with_assigned_issues:
+                    repos_with_assigned_issues[issue.repo] = []
 
-            List all outstanding, unreconciled days.
-            Provide a summary of hours worked this week
-            maybe a breakdown of hours worked for given jobs.
-            go nuts. Comment on what data or actions seem useful
+                repos_with_assigned_issues[issue.repo].append(issue)
 
-        maybe draw inspiration from github and other sources.
-         """
-        test_issue2 = Issue(1734606)
-        test_issue2.title = "Single datatable workitem prototype"
-        test_issue2.number = 15
-        test_issue2.open = True
-        test_issue2.body = """
-        Try to merge the UI for creating/updating new/existing workitems into a single datatable.
-
-        This implementation should leverage rivets or another data binding library.
-        """
-        # open_assigned_issues = Issue.objects.filter(assignee=user, open=True)
-        # open_assigned_issues = Issue.objects.all()    ## Sort by number
-        open_assigned_issues = [test_issue, test_issue2]
-        repos_with_assigned_issues = {"test": open_assigned_issues, "test2": open_assigned_issues}  # repo_name: list of issues
-
-        context.update({'outstanding_work': outstanding_work})
         context.update({'past_seven_days': past_seven_days})
         context.update({'total_hours': total_hours})
         context.update({'repos_with_issues': repos_with_assigned_issues})

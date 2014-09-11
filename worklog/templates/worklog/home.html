@@ -9,27 +9,28 @@
     <div id="work-pane" style="width: 50%; min-width: 280px; float: left; padding-bottom: 30px">
         <div class="panel panel-default" style="width: 90%; margin: 0 auto">
             <div class="panel-heading">Work</div>
+            <div class="panel-body">
+                <h3 style="text-align: center">{{ total_hours }} hours worked this week</h3>
+            </div>
+            <table class="table table-bordered">
+                {% for datestring, date, hours, show_link in past_seven_days %}
+                    <tr style="{%if 'Saturday' in datestring %}border-bottom: 2px solid black;{% else %}{% endif %}">
+                        {% if "Saturday" in datestring or "Sunday" in datestring %}
+                            <th style="width: 50%; text-align: center" class="text-muted">{{ datestring }}</th>
+                        {% else %}
+                            <th style="width: 50%; text-align: center">{{ datestring }}</th>
+                        {% endif %}
 
-                <table class="table table-bordered">
-                    {% for datestring, date, hours, show_link in past_seven_days %}
-                        <tr style="{%if 'Saturday' in datestring %}border-bottom: 2px solid black;{% else %}{% endif %}">
-                            {% if "Saturday" in datestring or "Sunday" in datestring %}
-                                <th style="width: 50%; text-align: center" class="text-muted">{{ datestring }}</th>
-                            {% else %}
-                                <th style="width: 50%; text-align: center">{{ datestring }}</th>
-                            {% endif %}
-
-                            {% if show_link %}
-                                <td style="width: 50%; text-align: center">
-                                {{ hours }}&nbsp;&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Add Item</a>)</small>
-                                </td>
-                            {% else %}
-                                <td style="width: 50%; text-align: center">{{ hours }}</td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                </table>
-            <h3 style="text-align: center">{{ total_hours }} hours worked this week</h3>
+                        {% if show_link %}
+                            <td style="width: 50%; text-align: center">
+                            {{ hours }}&nbsp;&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Add Item</a>)</small>
+                            </td>
+                        {% else %}
+                            <td style="width: 50%; text-align: center">{{ hours }}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </table>
         </div>
     </div>
 
@@ -51,7 +52,7 @@
                                 {% for issue in issues %}
                                     <li class="list-group-item">
                                         <h4>{{ issue.number }} - {{ issue.title }}</h4>
-                                        <p>{{ issue.body }}</p>
+                                        <p>{{ issue.body|truncatechars:250 }}</p>
                                         <br/>
                                     </li>
                                 {% endfor %}
