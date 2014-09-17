@@ -264,7 +264,7 @@ def reconcile_db_with_gh(*args, **kwargs):
     issues = ghc.get_all_issues()
 
     for repo in repos:
-        r = Repo(github_id=repo.id, name=repo.name)
+        r = Repo(github_id=repo.id, name=repo.name, url=repo.html_url)
         r.save()
 
     for issue in issues:
@@ -273,6 +273,7 @@ def reconcile_db_with_gh(*args, **kwargs):
         i.number = issue.number
         i.repo = Repo.objects.get(name=issue.repository[1])
         i.open = not issue.is_closed()
+        i.url = issue.html_url
         if issue.assignee:
             try:
                 i.assignee = BiweeklyEmployee.objects.get(github_user=issue.assignee).user

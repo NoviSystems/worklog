@@ -78,6 +78,7 @@ class Job(models.Model):
 class Repo(models.Model):
     github_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=256)
+    url = models.URLField(null=True)
 
     def __unicode__(self):
         return unicode(self.name)
@@ -91,6 +92,7 @@ class Issue(models.Model):
     repo = models.ForeignKey(Repo, related_name='issues')
     open = models.BooleanField(default=False)
     assignee = models.ForeignKey(User, null=True)
+    url = models.URLField(null=True)
 
     def __unicode__(self):
         return unicode(self.number) + u': ' + unicode(self.title)
