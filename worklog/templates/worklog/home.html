@@ -9,12 +9,13 @@
     <div id="work-pane" style="width: 50%; min-width: 280px; float: left; padding-bottom: 30px">
         <div class="panel panel-default" style="width: 90%; margin: 0 auto">
             <div class="panel-heading">Work</div>
+
             <div class="panel-body">
                 <h3 style="text-align: center">{{ total_hours }} hours worked this week</h3>
             </div>
             <table class="table table-bordered">
                 {% for datestring, date, hours, show_link in past_seven_days %}
-                    <tr style="{%if 'Saturday' in datestring %}border-bottom: 2px solid black;{% else %}{% endif %}">
+                    <tr style="{%if 'Saturday' in datestring %}border-bottom: 2px solid gray;{% else %}{% endif %}">
                         {% if "Saturday" in datestring or "Sunday" in datestring %}
                             <th style="width: 50%; text-align: center" class="text-muted">{{ datestring }}</th>
                         {% else %}
@@ -23,7 +24,7 @@
 
                         {% if show_link %}
                             <td style="width: 50%; text-align: center">
-                            {{ hours }}&nbsp;&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Add Item</a>)</small>
+                                {{ hours }}&nbsp;&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Log Work</a>)</small>
                             </td>
                         {% else %}
                             <td style="width: 50%; text-align: center">{{ hours }}</td>
@@ -38,22 +39,22 @@
     <div id="github-pane" style="width: 50%; min-width: 280px; float: left; padding-bottom: 30px">
         <div class="panel panel-default" style="width: 90%; margin: 0 auto">
             <div class="panel-heading">Github Issues</div>
+
             {% if repos_with_issues %}
                 <div class="list-group" id="repos">
                     {% for repo, issues in repos_with_issues.items %}
                         <div class="list-group-item accordion-toggle">
                             <h4>
-                                {{ repo }}&nbsp;&nbsp;
-                                <small>(<a href='#{{ repo }}_issues' data-toggle="collapse">show</a>)</small>
+                                <a href='#{{ repo }}_issues' data-toggle="collapse">{{ repo.name }}</a>
+                                <small>&nbsp;&nbsp;(<a href="{{ repo.url }}">github</a>)</small>
                                 <span href="#" class="badge" style="float: right">{{ issues|length }}</span>
                             </h4>
 
                             <div class="list-group collapse out" id="{{ repo }}_issues">
                                 {% for issue in issues %}
                                     <li class="list-group-item">
-                                        <h4>{{ issue.number }} - {{ issue.title }}</h4>
-                                        <p>{{ issue.body|truncatechars:250 }}</p>
-                                        <br/>
+                                        <h4><span class="text-muted">#{{ issue.number }}</span>&nbsp;&nbsp;<a href="{{ issue.url }}">{{ issue.title }}</a></h4>
+                                        <p>{{ issue.body|truncatewords:35 }}</p>
                                     </li>
                                 {% endfor %}
                             </div>
