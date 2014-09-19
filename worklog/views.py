@@ -134,8 +134,7 @@ class CurrentDateRedirectView(RedirectView):
 
 
 def createWorkItem(request, date='today'):
-    WorkItemFormSet = modelformset_factory(
-        WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
+    WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
 
     if date == 'today':
         date = datetime.date.today()
@@ -165,8 +164,7 @@ def createWorkItem(request, date='today'):
                 else:
                     return HttpResponseRedirect('/worklog/view/%s/%s_%s/' % (request.user.username, date, date))
     elif datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
-        formset = WorkItemFormSet(
-            logged_in_user=request.user)  # An unbound form
+        formset = WorkItemFormSet(logged_in_user=request.user)  # An unbound form
     else:
         formset = None
 
@@ -174,8 +172,7 @@ def createWorkItem(request, date='today'):
     rawitems = list(tuple(_itercolumns(item)) for item in items)
 
     if BiweeklyEmployee.objects.filter(user=request.user).count() > 0:
-        holidays = Holiday.objects.filter(
-            start_date__gte=date, end_date__lte=date)
+        holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
     else:
         holidays = None
 
@@ -214,8 +211,7 @@ class WorkViewMenu(object):
             if items and not isinstance(items[0], WorkViewMenu.MenuItem):
                 items = list(WorkViewMenu.MenuItem(q, n) for q, n in items)
             self.items = items if items else []
-            assert all(isinstance(item, WorkViewMenu.MenuItem)
-                       for item in self.items)
+            assert all(isinstance(item, WorkViewMenu.MenuItem) for item in self.items)
 
         def __iter__(self):
             return self.items.__iter__()
@@ -255,8 +251,7 @@ class WorkViewerFilter(object):
         if self.value is not None:
             if self.model:
                 qs = self.model.objects.filter(pk=self.value)
-                name = getattr(
-                    qs[0], self.name_attr) if qs.exists() else self.error_name
+                name = getattr(qs[0], self.name_attr) if qs.exists() else self.error_name
             else:
                 name = self.value
             return (self.title, "{0}".format(name))
@@ -319,8 +314,7 @@ class WorkViewer(object):
                 self.current_queries[filter.key] = q
 
         self.menu = WorkViewMenu()
-        allsubmenu = WorkViewMenu.SubMenu(
-            "", [WorkViewMenu.MenuItem("", "all")])
+        allsubmenu = WorkViewMenu.SubMenu("", [WorkViewMenu.MenuItem("", "all")])
         self.menu.submenus.append(allsubmenu)
 
         # build the links
@@ -342,19 +336,16 @@ class WorkViewer(object):
 
     def build_user_links(self):
         # The basequery includes all current queries except for 'user'
-        basequery = '&'.join(
-            v for k, v in self.current_queries.iteritems() if k != "user")
+        basequery = '&'.join(v for k, v in self.current_queries.iteritems() if k != "user")
         alllink = (basequery, 'all users')
         if basequery:
             basequery += '&'
-        links = list(("{1}user={0}".format(user.pk, basequery), user.username)
-                     for user in User.objects.all())
+        links = list(("{1}user={0}".format(user.pk, basequery), user.username) for user in User.objects.all())
         links = [alllink] + links
         self.menu.submenus.append(WorkViewMenu.SubMenu("User", links))
 
     def build_yearmonth_links(self):
-        basequery = '&'.join(
-            v for k, v in self.current_queries.iteritems() if k != "datemin" and k != "datemax")
+        basequery = '&'.join(v for k, v in self.current_queries.iteritems() if k != "datemin" and k != "datemax")
         alllink = (basequery, 'all dates')
         if basequery:
             basequery += '&'
@@ -362,26 +353,21 @@ class WorkViewer(object):
         # get all dates
         values_list = WorkItem.objects.values_list('date', flat=True)
         # Strip the day from dates and remove duplicates.
-        unique_dates = list(set(
-            val.replace(day=1) for val in values_list if isinstance(val, datetime.date)
-        ))
+        unique_dates = list(set(val.replace(day=1) for val in values_list if isinstance(val, datetime.date)))
         # Sort so most recent date is at the top.
         unique_dates.sort(reverse=True)
         ranges = list(make_month_range(x) for x in unique_dates)
 
-        links = list(("{2}datemin={0}&datemax={1}".format(
-            a, b, basequery), a.strftime('%Y %B')) for a, b in ranges)
+        links = list(("{2}datemin={0}&datemax={1}".format(a, b, basequery), a.strftime('%Y %B')) for a, b in ranges)
         links = [alllink] + links
         self.menu.submenus.append(WorkViewMenu.SubMenu("Date", links))
 
     def build_job_links(self):
-        basequery = '&'.join(
-            v for k, v in self.current_queries.iteritems() if k != "job")
+        basequery = '&'.join(v for k, v in self.current_queries.iteritems() if k != "job")
         alllink = (basequery, 'all jobs')
         if basequery:
             basequery += '&'
-        links = list(("{1}job={0}".format(job.pk, basequery), job.name)
-                     for job in Job.objects.all())
+        links = list(("{1}job={0}".format(job.pk, basequery), job.name) for job in Job.objects.all())
         links = [alllink] + links
         self.menu.submenus.append(WorkViewMenu.SubMenu("Job", links))
 
@@ -595,8 +581,7 @@ class ChartView(TemplateView):
                         return self.error('There is no work or funding available for job %s' % job)
                     else:
                         if funding is not None:
-                            last_funding = funding.latest(
-                                'date_available').date_available
+                            last_funding = funding.latest('date_available').date_available
                         else:
                             last_funding = None
 
@@ -640,8 +625,7 @@ class ChartView(TemplateView):
                         work_date = None
 
                     if funding is not None:
-                        funding_date = funding.order_by(
-                            'date_available')[0].date_available
+                        funding_date = funding.order_by('date_available')[0].date_available
                     else:
                         funding_date = None
 
@@ -744,10 +728,8 @@ class JobDataView(View):
 
             # Look into why this is occurring
             # The milliseconds are a whole day behind, add one day
-            date = datetime.datetime.fromtimestamp(
-                date_in_millis // 1000) + datetime.timedelta(days=1)
-            work_items = WorkItem.objects.filter(
-                job__pk=job_id, date=date.date())
+            date = datetime.datetime.fromtimestamp(date_in_millis // 1000) + datetime.timedelta(days=1)
+            work_items = WorkItem.objects.filter(job__pk=job_id, date=date.date())
             data = serializers.serialize('json', work_items)
 
             return HttpResponse(data, mimetype='application/json')
