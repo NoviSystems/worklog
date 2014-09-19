@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse as urlreverse
 import django.core.mail as mail
 
-from models import WorkItem, Job, WorkDay, BiweeklyEmployee
+from models import WorkItem, Job, WorkDay, GithubAlias
 
 from gh_connect import GitHubConnector
 from models import Repo, Issue
@@ -276,9 +276,9 @@ def reconcile_db_with_gh(*args, **kwargs):
         i.url = issue.html_url
         if issue.assignee:
             try:
-                i.assignee = BiweeklyEmployee.objects.get(github_user=issue.assignee).user
-            except BiweeklyEmployee.DoesNotExist:
-                print "No BiweeklyEmployee with github_user '%s' exists" % issue.assignee
+                i.assignee = GithubAlias.objects.get(github_name=issue.assignee).user
+            except GithubAlias.DoesNotExist:
+                print "No GithubUser '%s' exists" % issue.assignee
         i.body = issue.body
         i.save()
 

@@ -9,7 +9,6 @@ import string
 class BiweeklyEmployee(models.Model):
     user = models.ForeignKey(User)
     univ_id = models.CharField(max_length=9, verbose_name='University ID')
-    github_user = models.CharField(max_length=16, null=True, blank=True)
     project_num = models.CharField(max_length=255, blank=True, verbose_name='Project #')
     obj_code = models.CharField(max_length=255, blank=True, verbose_name='Obj Code')
     hourly_pay = models.DecimalField(max_digits=5, decimal_places=2)
@@ -19,6 +18,11 @@ class BiweeklyEmployee(models.Model):
 
     def __unicode__(self):
         return u'%s' % self.user.get_full_name()
+
+
+class GithubAlias(models.Model):
+    user = models.ForeignKey(User)
+    github_name = models.CharField(max_length=39, null=True, blank=True)  # 39 is github max
 
 
 class Holiday(models.Model):
@@ -132,8 +136,8 @@ class WorkItem(models.Model):
     invoiced.is_invoiced_filter = True
 
     def __unicode__(self):
-        return u'{user} on {date} worked {hours} hours on {item} for job {job}'.format(
-            user=self.user, date=self.date, hours=self.hours, item=self.text, job=self.job)
+        return u'{user} on {date} worked {hours} hours on job {job} doing {item}'.format(
+            user=self.user, date=self.date, hours=self.hours, job=self.job, item=self.text)
 
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):
