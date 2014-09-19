@@ -16,7 +16,7 @@ from django.db.models import Sum
 
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
 from django.forms.models import modelformset_factory
-from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue, Repo
+from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user
 
 from labsite import settings
@@ -65,10 +65,7 @@ def get_past_week_dates():
 
 def get_total_hours_from_workitems(workitems):
     """ Sums up the total hours worked in a list of workitems """
-    total = workitems.aggregate(Sum('hours'))['hours__sum']
-    if total is None:
-        return 0
-    return total
+    return workitems.aggregate(Sum('hours'))['hours__sum'] or 0
 
 
 class HomepageView(TemplateView):
@@ -79,8 +76,7 @@ class HomepageView(TemplateView):
 
         # The order of this list is important (based on date.weekday()
         # implementation), and should not be changed ##
-        day_list = ['Monday', 'Tuesday', 'Wednesday',
-                    'Thursday', 'Friday', 'Saturday', 'Sunday']
+        day_list = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         user = self.request.user
         today = datetime.date.today()
 
@@ -92,31 +88,30 @@ class HomepageView(TemplateView):
         for date in get_past_week_dates():
             # get the year-month-date representation, strip off the year and
             # any 0's in front of the month
-            datestring = day_list[date.weekday()] + "   " + str(date)[5:].lstrip('0')
+            datestring = "{weekday} {date}".format(weekday=day_list[date.weekday()], date=date.strftime('%m-%d').lstrip('0'))
             # get the total hours for that day's workitems
-            hours = get_total_hours_from_workitems(
-                WorkItem.objects.filter(user=user, date=date))
+            hours = get_total_hours_from_workitems(WorkItem.objects.filter(user=user, date=date))
             # only show the link to the workitem if it's recent and unreconciled
             show_link = date in outstanding_work
             # package everything up
             tup = (datestring, date, hours, show_link)
             past_seven_days.append(tup)
 
-        # totals up the hours from last sunday to today for [user]
+        # totals up the hours from last sunday to today for [user] (different from last 7 days)
         total_hours = get_total_hours_from_workitems(
-            WorkItem.objects.filter(user=user, date__gte=find_previous_sunday(today), date__lte=today))
+            WorkItem.objects.filter(user=user, date__range=(find_previous_sunday(today), today)))
         # all issues assigned to [user] which are currently open
-        open_assigned_issues = Issue.objects.filter(assignee=user, open=True)
-        # get the repo objects associated with open issues assigned to [user]
-        repos_with_assigned_issues = [
-            Repo.objects.get(pk=key) for key in open_assigned_issues.values_list('repo_id', flat=True).distinct()]
-        # package them in a dict in form {repo: [associated issues for user]}
-        repos_with_assigned_issues = {
-            repo: open_assigned_issues.filter(repo=repo) for repo in repos_with_assigned_issues}
+        open_user_issues = Issue.objects.select_related('repo').filter(assignee=user, open=True)
+        # filter the issues into a dictionary of {repo: [associated issues]}
+        repos_with_issues = {}
+        for issue in open_user_issues:
+            if not issue.repo in repos_with_issues:
+                repos_with_issues[issue.repo] = []
+            repos_with_issues[issue.repo].append(issue)
 
         context.update({'past_seven_days': past_seven_days})
         context.update({'total_hours': total_hours})
-        context.update({'repos_with_issues': repos_with_assigned_issues})
+        context.update({'repos_with_issues': repos_with_issues})
         return context
 
 
