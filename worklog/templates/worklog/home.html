@@ -2,12 +2,13 @@
 {% load staticfiles %}
 
 {% block content %}
-    <!--  -->
-    <div style="text-align: center; vertical-align: top; padding-top: 70px"></div>
+<!-- Add padding to the top -->
+<div style="padding-top: 50px"></div>
 
+<div class="row">
     <!-- Pane for outstanding work days, etc -->
-    <div id="work-pane" style="width: 50%; min-width: 280px; float: left; padding-bottom: 30px">
-        <div class="panel panel-default" style="width: 90%; margin: 0 auto">
+    <div id="work-pane" class="col-sm-6">
+        <div class="panel panel-default">
             <div class="panel-heading">Work</div>
 
             <div class="panel-body">
@@ -17,18 +18,15 @@
                 {% for datestring, date, hours, show_link in past_seven_days %}
                     <tr style="{%if 'Saturday' in datestring %}border-bottom: 2px solid gray;{% else %}{% endif %}">
                         {% if "Saturday" in datestring or "Sunday" in datestring %}
-                            <th style="width: 50%; text-align: center" class="text-muted">{{ datestring }}</th>
+                            <th class="col-xs-6 text-center text-muted">{{ datestring }}</th>
                         {% else %}
-                            <th style="width: 50%; text-align: center">{{ datestring }}</th>
+                            <th class="col-xs-6 text-center">{{ datestring }}</th>
                         {% endif %}
 
-                        {% if show_link %}
-                            <td style="width: 50%; text-align: center">
-                                {{ hours }}&nbsp;&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Log Work</a>)</small>
-                            </td>
-                        {% else %}
-                            <td style="width: 50%; text-align: center">{{ hours }}</td>
-                        {% endif %}
+                        <td class="col-xs-6 text-center">
+                            {{ hours }}
+                            {% if show_link %}&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Log Work</a>)</small>{% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </table>
@@ -36,8 +34,8 @@
     </div>
 
     <!-- Pane for the github issue listings -->
-    <div id="github-pane" style="width: 50%; min-width: 280px; float: left; padding-bottom: 30px">
-        <div class="panel panel-default" style="width: 90%; margin: 0 auto">
+    <div id="github-pane" class="col-sm-6">
+        <div class="panel panel-default">
             <div class="panel-heading">Github Issues</div>
 
             {% if repos_with_issues %}
@@ -63,10 +61,11 @@
                 </div>
             {% else %}
                 <li class="list-group-item">
-                    <h3 style="text-align: center; padding-top: 30">No open issues assigned</h3>
+                    <h3 class="text-center" style="padding-top: 30px">No open issues assigned</h3>
                 </li>
             {% endif %}
             </div>
         </div>
     </div>
+</div>
 {% endblock %}

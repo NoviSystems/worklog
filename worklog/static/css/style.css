@@ -1,0 +1,13 @@
+body {
+    overflow-y: scroll;
+}
+.table .form-group {
+    margin-bottom: 0;
+}
+tr.workitem-fade  td{
+    background-color: white;
+    -webkit-transition: background-color 1s ease-in-out;
+    -moz-transition: background-color 1s ease-in-out;
+    -o-transition: background-color 1s ease-in-out;
+    transition: background-color 1s ease-in-out;
+}
