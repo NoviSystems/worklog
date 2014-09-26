@@ -142,7 +142,7 @@ class WorkItem(models.Model):
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):
             if(not self.job.users.filter(id=self.user.id).exists()):
-                return
+                raise ValueError("Specified job is not available to {user}".format(user=str(self.user)))
 
         commit, hash, text = ['', '', '']
 
