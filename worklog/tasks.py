@@ -243,9 +243,9 @@ def send_reminder_emails():
             for email in email_list:
                 email.connection = connection
                 email.send()
-        print "Reminder emails sent"
-    else:
-        print "Reminder emails turned off, not sent."
+    #     print "Reminder emails sent"
+    # else:
+    #     print "Reminder emails turned off, not sent."
 
 
 def test_send_reminder_email(username, date=datetime.date.today()):

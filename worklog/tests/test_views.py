@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from datetime import date
 
 from factories import UserFactory, IssueFactory, RepoFactory, WorkItemFactory
-from worklog.views import get_past_week_from_date, find_previous_sunday, get_total_hours_from_workitems
+from worklog.views import get_past_n_days, find_previous_sunday, get_total_hours_from_workitems
 from worklog.models import WorkItem
 
 
@@ -45,9 +45,16 @@ class ViewsFunctionsTest(WebTest):
         test_date = date(2014, 9, 25)
         self.assertEqual(find_previous_sunday(test_date), date(2014, 9, 21))
 
-    def test_get_past_week_from_date(self):
-        test_week = [date(2014, 9, i) for i in range(7, 0, -1)]  # list of dates from 9-7 to 9-1 in descending order
-        self.assertListEqual(get_past_week_from_date(date(2014, 9, 7)), test_week)
+        test_date = date(2014, 9, 21)
+        self.assertEqual(find_previous_sunday(test_date), date(2014, 9, 21))
+
+        test_date = date(2014, 9, 20)
+        self.assertEqual(find_previous_sunday(test_date), date(2014, 9, 14))
+
+    def test_get_past_n_days(self):
+        # list of dates from 9-7 to 9-1 in descending order
+        test_week = [date(2014, 9, i) for i in range(7, 0, -1)]
+        self.assertListEqual(get_past_n_days(date(2014, 9, 7)), test_week)
 
     def test_get_total_hours_from_workitems(self):
         user = UserFactory(username="test_user2")

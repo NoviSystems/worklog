@@ -51,8 +51,8 @@ def find_previous_sunday(date):
     return last_sunday
 
 
-def get_past_week_from_date(date):
-    """ Gets the dates for the past week and returns them in a list ordered from most recent to least recent """
+def get_past_n_days(date, num=7):
+    """ Gets the past [num] days and returns them in a list ordered from most recent to least recent """
     past_week_dates = []
     for i in range(0, 7):
         new_date = date - datetime.timedelta(days=i)
@@ -83,7 +83,7 @@ class HomepageView(TemplateView):
             date for date in reversed(get_reminder_dates_for_user(user))]
 
         past_seven_days = []
-        for date in get_past_week_from_date(today):
+        for date in get_past_n_days(today):
             # get the year-month-date representation, strip off the year and
             # any 0's in front of the month
             datestring = "{weekday} {date}".format(weekday=day_list[date.weekday()], date=date.strftime('%m-%d').lstrip('0'))
