@@ -278,7 +278,7 @@ def reconcile_db_with_gh(*args, **kwargs):
             try:
                 i.assignee = GithubAlias.objects.get(github_name=issue.assignee).user
             except GithubAlias.DoesNotExist:
-                print "No GithubUser '%s' exists" % issue.assignee
+                print "No GithubAlias with github_name '%s' exists" % issue.assignee
         i.body = issue.body
         i.save()
 
