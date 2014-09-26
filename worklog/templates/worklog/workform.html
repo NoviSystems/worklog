@@ -18,6 +18,7 @@
 <script src="{% static 'js/app/formsets.js' %}"></script>
 <script src="{% static 'js/app/tables.js' %}"></script>
 <script src="{% static 'js/app/workitem.js' %}"></script>
+<script src="{% static 'js/app/worklog.js' %}"></script>
 
 {% if open %}
 <h2>New Work Item</h2>
@@ -54,8 +55,28 @@
                 </tr>
             </thead>
             <tbody>
+                <div class="modal fade bs-delete-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="myModalLabel">You have chosen to delete a work item.</h4>
+                        </div>
+                        <div class="modal-body">
+                            Please confirm your choice.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-success" data-dismiss="modal">Keep</button>
+                            <button type="button" class="btn btn-danger" id="delete">Delete</button>
+                        </div>
+                    </div>
+                  </div>
+                </div>
             </tbody>
         </table>
+        {{#each WorkItemApp.WorkItemsController}}
+            {{id}} {{job}}
+        {{/each}}
     </script>
 
     <script id="row-template" type="text/x-handlebars-template">

@@ -74,8 +74,6 @@ function WorkItemFormTable(rowTemplate) {
         this.rows.push(newForm);
         this.rowsBySelector['#' + selector] = newForm;
 
-        console.log(rowTemplate(newForm.context));
-
         if (tail === null) {
             $(rowTemplate(newForm.context)).prependTo('#form-table tbody').hide().fadeIn('fast');
         } else {

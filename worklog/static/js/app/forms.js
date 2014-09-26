@@ -106,7 +106,7 @@ function WorkItemForm(workItem, selector, formset) {
                 return 0;
             });
 
-            for (var i in issues) {
+            for (var i = 0; i < issues.length; i++) {
                 $(this.selector + ' .issue').append('<option value="' + issues[i].github_id + '">' + issues[i].number + ': ' + issues[i].title + '</option>');
             }
             if (this.issue.value) {

@@ -20,24 +20,15 @@
         <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
         <script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 
-        <style type="text/css">
-            .table .form-group {
-                margin-bottom: 0;
-            }
-            tr.workitem-fade  td{
-                background-color: white;
-                -webkit-transition: background-color 1s ease-in-out;
-                -moz-transition: background-color 1s ease-in-out;
-                -o-transition: background-color 1s ease-in-out;
-                transition: background-color 1s ease-in-out;
-            }
-        </style>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.1/moment.min.js"></script>
+        <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
     </head>
 
     <body>
+        {% verbatim %}
 
-        <script type="text/x-handlebars" data-template-name="worklog">
+        <script type="text/x-handlebars">
             <div class="navbar navbar-default navbar-fixed-top" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
@@ -53,38 +44,76 @@
                         </a>
                     </div>
                     <div class="navbar-collapse collapse">
-                        {% if user.is_authenticated %}
                         <ul class="nav navbar-nav">
-                            <li><a href="/worklog/today">New Work Item <i class="fa fa-tags"></i></a>
+                            <li>{{#link-to 'today'}}New Work Item <i class="fa fa-tags"></i>{{/link-to}}
                             </li>
                             <li><a href="/worklog/chart">Chart <i class="fa fa-book"></i></a>
                             </li>
-                            <li><a href="/worklog/view/{{ user }}">My Work <i class="fa fa-folder"></i></a>
+                            <li>{{#link-to 'workitems'}}My Work <i class="fa fa-folder"></i>{{/link-to}}
                             </li>
                         </ul>
                         <ul class="nav navbar-nav navbar-right">
-                            <li><a href="/worklog/add">{{ user }}</i></a>
+                            <li><a href="/worklog/add">user</i></a>
                             </li>
                             <li>
                                 <a href="/lunch">
                                     <span class="label label-success">Lunch</span>
                                 </a>
                             </li>
-                            <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i></a>
+                            <li><a href=""><i class="fa fa-sign-out"></i></a>
                             </li>
                         </ul>
-                        {% endif %}
                     </div>
-                    <!--/.nav-collapse -->
+                    <!--/.nav-collapse-->
                 </div>
             </div>
-
             <div class="container" style="padding-top: 50px">
 
                 {{outlet}}
 
             </div>
         </script>
+
+
+        <script type="text/x-handlebars" data-template-name="today">
+            <h3>Add a new Work Item</h3>
+
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="workitems">
+            <h3>Work Items</h3>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="col-md-2">Job</th>
+                        <th class="col-md-1">Date</th>
+                        <th class="col-md-1">Hours</th>
+                        <th class="col-md-2">Repo</th>
+                        <th class="col-md-2">Issue</th>
+                        <th class="col-md-2">Description</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each}}
+                    <tr>
+                        <td class="col-md-2">{{job.name}}</td>
+                        <td class="col-md-1>">{{format-date date}}</td>
+                        <td class="col-md-1">{{hours}}</td>
+                        <td class="col-md-2">{{repo.name}}</td>
+                        <td class="col-md-2">{{issue.title}}</td>
+                        <td class="col-md-2">{{text}}</td>
+                        <td class="controls" align="right">
+                            <button type="button" class="btn btn-link btn-xs edit" data-target=".bs-edit-modal-sm" data-workitem><span class="glyphicon glyphicon-pencil"></span></button>
+                            <button type="button" class="btn btn-link btn-xs delete" data-toggle="modal" data-target=".bs-delete-modal-sm" data-workitem><span class="glyphicon glyphicon-trash"></span></button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </script>
+
+        {% endverbatim %}
 
 
         <script>

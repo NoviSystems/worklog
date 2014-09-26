@@ -31,11 +31,11 @@ function JobSelectField(value, data) {
 
     var options = [{value: '', text: 'None'}];
 
-    for (var i in jobList) {
+    for (var i = 0; i < jobList.length; i++) {
         options.push({ 
             value: jobList[i].id,
             text: jobList[i].name
-        });
+        });            
     }
 
     var context = {
@@ -56,7 +56,7 @@ function RepoSelectField(value, data) {
 
     var options = [{value: '', text: 'None'}];
 
-    for (var i in repoList) {
+    for (var i = 0; i < repoList.length; i++) {
         options.push({
             value: repoList[i].github_id,
             text: repoList[i].name

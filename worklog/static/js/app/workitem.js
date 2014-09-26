@@ -317,7 +317,6 @@ $(document).ready(function() {
 
         $('.panel-heading').on('click', '#save', function(event) {
             event.stopPropagation();
-            console.log(workItemFormSet.forms);
             workItemFormSet.postOrPut($(this).parent().data('target'));
         });
 

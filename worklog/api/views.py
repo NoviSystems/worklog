@@ -1,5 +1,5 @@
 from worklog import models
-from worklog.api import serializers 
+from worklog.api import serializers, renderers
 from rest_framework import viewsets
 
 from django.contrib.auth.models import User
@@ -27,6 +27,7 @@ class WorkDayViewSet(viewsets.ModelViewSet):
 class WorkItemViewSet(viewsets.ModelViewSet):
 	model = models.WorkItem
 	serializer_class = serializers.WorkItemSerializer
+	renderer_classes = (renderers.WorkItemJSONRenderer,)
 
 	def get_queryset(self):
 		queryset = models.WorkItem.objects.all()
@@ -45,11 +46,13 @@ class WorkItemViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = User.objects.all()
 	serializer_class = serializers.UserSerializer
+	renderer_classes = (renderers.UserJSONRenderer,)
 
 
 class JobViewSet(viewsets.ReadOnlyModelViewSet):
 	model = models.Job
 	serializer_class = serializers.JobSerializer
+	renderer_classes = (renderers.JobJSONRenderer,)
 
 	def get_queryset(self):
 		queryset = models.Job.objects.all()
@@ -72,6 +75,7 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
 class RepoViewSet(viewsets.ReadOnlyModelViewSet):
 	model = models.Repo
 	serializer_class = serializers.RepoSerializer
+	renderer_classes = (renderers.RepoJSONRenderer,)
 
 	def get_queryset(self):
 		queryset = models.Repo.objects.all()
@@ -85,6 +89,7 @@ class RepoViewSet(viewsets.ReadOnlyModelViewSet):
 class IssueViewSet(viewsets.ReadOnlyModelViewSet):
 	model = models.Issue
 	serializer_class = serializers.IssueSerializer
+	renderer_classes = (renderers.IssueJSONRenderer,)
 
 	def get_queryset(self):
 		queryset = models.Issue.objects.all()
