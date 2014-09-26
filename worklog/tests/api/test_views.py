@@ -46,7 +46,7 @@ class ViewSetBaseTestCase(APITestCase):
         Repo.objects.all().delete()
         Issue.objects.all().delete()
 
-    def get_queryset(self, query_params=None, expected_qs=None):
+    def get_queryset(self, query_params=None):
 
         request = self.factory.get('')
         request.GET = query_params
@@ -80,18 +80,21 @@ class WorkItemViewSetTestCase(ViewSetBaseTestCase):
         for date in date_list:
             query_params = {'date': str(date)}
             expected_qs = WorkItem.objects.filter(date=date).order_by('pk')
-            super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+            actual_qs = super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params)
+            self.assertEqual(list(actual_qs), list(expected_qs))
 
         for user in range(1, 30):
             query_params = {'user': user}
             expected_qs = WorkItem.objects.filter(user=user).order_by('pk')
-            super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+            actual_qs = super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params)
+            self.assertEqual(list(actual_qs), list(expected_qs))
 
         for date in date_list:
             for user in range(1, 30):
                 query_params = {'date': str(date), 'user': user}
                 expected_qs = WorkItem.objects.filter(user=user, date=date).order_by('pk')
-                super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+                actual_qs = super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params)
+                self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
 
@@ -170,19 +173,22 @@ class JobViewSetTestCase(ViewSetBaseTestCase):
         for date in date_list:
             query_params = {'date': date}
             expected_qs = Job.get_jobs_open_on(date)
-            super(JobViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+            actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
+            self.assertEqual(list(actual_qs), list(expected_qs))
 
         job_names = Job.objects.all().values_list('name', flat=True)
 
         for name in job_names:
             query_params = {'name': name}
             expected_qs = Job.objects.filter(name=name)
-            super(JobViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+            actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
+            self.assertEqual(list(actual_qs), list(expected_qs))
 
         for user in range(1, 30):
             query_params = {'user': user}
             expected_qs = Job.objects.filter(Q(users__id=user) | Q(available_all_users=True)).distinct().order_by('pk')
-            super(JobViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+            actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
+            self.assertEqual(list(actual_qs), list(expected_qs))
 
         for date in date_list:
             for name in job_names:
@@ -191,7 +197,8 @@ class JobViewSetTestCase(ViewSetBaseTestCase):
                     expected_qs = Job.get_jobs_open_on(date)
                     expected_qs = expected_qs.filter(name=name)
                     expected_qs = expected_qs.filter(Q(users__id=user) | Q(available_all_users=True)).distinct().order_by('pk')
-                    super(JobViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+                    actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
+                    self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
 
@@ -257,7 +264,8 @@ class RepoViewSetTestCase(ViewSetBaseTestCase):
         for name in repo_names:
             query_params = {'name': name}
             expected_qs = Repo.objects.filter(name=name)
-            super(RepoViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+            actual_qs = super(RepoViewSetTestCase, self).get_queryset(query_params=query_params)
+            self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
 
@@ -318,7 +326,8 @@ class IssueViewSetTestCase(ViewSetBaseTestCase):
         for repo in repos:
             query_params = {'repo': repo}
             expected_qs = Issue.objects.filter(repo=repo).order_by('pk')
-            super(IssueViewSetTestCase, self).get_queryset(query_params=query_params, expected_qs=expected_qs)
+            actual_qs = super(IssueViewSetTestCase, self).get_queryset(query_params=query_params)
+            self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
 
