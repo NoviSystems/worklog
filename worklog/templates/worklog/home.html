@@ -1,0 +1,71 @@
+{% extends "worklog/base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<!-- Add padding to the top -->
+<div style="padding-top: 50px"></div>
+
+<div class="row">
+    <!-- Pane for outstanding work days, etc -->
+    <div id="work-pane" class="col-sm-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">Work</div>
+
+            <div class="panel-body">
+                <h3 style="text-align: center">{{ total_hours }} hours worked this week</h3>
+            </div>
+            <table class="table table-bordered">
+                {% for datestring, date, hours, show_link in past_seven_days %}
+                    <tr style="{%if 'Saturday' in datestring %}border-bottom: 2px solid gray;{% else %}{% endif %}">
+                        {% if "Saturday" in datestring or "Sunday" in datestring %}
+                            <th class="col-xs-6 text-center text-muted">{{ datestring }}</th>
+                        {% else %}
+                            <th class="col-xs-6 text-center">{{ datestring }}</th>
+                        {% endif %}
+
+                        <td class="col-xs-6 text-center">
+                            {{ hours }}
+                            {% if show_link %}&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Log Work</a>)</small>{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <!-- Pane for the github issue listings -->
+    <div id="github-pane" class="col-sm-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">Github Issues</div>
+
+            {% if repos_with_issues %}
+                <div class="list-group" id="repos">
+                    {% for repo, issues in repos_with_issues.items %}
+                        <div class="list-group-item accordion-toggle">
+                            <h4>
+                                <a href='#{{ repo }}_issues' data-toggle="collapse">{{ repo.name }}</a>
+                                <small>&nbsp;&nbsp;(<a href="{{ repo.url }}">github</a>)</small>
+                                <span href="#" class="badge" style="float: right">{{ issues|length }}</span>
+                            </h4>
+
+                            <div class="list-group collapse out" id="{{ repo }}_issues">
+                                {% for issue in issues %}
+                                    <li class="list-group-item">
+                                        <h4><span class="text-muted">#{{ issue.number }}</span>&nbsp;&nbsp;<a href="{{ issue.url }}">{{ issue.title }}</a></h4>
+                                        <p>{{ issue.body|truncatewords:35 }}</p>
+                                    </li>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <li class="list-group-item">
+                    <h3 class="text-center">No open issues assigned</h3>
+                </li>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

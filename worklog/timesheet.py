@@ -13,6 +13,14 @@ from django.shortcuts import get_object_or_404
 
 from models import WorkItem, BiweeklyEmployee, Holiday, WorkPeriod
 
+#########################################
+############### NOTICE ##################
+#########################################
+##  Now that worklog accepts 15-minute increments, this code is broken
+##  If we ever start using it again, we need to be sure to fix it such
+##  that having perfect half-hour divisible time periods is not necessary
+
+
 
 # Class representing a timesheet
 class Timesheet:
@@ -30,14 +38,14 @@ class Timesheet:
     # Generate the paysheet data for a given BiweeklyEmployee and WorkPeriod
     # Returns a tuple of two lists where each list is a week in the work period
     def get_hours(self):
-        holidays = Holiday.objects.filter(start_date__gte=self.work_period.start_date, 
+        holidays = Holiday.objects.filter(start_date__gte=self.work_period.start_date,
             end_date__lte=self.work_period.end_date)
-        work_items = WorkItem.objects.filter(user=self.employee.user, 
+        work_items = WorkItem.objects.filter(user=self.employee.user,
             date__range=(self.work_period.start_date, self.work_period.end_date))
 
-        first_week = self.get_weekly_hours(self.work_period.start_date, 
+        first_week = self.get_weekly_hours(self.work_period.start_date,
             self.work_period.start_date + date.timedelta(days=7), work_items, holidays)
-        second_week = self.get_weekly_hours(self.work_period.end_date - date.timedelta(days=6), 
+        second_week = self.get_weekly_hours(self.work_period.end_date - date.timedelta(days=6),
             self.work_period.end_date + date.timedelta(days=1), work_items, holidays)  # Have to add one extra day
                                                                                        # for the end date to work
 
@@ -54,15 +62,15 @@ class Timesheet:
         for day in range(days):
             daily_hours = 0
             daily_work = work_items.filter(date=current_date)
-            
+
             if holidays.filter(start_date__lte=current_date, end_date__gte=current_date).count() == 0:
                 for work in daily_work:
                     daily_hours += work.hours
-            
+
             week.append((current_date, daily_hours,))
-        
+
             current_date += date.timedelta(days=1)
-        
+
         return week
 
     def set_timesheet_weeks(self, weeks):
@@ -82,7 +90,7 @@ class Timesheet:
 
                 # If the person worked at all this day
                 if hours != 0:
-                    # Starting at 8 AMb 
+                    # Starting at 8 AMb
                     start_hour = '8:00a'
 
                     # Cast to int to get the fraction part
@@ -105,7 +113,7 @@ class Timesheet:
 
                     self.context['%s_start' % week_str] = start_hour
                     self.context['%s_end' % week_str] = end_hour
-            
+
             self.context['week%d_total' % (weeks.index(week) + 1)] = week_total_hours
             total_hours += week_total_hours
 
@@ -119,7 +127,7 @@ class Timesheet:
         self.context['work_beginning'] = '%s' % self.work_period.start_date.strftime(d_format)
         self.context['work_ending'] = '%s' % self.work_period.end_date.strftime(d_format)
         self.context['prid'] = '%s' % self.work_period.payroll_id
-        self.context['dept'] = '%s' % 'CSC/8206' 
+        self.context['dept'] = '%s' % 'CSC/8206'
         self.context['due_date'] = '%s' % self.work_period.due_date.strftime(d_format)
         self.context['pay_day'] = '%s' % self.work_period.pay_day.strftime(d_format)
 
@@ -152,7 +160,7 @@ class Timesheet:
 
         for admin in settings.ADMINS:
             recipients.append(admin[1])
-        
+
         email = EmailMessage(
             subject,
             'Timesheet is attached',
@@ -181,9 +189,9 @@ class TimesheetView(TemplateView):
             if not regex.match(request.GET['date']):
                 context = {'error': 'Please provide a valid date'}
                 return super(TimesheetView, self).render_to_response(context)
-            
+
             date = request.GET['date']
-            
+
             context = self.get_context_data(**kwargs)
             context['date'] = date
 
@@ -191,7 +199,7 @@ class TimesheetView(TemplateView):
         else:
             context = {'error': 'Please provide a valid date'}
             return super(TimesheetView, self).render_to_response(context)
-    
+
     def post(self, request, *args, **kwargs):
         due_date = date.datetime.strptime(request.POST['date'], '%Y-%m-%d').date()
         work_period = get_object_or_404(WorkPeriod, due_date=due_date)
@@ -201,18 +209,18 @@ class TimesheetView(TemplateView):
             for employee in BiweeklyEmployee.objects.all():
                 timesheet = Timesheet(employee, work_period)
                 pdf = timesheet.get_pdf()
-                
+
                 if pdf is not None:
                     timesheet.send_email()
                 else:
                     context['error'] = 'Please provide a valid date'
                     return super(TimesheetView, self).render_to_response(context)
-            
+
             context['success'] = 'Emails with timesheets were sent'
         else:
             employee = BiweeklyEmployee.objects.get(pk=request.POST['employee_id'])
             timesheet = Timesheet(employee, work_period)
-            
+
             pdf = timesheet.get_pdf()
 
             if pdf is not None:
@@ -222,7 +230,7 @@ class TimesheetView(TemplateView):
                 return super(TimesheetView, self).render_to_response(context)
 
             context['success'] = 'Email with timesheet was sent'
-        
+
         context['date'] = request.POST['date']
 
         return super(TimesheetView, self).render_to_response(context)

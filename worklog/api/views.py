@@ -1,5 +1,6 @@
 from worklog import models
 from worklog.api import serializers, renderers
+
 from rest_framework import viewsets
 
 from django.contrib.auth.models import User
@@ -7,21 +8,21 @@ from django.db.models import Q
 
 
 class WorkDayViewSet(viewsets.ModelViewSet):
-	model = models.WorkDay
-	serializer_class = serializers.WorkDaySerializer
+    model = models.WorkDay
+    serializer_class = serializers.WorkDaySerializer
 
-	def get_queryset(self):
-		queryset = models.WorkDay.objects.all()
-		date = self.request.QUERY_PARAMS.get('date', None)
-		user = self.request.QUERY_PARAMS.get('user', None)
+    def get_queryset(self):
+        queryset = models.WorkDay.objects.all()
+        date = self.request.QUERY_PARAMS.get('date', None)
+        user = self.request.QUERY_PARAMS.get('user', None)
 
-		if date is not None:
-			queryset = queryset.filter(date=date)
+        if date is not None:
+            queryset = queryset.filter(date=date)
 
-		if user is not None:
-			queryset = queryset.filter(user=user)
+        if user is not None:
+            queryset = queryset.filter(user=user)
 
-		return queryset
+        return queryset
 
 
 class WorkItemViewSet(viewsets.ModelViewSet):
@@ -29,18 +30,18 @@ class WorkItemViewSet(viewsets.ModelViewSet):
 	serializer_class = serializers.WorkItemSerializer
 	renderer_classes = (renderers.WorkItemJSONRenderer,)
 
-	def get_queryset(self):
-		queryset = models.WorkItem.objects.all()
-		date = self.request.QUERY_PARAMS.get('date', None)
-		user = self.request.QUERY_PARAMS.get('user', None)
+    def get_queryset(self):
+        queryset = models.WorkItem.objects.all()
+        date = self.request.QUERY_PARAMS.get('date', None)
+        user = self.request.QUERY_PARAMS.get('user', None)
 
-		if date is not None:
-			queryset = queryset.filter(date=date)
+        if date is not None:
+            queryset = queryset.filter(date=date)
 
-		if user is not None:
-			queryset = queryset.filter(user=user)
+        if user is not None:
+            queryset = queryset.filter(user=user)
 
-		return queryset
+        return queryset
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -54,22 +55,22 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
 	serializer_class = serializers.JobSerializer
 	renderer_classes = (renderers.JobJSONRenderer,)
 
-	def get_queryset(self):
-		queryset = models.Job.objects.all()
-		date = self.request.QUERY_PARAMS.get('date', None)
-		name = self.request.QUERY_PARAMS.get('name', None)
-		user = self.request.QUERY_PARAMS.get('user', None)
+    def get_queryset(self):
+        queryset = models.Job.objects.all()
+        date = self.request.QUERY_PARAMS.get('date', None)
+        name = self.request.QUERY_PARAMS.get('name', None)
+        user = self.request.QUERY_PARAMS.get('user', None)
 
-		if date is not None:
-			queryset = models.Job.get_jobs_open_on(date)
+        if date is not None:
+            queryset = models.Job.get_jobs_open_on(date)
 
-		if name is not None:
-			queryset = queryset.filter(name=name)
+        if name is not None:
+            queryset = queryset.filter(name=name)
 
-		if user is not None:
-			queryset = queryset.filter(Q(users__id=user) | Q(available_all_users=True)).distinct()
+        if user is not None:
+            queryset = queryset.filter(Q(users__id=user) | Q(available_all_users=True)).distinct()
 
-		return queryset
+        return queryset
 
 
 class RepoViewSet(viewsets.ReadOnlyModelViewSet):
@@ -77,13 +78,13 @@ class RepoViewSet(viewsets.ReadOnlyModelViewSet):
 	serializer_class = serializers.RepoSerializer
 	renderer_classes = (renderers.RepoJSONRenderer,)
 
-	def get_queryset(self):
-		queryset = models.Repo.objects.all()
-		name = self.request.QUERY_PARAMS.get('name', None)
+    def get_queryset(self):
+        queryset = models.Repo.objects.all()
+        name = self.request.QUERY_PARAMS.get('name', None)
 
-		if name is not None:
-			queryset = queryset.filter(name=name)
-		return queryset
+        if name is not None:
+            queryset = queryset.filter(name=name)
+        return queryset
 
 
 class IssueViewSet(viewsets.ReadOnlyModelViewSet):
@@ -91,10 +92,10 @@ class IssueViewSet(viewsets.ReadOnlyModelViewSet):
 	serializer_class = serializers.IssueSerializer
 	renderer_classes = (renderers.IssueJSONRenderer,)
 
-	def get_queryset(self):
-		queryset = models.Issue.objects.all()
-		repo = self.request.QUERY_PARAMS.get('repo', None)
+    def get_queryset(self):
+        queryset = models.Issue.objects.all()
+        repo = self.request.QUERY_PARAMS.get('repo', None)
 
-		if repo is not None:
-			queryset = queryset.filter(repo=repo)
-		return queryset
+        if repo is not None:
+            queryset = queryset.filter(repo=repo)
+        return queryset

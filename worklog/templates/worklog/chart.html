@@ -1,15 +1,16 @@
 {% extends "worklog/base.html" %}
+{% load staticfiles %}
 
 {% block content %}
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.flot.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.flot.selection.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.flot.threshold.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.ui.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/chart.js"></script>
-    
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/smoothness/smoothness.css" />
+    <script type="text/javascript" src="{% static 'js/lib/jquery.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/lib/jquery.flot.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/lib/jquery.flot.selection.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/lib/jquery.flot.threshold.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/lib/jquery.ui.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/lib/chart.js' %}"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'css/smoothness/smoothness.css' %}" />
 
     <script type="text/javascript">
         var c, options = {
@@ -21,10 +22,10 @@
                 label: 'Hours Available'
             }
         };
-        
-        var jobDataUrl = '{% url 'job_data_url' %}';
+
+        var jobDataUrl = "{% url 'job_data_url' %}";
         var jobId = '';
-        
+
         function parseData(data, status, xhr) {
             if('error' in data) {
                 $('#plot').after('<div class="error">' + data['error'] + '</div>');
@@ -35,7 +36,7 @@
                     positive,
                     negative,
                     changedGraph = false;
-            
+
                 //Grab the keys
                 for(var d in data) {
                     keys.push(d);
@@ -44,7 +45,7 @@
                 //Sort the keys since they are not sorted
                 //when returned from the python
                 keys.sort();
-                
+
                 if(data[keys[0]] > 0) {
                     positive = true;
                     negative = false;
@@ -52,47 +53,47 @@
                     positive = false;
                     negative = true;
                 }
-            
+
                 for(var i = 0; i < keys.length; i++) {
                     var point = [new Date(keys[i]).getTime(), data[keys[i]]];
                     arr.push(point);
-                    
+
                     if(data[keys[i]] > 0) {
                         if(!positive) {
                             changedGraph = true;
                         }
-                        
+
                         positive = true;
                         negative = false;
                     } else {
                         if(!negative) {
                             changedGraph = true;
                         }
-                        
+
                         positive = false;
                         negative = true;
                     }
                 }
-                
+
                 var chartingData = {
                     data: arr,
                     threshold: { below: 0, color: '#FF0000' }
                 };
-            
+
                 c = new Chart('#plot', [chartingData], options);
-            
+
                 if($('#overview').children().length) {
                     c.disableOverview();
                 }
-            
+
                 c.displayLineChart();
                 c.enableOverview('#overview');
-                
+
                 drawAxes();
-                
+
                 function respectYAxis() {
                     var changed = true;
-                    
+
                     if($('#y-axis').attr('checked')) {
                         if(!changedGraph) {
                             if(negative) {
@@ -104,11 +105,11 @@
                             if('min' in options.yaxis) {
                                 delete options.yaxis.min
                             }
-                            
+
                             if('max' in options.yaxis) {
                                 delete options.yaxis.max;
                             }
-                            
+
                             changed = true;
                         }
                     } else {
@@ -120,14 +121,14 @@
                             changed = false;
                         }
                     }
-                    
+
                     if(changed) {
                         c.changeOptions(options);
                         c.displayLineChart();
                         drawAxes();
                     }
                 }
-                
+
                 function respectTooltips() {
                     if($('#tooltips').attr('checked')) {
                         c.enableTooltips();
@@ -135,21 +136,21 @@
                         c.disableTooltips();
                     }
                 }
-                
+
                 //Register the y-axis listener
                 $('#y-axis').click(respectYAxis);
-                
+
                 //Register the tooltips listener
                 $('#tooltips').click(respectTooltips);
-                
+
                 //Handle the y-axis checkbox right after charting
                 respectYAxis();
-                
+
                 //Handle the tooltips checkbox right after charting
                 respectTooltips();
             }
         }
-        
+
         function drawAxes() {
             $('canvas.overlay').attr('height', '550');
             var context = $('canvas.overlay')[0].getContext('2d');
@@ -165,17 +166,17 @@
             $('#startDate').datepicker({
                 format: 'mm/dd/yy'
             });
-            
+
             $('#endDate').datepicker({
                 format: 'mm/dd/yy'
             });
-            
+
             $('#chartingForm').submit(function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 $('div.error').remove();
-                
+
                 if($('#jobs').val() === '-1') {
                     $('#plot').after('<div class="error">Select a job</div>');
                 } else {
@@ -185,7 +186,7 @@
             });
         });
     </script>
-    
+
     <style type="text/css">
         .label {
             -o-transform:rotate(-90deg);

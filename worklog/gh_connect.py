@@ -3,10 +3,13 @@ from django.conf import settings
 
 
 class GitHubConnector(object):
-
-    def __init__(self):
-
-        self.git_hub = GitHub(settings.GITHUB_USER, settings.GITHUB_PASS)
+    def __init__(self, gh_username=settings.GITHUB_USER, gh_password=settings.GITHUB_PASS):
+        """
+        Kwargs:
+            gh_username (str): Github username defaults to the one provided in secrets.py
+            gh_password (str): Github password defaults to the one provided in secrets.py
+        """
+        self.git_hub = GitHub(gh_username, gh_password)
         self.orgs = list(self.git_hub.iter_orgs())
 
         # As of 10/3/2013, the default rate limit was 5000/hr.
@@ -16,17 +19,23 @@ class GitHubConnector(object):
         if self.git_hub.ratelimit_remaining < 500:
             raise Exception('You have only 500 GitHub requests left for this hour')
 
-    def get_issues_for_repo(self, repo_name=None, github_id=None, repo_tuple=None):
+    def get_issues_for_repo(self, repo_name=None, github_id=None):
+        """ Returns all the issues for a given repo name or id in the user's account (not organization)
+
+        Kwargs:
+            repo_name (str, optional): The name of a repo
+            github_id (int, optional): The github id of a repo
+        """
         repos = self.git_hub.iter_all_repos()
         for repo in repos:
             if repo_name and repo_name == repo.name:
                 return list(repo.iter_issues())
             elif github_id and github_id == repo.id:
                 return list(repo.iter_issues())
-            elif repo_tuple and repo_tuple[1] == repo.name:
-                return list(repo.iter_issues())
+        return []
 
     def get_all_issues(self):
+        """ Returns all issues for all repos associated with the account in secrets.py """
         issues = []
         for org in self.orgs:
             org_repos = org.iter_repos()
@@ -38,13 +47,20 @@ class GitHubConnector(object):
                     continue
         return issues
 
-    def get_repos_for_org(self, org_login=None, org_id=None):
+    def get_repos_for_org(self, org_login=None, org_name=None):
+        """ Returns all repos for the organization
+
+        Kwargs:
+            org_login (str, optional): Login for the organization
+            org_name (str, optional): Name of the organization
+        """
         for org in self.orgs:
             org_json = org.to_json()
-            if org_json["login"] == org_login or org_json["id"] == org_id:
+            if org_json["login"] == org_login or org_json["id"] == org_name:
                 return list(org.iter_repos())
 
     def get_all_repos(self):
+        """ Returns all repos for all organizations associated with the account in secrets.py """
         repos = []
         for org in self.orgs:
             org_repos = org.iter_repos()

@@ -3,8 +3,6 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 
 from gh_connect import GitHubConnector
-
-import datetime
 import string
 
 
@@ -20,6 +18,11 @@ class BiweeklyEmployee(models.Model):
 
     def __unicode__(self):
         return u'%s' % self.user.get_full_name()
+
+
+class GithubAlias(models.Model):
+    user = models.ForeignKey(User)
+    github_name = models.CharField(max_length=39, null=True, blank=True)  # 39 is github max
 
 
 class Holiday(models.Model):
@@ -38,7 +41,7 @@ class WorkDay(models.Model):
 
     @property
     def workitem_set(self):
-        return WorkItem.objects.filter(date__range=[self.date - datetime.timedelta(days=3), self.date])
+        return WorkItem.objects.filter(date=self.date, user=self.user)
 
 
 class WorkPeriod(models.Model):
@@ -79,6 +82,7 @@ class Job(models.Model):
 class Repo(models.Model):
     github_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=256)
+    url = models.URLField(null=True)
 
     def __unicode__(self):
         return unicode(self.name)
@@ -87,8 +91,12 @@ class Repo(models.Model):
 class Issue(models.Model):
     github_id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=256, null=True)
+    body = models.TextField(null=True)
     number = models.IntegerField()
     repo = models.ForeignKey(Repo, related_name='issues')
+    open = models.BooleanField(default=False)
+    assignee = models.ForeignKey(User, null=True)
+    url = models.URLField(null=True)
 
     def __unicode__(self):
         return unicode(self.number) + u': ' + unicode(self.title)
@@ -128,12 +136,13 @@ class WorkItem(models.Model):
     invoiced.is_invoiced_filter = True
 
     def __unicode__(self):
-        return u'{user} on {date} work {hours} hours on {item}'.format(user=self.user, date=self.date, hours=self.hours, item=self.text)
+        return u'{user} on {date} worked {hours} hours on job {job} doing {item}'.format(
+            user=self.user, date=self.date, hours=self.hours, job=self.job, item=self.text)
 
     def save(self, *args, **kwargs):
         if(not self.job.available_all_users):
             if(not self.job.users.filter(id=self.user.id).exists()):
-                return
+                raise ValueError("Specified job is not available to {user}".format(user=str(self.user)))
 
         commit, hash, text = ['', '', '']
 

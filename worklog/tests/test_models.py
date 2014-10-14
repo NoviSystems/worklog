@@ -32,24 +32,24 @@ class WorkItemCommitHashSwapTestCase(TestCase):
 
     def test_commit_hash_swap(self):
 
-        for repo in self.repos:
+        repo = self.repos.pop()
+        commit = repo.iter_commits().next()
 
-            commits = list(repo.iter_commits())
-            repo_obj = Repo()
-            repo_obj.github_id = repo.id
-            repo_obj.name = repo.name
-            repo_obj.save()
+        repo_obj = Repo()
+        repo_obj.github_id = repo.id
+        repo_obj.name = repo.name
+        repo_obj.save()
 
-            workitem = WorkItem()
-            workitem.user = User.objects.all()[0]
-            workitem.job = Job.objects.filter(available_all_users=True)[0]
-            workitem.hours = 10
-            workitem.date = datetime.date.today()
-            workitem.repo = repo_obj
-            workitem.text = 'commit ' + commits[0].sha + ' extra text'
-            workitem.save()
+        workitem = WorkItem()
+        workitem.user = User.objects.all()[0]
+        workitem.job = Job.objects.filter(available_all_users=True)[0]
+        workitem.hours = 10
+        workitem.date = datetime.date.today()
+        workitem.repo = repo_obj
+        workitem.text = 'commit ' + commit.sha + ' extra text'
+        workitem.save()
 
-            self.assertEquals(workitem.text, commits[0].commit.message + ' extra text')
+        self.assertEquals(workitem.text, commit.commit.message + ' extra text')
 
     def test_no_commit(self):
 

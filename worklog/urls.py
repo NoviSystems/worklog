@@ -2,7 +2,8 @@ from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView, EmberView
+from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView, EmberView, HomepageView
+
 from timesheet import TimesheetView
 
 DATEMIN = r'(?P<datemin>\d{4}-\d{2}-\d{2})'
@@ -15,8 +16,9 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 ##JOBID = r'(?:_job_(?P<jobid>[0-9]+))'
 
 urlpatterns = patterns('worklog',
+    url(r'^$', login_required(HomepageView.as_view()), {}, name='worklog-home'),
     #(r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
-    (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem), {}, 'worklog-current-date'),
+    (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem), {}, 'worklog-date'),
     (r'^today/$', CurrentDateRedirectView.as_view(), {}, 'worklog-today'),
     (r'^add/$', CurrentDateRedirectView.as_view(), {}, 'worklog-add'),
 

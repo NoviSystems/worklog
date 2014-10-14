@@ -6,8 +6,7 @@ from django.http import HttpResponse
 from django.conf.urls.defaults import *
 from django.db.models import Sum
 
-from models import WorkItem, Job, BillingSchedule, Funding
-from models import BiweeklyEmployee, Holiday, WorkPeriod
+from models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, BiweeklyEmployee, Holiday, WorkPeriod
 
 
 def mark_invoiced(modeladmin, request, queryset):
@@ -36,6 +35,12 @@ class WorkItemAdmin(admin.ModelAdmin):
     actions = [mark_invoiced, mark_not_invoiced, mark_invoiceable, mark_not_invoiceable]
     #sort the items by time in descending order
     ordering = ['-date']
+
+    # order the job dropdown alphabetically
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "job":
+            kwargs["queryset"] = Job.objects.order_by('name')
+        return super(WorkItemAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def changelist_view(self, request, extra_context=None):
         # Look for 'export_as_csv' in the HTTP Request header.  If it is found,
@@ -117,6 +122,11 @@ class JobAdmin(admin.ModelAdmin):
     ]
 
 
+class GithubAliasAdmin(admin.ModelAdmin):
+    list_display = ('user', 'github_name')
+    ordering = ['user']
+
+
 class WorkPeriodAdmin(admin.ModelAdmin):
     list_display = ('payroll_id', 'start_date', 'end_date',)
     list_filter = ('start_date', 'end_date',)
@@ -128,6 +138,7 @@ class HolidayAdmin(admin.ModelAdmin):
 
 admin.site.register(WorkItem, WorkItemAdmin)
 admin.site.register(Job, JobAdmin)
+admin.site.register(GithubAlias, GithubAliasAdmin)
 
 admin.site.register(BiweeklyEmployee)
 admin.site.register(WorkPeriod, WorkPeriodAdmin)

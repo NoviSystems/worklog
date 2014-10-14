@@ -13,6 +13,8 @@
 
     {% load staticfiles %}
 
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
     <!-- Loading everything off BootstrapCDN -->
     <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
@@ -44,19 +46,6 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
     <![endif]-->
 
-    <style>
-        .table .form-group {
-            margin-bottom: 0;
-        }
-        tr.workitem-fade  td{
-            background-color: white;
-            -webkit-transition: background-color 1s ease-in-out;
-            -moz-transition: background-color 1s ease-in-out;
-            -o-transition: background-color 1s ease-in-out;
-            transition: background-color 1s ease-in-out;
-        }
-    </style>
-
 </head>
 
 <body>
@@ -77,15 +66,20 @@
             <div class="navbar-collapse collapse">
                 {% if user.is_authenticated %}
                 <ul class="nav navbar-nav">
-                    <li><a href="/worklog/today">New Work Item <i class="fa fa-tags"></i></a>
+                    <li><a href="/worklog/today">New Work Item</a>
                     </li>
-                    <li><a href="/worklog/chart">Chart <i class="fa fa-book"></i></a>
+                    <li><a href="/worklog/chart">Chart</a>
                     </li>
-                    <li><a href="/worklog/view/{{ user }}">My Work <i class="fa fa-folder"></i></a>
+                    <li><a href="/worklog/view/{{ user }}">My Work</a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a href="/worklog/add">{{ user }}</i></a>
+                    <li><a href="/worklog/add">{{ user }}</a>
+                    </li>
+                    <li>
+                        <a href="https://kaba.oit.ncsu.edu/WebTimeClock/main/index.jsp?actionEvent=cmd://startdialog" target="_blank">
+                            <span class="label label-primary">KABA</span>
+                        </a>
                     </li>
                     <li>
                         <a href="/lunch">

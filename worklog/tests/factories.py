@@ -46,7 +46,7 @@ class JobFactory(DjangoModelFactory):
 
 
 class RepoFactory(DjangoModelFactory):
-    
+
     class Meta:
         model = Repo
 
@@ -55,12 +55,15 @@ class RepoFactory(DjangoModelFactory):
 
 
 class IssueFactory(DjangoModelFactory):
-    
+
     class Meta:
         model = Issue
 
     github_id = factory.Sequence(lambda n: '%04d' % n)
     title = factory.LazyAttribute(lambda p: faker.name())
+    body = factory.LazyAttribute(lambda p: faker.text())
+    open = factory.LazyAttribute(lambda p: faker.boolean())
+    assignee = factory.SubFactory(UserFactory)
     number = factory.LazyAttribute(lambda p: random.randint(0, 500))
     repo = factory.SubFactory(RepoFactory)
 
@@ -72,7 +75,7 @@ class WorkItemFactory(DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     date = factory.LazyAttribute(lambda p: faker.date_time())
-    job = factory.SubFactory(JobFactory)
+    job = factory.SubFactory(JobFactory, available_all_users=True)
     hours = factory.LazyAttribute(lambda p: random.randint(1, 24))
     repo = factory.SubFactory(RepoFactory)
     issue = factory.SubFactory(IssueFactory, repo=factory.SelfAttribute('..repo'))
