@@ -41,14 +41,14 @@ def _itercolumns(item):
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
 
 
-def find_previous_sunday(date):
-    """ Returns the most recent sunday"""
+def find_previous_saturday(date):
+    """ Returns the most recent saturday"""
     dow = date.isoweekday()
-    if dow == 7:
-        last_sunday = date
+    if dow == 6:
+        last_saturday = date
     else:
-        last_sunday = date - datetime.timedelta(days=dow)
-    return last_sunday
+        last_saturday = date - datetime.timedelta(days=dow + 1)
+    return last_saturday
 
 
 def get_past_n_days(date, num=7):
@@ -97,7 +97,7 @@ class HomepageView(TemplateView):
 
         # totals up the hours from last sunday to today for [user] (different from last 7 days)
         total_hours = get_total_hours_from_workitems(
-            WorkItem.objects.filter(user=user, date__range=(find_previous_sunday(today), today)))
+            WorkItem.objects.filter(user=user, date__range=(find_previous_saturday(today), today)))
         # all issues assigned to [user] which are currently open
         open_user_issues = Issue.objects.select_related('repo').filter(assignee=user, open=True)
         # filter the issues into a dictionary of {repo: [associated issues]}
