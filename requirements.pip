@@ -1,6 +1,8 @@
 # project requirements - these should be in setup.py
 celery
 djangorestframework
+django-filter
+github3.py
 xhtml2pdf
 reportlab==2.7
 pisa
