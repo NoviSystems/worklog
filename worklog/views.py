@@ -121,67 +121,73 @@ class HomepageRedirectView(RedirectView):
 
 
 class WorkItemView(TemplateView):
-    pass
-
-
-class CurrentDateRedirectView(RedirectView):
-    permanent = False
-
-    def get_redirect_url(self, *args, **kwargs):
-        return reverse('worklog-date', kwargs={'date': str(datetime.date.today())})
-
-
-def createWorkItem(request, date='today'):
     WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
 
-    if date == 'today':
-        date = datetime.date.today()
-    else:
-        date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+    def workitem_response(self, request, date, formset):
+        items = WorkItem.objects.filter(date=date, user=request.user)
+        rawitems = list(tuple(_itercolumns(item)) for item in items)
 
-    if request.method == 'POST':  # If the form has been submitted...
+        if BiweeklyEmployee.objects.filter(user=request.user).count() > 0:
+            holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
+        else:
+            holidays = None
 
-        formset = WorkItemFormSet(request.POST, logged_in_user=request.user)
+        return render_to_response('worklog/workform.html',
+                {
+                    'open': formset,
+                    'date': date,
+                    'items': rawitems,
+                    'column_names': list(t for k, t in _column_layout),
+                    'holidays': holidays
+                },
+                    context_instance = RequestContext(request)
+                )
+
+    def get_context_data(self, **kwargs):
+        date = kwargs['date']
+        if date == 'today' or date == None:
+            date = datetime.date.today()
+        else:
+            date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+
+        context = super(WorkItemView, self).get_context_data()
+        context['date'] = date
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        date = self.get_context_data(**kwargs)['date']
+        formset = self.WorkItemFormSet(request.POST, logged_in_user=request.user)
         if formset.is_valid():
             for f in formset.forms:
-                # Save but don't commit form data
-                form = f.save(commit=False)
-                # Add user and date before saving
+                form = f.save(comit=False)
+
                 form.user = request.user
                 form.date = date
 
                 form.save()
 
             if 'submit_and_add_another' in request.POST:
-                # redisplay workitem form so another item may be added
                 return HttpResponseRedirect(request.path)
             else:
                 if date == datetime.date.today():
-                    # Redirect after POST
                     return HttpResponseRedirect('/worklog/view/%s/today/' % request.user.username)
                 else:
                     return HttpResponseRedirect('/worklog/view/%s/%s_%s/' % (request.user.username, date, date))
-    elif datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
-        formset = WorkItemFormSet(logged_in_user=request.user)  # An unbound form
-    else:
+        return self.workitem_response(request, date, formset)
+
+    def get(self, request, *args, **kwargs):
+        date = self.get_context_data(**kwargs)['date']
         formset = None
+        if datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
+            formset = self.WorkItemFormSet(logged_in_user=request.user)
+        return self.workitem_response(request, date, formset)
 
-    items = WorkItem.objects.filter(date=date, user=request.user)
-    rawitems = list(tuple(_itercolumns(item)) for item in items)
+class CurrentDateRedirectView(RedirectView):
+    permanent = False
 
-    if BiweeklyEmployee.objects.filter(user=request.user).count() > 0:
-        holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
-    else:
-        holidays = None
-
-    return render_to_response('worklog/workform.html',
-                              {'open': formset, 'date': date,
-                               'items': rawitems,
-                               'column_names': list(t for k, t in _column_layout),
-                               'holidays': holidays
-                               },
-                              context_instance=RequestContext(request)
-                              )
+    def get_redirect_url(self, *args, **kwargs):
+        return reverse('worklog-date', kwargs={'date': str(datetime.date.today())})
 
 
 def make_month_range(d):
@@ -369,31 +375,36 @@ class WorkViewer(object):
         links = [alllink] + links
         self.menu.submenus.append(WorkViewMenu.SubMenu("Job", links))
 
+class ViewWorkView(TemplateView):
+    def get(self, request, username=None, datemin=None, datemax=None, *args, **kwargs):
+        #username = request.GET.get('user', None)
+        #datemin = request.GET.get('datemin', None)
+        #datemax = request.GET.get('datemax', None)
 
-def viewWork(request, username=None, datemin=None, datemax=None):
-    if datemin == 'today':
-        datemin = datetime.date.today()
-    if datemax == 'today':
-        datemax = datetime.date.today()
+#def viewWork(request, username=None, datemin=None, datemax=None):
+        if datemin == 'today':
+            datemin = datetime.date.today()
+        if datemax == 'today':
+            datemax = datetime.date.today()
 
-    viewer = WorkViewer(request, username, datemin, datemax)
+        viewer = WorkViewer(request, username, datemin, datemax)
 
-    items = WorkItem.objects.all()
-    items = viewer.filter_items(items)
+        items = WorkItem.objects.all()
+        items = viewer.filter_items(items)
 
-    # menulink_base must either be blank, or include a trailing slash.
-    # menulink_base is the part of the URL in the menu links that will precede
-    # the '?'
-    menulink_base = ''
-    if username is not None:
-        menulink_base += '../'
+        # menulink_base must either be blank, or include a trailing slash.
+        # menulink_base is the part of the URL in the menu links that will precede
+        # the '?'
+        menulink_base = ''
+        if username is not None:
+            menulink_base += '../'
 
-    if datemin or datemax:
-        menulink_base += '../'
+        if datemin or datemax:
+            menulink_base += '../'
 
-    rawitems = list(tuple(_itercolumns(item)) for item in items)
+        rawitems = list(tuple(_itercolumns(item)) for item in items)
 
-    return render_to_response('worklog/viewwork.html',
+        return render_to_response('worklog/viewwork.html',
                               {'items': rawitems,
                                'filtermenu': viewer.menu,
                                'menulink_base': menulink_base,

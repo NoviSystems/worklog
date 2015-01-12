@@ -2,7 +2,7 @@ from django.conf.urls.defaults import *
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-from views import ReportView, ChartView, JobDataView, createWorkItem, viewWork, CurrentDateRedirectView, HomepageView
+from views import ReportView, ChartView, JobDataView, WorkItemView, ViewWorkView, CurrentDateRedirectView, HomepageView
 from timesheet import TimesheetView
 
 DATEMIN = r'(?P<datemin>\d{4}-\d{2}-\d{2})'
@@ -17,21 +17,21 @@ USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 urlpatterns = patterns('worklog',
     url(r'^$', login_required(HomepageView.as_view()), {}, name='worklog-home'),
     #(r'^$', CurrentDateRedirectView.as_view(), {}, 'worklog-home'),
-    (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(createWorkItem), {}, 'worklog-date'),
+    (r'^(?P<date>\d{4}-\d{2}-\d{2})/$', login_required(WorkItemView.as_view()), {}, 'worklog-date'),
     (r'^today/$', CurrentDateRedirectView.as_view(), {}, 'worklog-today'),
     (r'^add/$', CurrentDateRedirectView.as_view(), {}, 'worklog-add'),
 
-    (r'^view/$', login_required(viewWork)),
+    (r'^view/$', login_required(ViewWorkView.as_view())),
     #(r'^view/today/$', 'views.viewWork', {'datemin': datetime.date.today(), 'datemax': datetime.date.today()}),
-    (r'^view/today/$', login_required(viewWork), {'datemin': 'today', 'datemax': 'today'}),
+    (r'^view/today/$', login_required(ViewWorkView.as_view()), {'datemin': 'today', 'datemax': 'today'}),
 
-    (r'^view/'+DATERANGE1+'/$', login_required(viewWork)),
-    (r'^view/'+DATERANGE2+'/$', login_required(viewWork)),
-    (r'^view/'+USERNAME+'/$', login_required(viewWork)),
+    (r'^view/'+DATERANGE1+'/$', login_required(ViewWorkView.as_view())),
+    (r'^view/'+DATERANGE2+'/$', login_required(ViewWorkView.as_view())),
+    (r'^view/'+USERNAME+'/$', login_required(ViewWorkView.as_view())),
     #(r'^view/'+USERNAME+'/today/$', 'views.viewWork', {'datemin': datetime.date.today(), 'datemax': datetime.date.today()}),
-    (r'^view/'+USERNAME+'/today/$', login_required(viewWork), {'datemin': 'today', 'datemax': 'today'}),
-    (r'^view/'+USERNAME+'/'+DATERANGE1+'/$', login_required(viewWork)),
-    (r'^view/'+USERNAME+'/'+DATERANGE2+'/$', login_required(viewWork)),
+    (r'^view/'+USERNAME+'/today/$', login_required(ViewWorkView.as_view()), {'datemin': 'today', 'datemax': 'today'}),
+    (r'^view/'+USERNAME+'/'+DATERANGE1+'/$', login_required(ViewWorkView.as_view())),
+    (r'^view/'+USERNAME+'/'+DATERANGE2+'/$', login_required(ViewWorkView.as_view())),
 
     (r'^api/', include('worklog.api.urls')),
 )
