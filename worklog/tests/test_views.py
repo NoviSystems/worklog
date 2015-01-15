@@ -2,8 +2,8 @@ from django_webtest import WebTest
 from django.core.urlresolvers import reverse
 from datetime import date
 
-from factories import UserFactory, IssueFactory, RepoFactory, WorkItemFactory
-from worklog.views import get_past_n_days, find_previous_sunday, get_total_hours_from_workitems
+from factories import UserFactory, IssueFactory, RepoFactory, WorkItemFactory, JobFactory
+from worklog.views import get_past_n_days, find_previous_saturday, get_total_hours_from_workitems
 from worklog.models import WorkItem
 
 
@@ -39,17 +39,117 @@ class HomepageViewTestCase(WebTest):
         response.mustcontain(self.issues_for_repo_2[1].body[:25])
 
 
+class WorklogViewTestCase(WebTest):
+
+    def setUp(self):
+        self.user = UserFactory(username="tester")
+        self.user2 = UserFactory(username="testre")
+        self.job = JobFactory(name="test1", available_all_users=True)
+        self.workitemJ = WorkItemFactory.create(user=self.user, job=self.job, date=date(2015,01,13), hours=8.0)
+        self.workitemJ2 = WorkItemFactory.create(user=self.user2, job=self.job, date=date(2015, 01, 13), hours=1.0)
+        self.workitemD = WorkItemFactory.create(user=self.user, job=self.job, date=date(2014,12,30), hours=7.0)
+        self.workitemD2 = WorkItemFactory.create(user=self.user2, job=self.job, date=date(2014, 12, 30), hours=2.0)
+        self.workitemT = WorkItemFactory.create(user=self.user, job=self.job, date=date.today(), hours=3.0)
+        self.workitemT2 = WorkItemFactory.create(user=self.user2, job=self.job, date=date.today(), hours=3.5)
+
+    def helper(self, string):
+        string = str(string)
+        string = string.split("Current query:")[1].split("</table>")[0].replace("\n", "").replace(" ", "")
+        string = string[string.find("<td>"):string.rfind("</td>")].replace("</td>", "").replace("<td>", "").replace("<tr>", "").replace("</tr>", "")
+        return string
+
+    def test_content(self):
+        responseView = self.app.get(reverse("worklog-view"), 
+                user=self.user)
+        rV = str(responseView)
+        rVc = self.helper(responseView)
+
+        self.assertEqual(rV.count("<td>tester</td>"), 3)
+        self.assertEqual(rV.count("<td>testre</td>"), 3)
+        self.assertEqual(rVc, "Showingallworkitems.")
+
+        
+        responseViewToday = self.app.get('/worklog/view/today/',
+                user=self.user)
+        rVT = str(responseViewToday)
+        rVTc = self.helper(responseViewToday)
+
+        self.assertEqual(rVT.count("<td>tester</td>"), 1)
+        self.assertEqual(rVT.count("<td>testre</td>"), 1)
+        self.assertEqual(rVTc, "Dateminimum:" + str(date.today()) + "Datemaximum:" + str(date.today()))
+
+
+        responseViewRange = self.app.get('/worklog/view/2014-12-01_2015-01-13/',
+                user=self.user)
+        rVR = str(responseViewRange)
+        rVRc = self.helper(responseViewRange)
+
+        self.assertEqual(rVR.count("<td>tester</td>"), 2)
+        self.assertEqual(rVR.count("<td>testre</td>"), 2)
+        self.assertEqual(rVRc, "Dateminimum:2014-12-01Datemaximum:2015-01-13")
+
+
+        responseViewMax = self.app.get('/worklog/view/_2015-01-31/',
+                user=self.user)
+        rVM = str(responseViewMax)
+        rVMc = self.helper(responseViewMax)
+
+        self.assertEqual(rVM.count("<td>tester</td>"), 3)
+        self.assertEqual(rVM.count("<td>testre</td>"), 3)
+        self.assertEqual(rVMc, "Datemaximum:2015-01-31")
+
+
+        responseViewUser = self.app.get('/worklog/view/tester/',
+                user=self.user)
+        rVU = str(responseViewUser)[:str(responseViewUser).find("Current query:")]
+        rVUc = self.helper(responseViewUser)
+
+        self.assertEqual(rVU.count("<td>tester</td>"), 3)
+        self.assertEqual(rVU.count("<td>testre</td>"), 0)
+        self.assertEqual(rVUc, "User:tester")
+
+
+        responseViewUserToday = self.app.get('/worklog/view/tester/today/',
+                user=self.user)
+        rVUT = str(responseViewUserToday)[:str(responseViewUserToday).find("Current query:")]
+        rVUTc = self.helper(responseViewUserToday)
+
+        self.assertEqual(rVUT.count("<td>tester</td>"), 1)
+        self.assertEqual(rVUT.count("<td>testre</td>"), 0)
+        self.assertEqual(rVUTc, "User:testerDateminimum:" + str(date.today()) + "Datemaximum:" + str(date.today()))
+
+
+        responseViewUserRange = self.app.get('/worklog/view/tester/2014-12-01_2015-01-31/',
+                user=self.user)
+        rVUR = str(responseViewUserRange)[:str(responseViewUserRange).find("Current query:")]
+        rVURc = self.helper(responseViewUserRange)
+
+        self.assertEqual(rVUR.count("<td>tester</td>"), 3)
+        self.assertEqual(rVUR.count("<td>testre</td>"), 0)
+        self.assertEqual(rVURc, "User:testerDateminimum:2014-12-01Datemaximum:2015-01-31")
+
+
+        responseViewUserMax = self.app.get('/worklog/view/tester/_2015-01-31/',
+                user=self.user)
+        rVUM = str(responseViewUserMax)[:str(responseViewUserMax).find("Current query:")]
+        rVUMc = self.helper(responseViewUserMax)
+
+        self.assertEqual(rVUM.count("<td>tester</td>"), 3)
+        self.assertEqual(rVUM.count("<td>testre</td>"), 0)
+        self.assertEqual(rVUMc, "User:testerDatemaximum:2015-01-31")
+
+
 class ViewsFunctionsTest(WebTest):
 
-    def test_find_previous_sunday(self):
+    def test_find_previous_saturday(self):
         test_date = date(2014, 9, 25)
-        self.assertEqual(find_previous_sunday(test_date), date(2014, 9, 21))
+        self.assertEqual(find_previous_saturday(test_date), date(2014, 9, 20))
 
         test_date = date(2014, 9, 21)
-        self.assertEqual(find_previous_sunday(test_date), date(2014, 9, 21))
+        self.assertEqual(find_previous_saturday(test_date), date(2014, 9, 20))
 
-        test_date = date(2014, 9, 20)
-        self.assertEqual(find_previous_sunday(test_date), date(2014, 9, 14))
+        test_date = date(2014, 9, 19)
+        self.assertEqual(find_previous_saturday(test_date), date(2014, 9, 13))
 
     def test_get_past_n_days(self):
         # list of dates from 9-7 to 9-1 in descending order

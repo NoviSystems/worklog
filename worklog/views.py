@@ -43,11 +43,8 @@ no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that 
 
 def find_previous_saturday(date):
     """ Returns the most recent saturday"""
-    dow = date.isoweekday()
-    if dow == 6:
-        last_saturday = date
-    else:
-        last_saturday = date - datetime.timedelta(days=dow + 1)
+    dow = (date.isoweekday() + 1) % 7
+    last_saturday = date - datetime.timedelta(days=dow)
     return last_saturday
 
 
@@ -375,13 +372,8 @@ class WorkViewer(object):
         links = [alllink] + links
         self.menu.submenus.append(WorkViewMenu.SubMenu("Job", links))
 
-class ViewWorkView(TemplateView):
+class WorklogView(TemplateView):
     def get(self, request, username=None, datemin=None, datemax=None, *args, **kwargs):
-        #username = request.GET.get('user', None)
-        #datemin = request.GET.get('datemin', None)
-        #datemax = request.GET.get('datemax', None)
-
-#def viewWork(request, username=None, datemin=None, datemax=None):
         if datemin == 'today':
             datemin = datetime.date.today()
         if datemax == 'today':
