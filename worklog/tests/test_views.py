@@ -58,7 +58,7 @@ class WorklogViewTestCase(WebTest):
         string = string[string.find("<td>"):string.rfind("</td>")].replace("</td>", "").replace("<td>", "").replace("<tr>", "").replace("</tr>", "")
         return string
 
-    def test_content(self):
+    def test_view(self):
         responseView = self.app.get(reverse("worklog-view"), 
                 user=self.user)
         rV = str(responseView)
@@ -68,7 +68,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rV.count("<td>testre</td>"), 3)
         self.assertEqual(rVc, "Showingallworkitems.")
 
-        
+    def test_view_today(self):
         responseViewToday = self.app.get('/worklog/view/today/',
                 user=self.user)
         rVT = str(responseViewToday)
@@ -78,7 +78,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVT.count("<td>testre</td>"), 1)
         self.assertEqual(rVTc, "Dateminimum:" + str(date.today()) + "Datemaximum:" + str(date.today()))
 
-
+    def test_view_range(self):
         responseViewRange = self.app.get('/worklog/view/2014-12-01_2015-01-13/',
                 user=self.user)
         rVR = str(responseViewRange)
@@ -88,7 +88,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVR.count("<td>testre</td>"), 2)
         self.assertEqual(rVRc, "Dateminimum:2014-12-01Datemaximum:2015-01-13")
 
-
+    def test_view_max(self):
         responseViewMax = self.app.get('/worklog/view/_2015-01-31/',
                 user=self.user)
         rVM = str(responseViewMax)
@@ -98,7 +98,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVM.count("<td>testre</td>"), 3)
         self.assertEqual(rVMc, "Datemaximum:2015-01-31")
 
-
+    def test_view_user(self):
         responseViewUser = self.app.get('/worklog/view/tester/',
                 user=self.user)
         rVU = str(responseViewUser)[:str(responseViewUser).find("Current query:")]
@@ -108,7 +108,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVU.count("<td>testre</td>"), 0)
         self.assertEqual(rVUc, "User:tester")
 
-
+    def test_view_user_today(self):
         responseViewUserToday = self.app.get('/worklog/view/tester/today/',
                 user=self.user)
         rVUT = str(responseViewUserToday)[:str(responseViewUserToday).find("Current query:")]
@@ -118,7 +118,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVUT.count("<td>testre</td>"), 0)
         self.assertEqual(rVUTc, "User:testerDateminimum:" + str(date.today()) + "Datemaximum:" + str(date.today()))
 
-
+    def test_view_user_range(self):
         responseViewUserRange = self.app.get('/worklog/view/tester/2014-12-01_2015-01-31/',
                 user=self.user)
         rVUR = str(responseViewUserRange)[:str(responseViewUserRange).find("Current query:")]
@@ -128,7 +128,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVUR.count("<td>testre</td>"), 0)
         self.assertEqual(rVURc, "User:testerDateminimum:2014-12-01Datemaximum:2015-01-31")
 
-
+    def test_view_user_max(self):
         responseViewUserMax = self.app.get('/worklog/view/tester/_2015-01-31/',
                 user=self.user)
         rVUM = str(responseViewUserMax)[:str(responseViewUserMax).find("Current query:")]
