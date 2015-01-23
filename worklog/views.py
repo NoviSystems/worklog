@@ -1,6 +1,7 @@
 import datetime
 import calendar
 import time
+import operator
 
 from django.utils import simplejson
 from django.core import serializers
@@ -395,6 +396,7 @@ class WorklogView(TemplateView):
             menulink_base += '../'
 
         rawitems = list(tuple(_itercolumns(item)) for item in items)
+        rawitems = sorted(rawitems, key=lambda raw: raw[1], reverse=True)
 
         return render_to_response('worklog/viewwork.html',
                               {'items': rawitems,
