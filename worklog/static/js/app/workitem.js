@@ -241,8 +241,6 @@ $(document).ready(function() {
             console.log(e.keyCode);
         });
 
-        $('#add-form').trigger('click');
-
         $('#display-table tbody').on('click', '.edit', function() {
             if ($(window).width() < 600) {
                 var workItem = $(this).data('workitem');
