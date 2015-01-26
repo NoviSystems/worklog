@@ -37,6 +37,7 @@ _column_layout = [
 
 def _itercolumns(item):
     for key, title in _column_layout:
+        print key + ":" + title
         yield getattr(item, key)
 
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
@@ -119,67 +120,37 @@ class HomepageRedirectView(RedirectView):
 
 
 class WorkItemView(TemplateView):
+    template_name = 'worklog/workform.html'
     WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
 
-    def workitem_response(self, request, date, formset):
-        items = WorkItem.objects.filter(date=date, user=request.user)
-        rawitems = list(tuple(_itercolumns(item)) for item in items)
-
-        if BiweeklyEmployee.objects.filter(user=request.user).count() > 0:
-            holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
-        else:
-            holidays = None
-
-        return render_to_response('worklog/workform.html',
-                {
-                    'open': formset,
-                    'date': date,
-                    'items': rawitems,
-                    'column_names': list(t for k, t in _column_layout),
-                    'holidays': holidays
-                },
-                    context_instance = RequestContext(request)
-                )
-
     def get_context_data(self, **kwargs):
+        context = super(WorkItemView, self).get_context_data()
         date = kwargs['date']
+        user = self.request.user
+        items = WorkItem.objects.filter(date=date, user=user)
+        items = list(tuple(_itercolumns(item)) for item in items)
+
         if date == 'today' or date == None:
             date = datetime.date.today()
         else:
             date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
 
-        context = super(WorkItemView, self).get_context_data()
+        if BiweeklyEmployee.objects.filter(user=user).count() > 0:
+            holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
+        else:
+            holidays = None
+
+        if datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
+            formset = self.WorkItemFormSet(logged_in_user=user)
+        
+        context['open'] = formset
         context['date'] = date
+        context['items'] = items
+        context['column_names'] = list(t for k, t in _column_layout)
+        context['holidays'] = holidays
 
         return context
 
-    def post(self, request, *args, **kwargs):
-        date = self.get_context_data(**kwargs)['date']
-        formset = self.WorkItemFormSet(request.POST, logged_in_user=request.user)
-        if formset.is_valid():
-            for f in formset.forms:
-                form = f.save(comit=False)
-
-                form.user = request.user
-                form.date = date
-
-                form.save()
-
-            if 'submit_and_add_another' in request.POST:
-                return HttpResponseRedirect(request.path)
-            else:
-                if date == datetime.date.today():
-                    return HttpResponseRedirect('/worklog/view/%s/today/' % request.user.username)
-                else:
-                    return HttpResponseRedirect('/worklog/view/%s/%s_%s/' % (request.user.username, date, date))
-        return self.workitem_response(request, date, formset)
-
-    def get(self, request, *args, **kwargs):
-        date = self.get_context_data(**kwargs)['date']
-        formset = None
-        if datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
-            formset = self.WorkItemFormSet(logged_in_user=request.user)
-        return self.workitem_response(request, date, formset)
 
 class CurrentDateRedirectView(RedirectView):
     permanent = False
@@ -374,7 +345,14 @@ class WorkViewer(object):
         self.menu.submenus.append(WorkViewMenu.SubMenu("Job", links))
 
 class WorklogView(TemplateView):
-    def get(self, request, username=None, datemin=None, datemax=None, *args, **kwargs):
+    template_name = 'worklog/viewwork.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(WorklogView, self).get_context_data()
+        datemin = kwargs['datemin']
+        datemax = kwargs['datemax']
+        username = kwargs['username']
+
         if datemin == 'today':
             datemin = datetime.date.today()
         if datemax == 'today':
@@ -383,11 +361,8 @@ class WorklogView(TemplateView):
         viewer = WorkViewer(request, username, datemin, datemax)
 
         items = WorkItem.objects.all()
-        items = viewer.filter_items(items)
+        items = view.filter_items(items).order_by('date')
 
-        # menulink_base must either be blank, or include a trailing slash.
-        # menulink_base is the part of the URL in the menu links that will precede
-        # the '?'
         menulink_base = ''
         if username is not None:
             menulink_base += '../'
@@ -395,18 +370,16 @@ class WorklogView(TemplateView):
         if datemin or datemax:
             menulink_base += '../'
 
-        rawitems = list(tuple(_itercolumns(item)) for item in items)
-        rawitems = sorted(rawitems, key=lambda raw: raw[1], reverse=True)
+        #rawitems = list(tuple(_itercolumns(item)) for item in items)
+        rawitems = [item for item in items]
 
-        return render_to_response('worklog/viewwork.html',
-                              {'items': rawitems,
-                               'filtermenu': viewer.menu,
-                               'menulink_base': menulink_base,
-                               'column_names': list(t for k, t in _column_layout),
-                               'current_filters': viewer.query_info,
-                               },
-                              context_instance=RequestContext(request)
-                              )
+        context['items'] = items
+        context['filtermenu'] = viewer.menu
+        context['menulink_base'] = menulink_base
+        context['column_names'] = list(t for k, t in _column_layout)
+        context['current_filters'] = viewer.query_info
+
+        return context
 
 
 class ReportView(TemplateView):
