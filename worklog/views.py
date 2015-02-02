@@ -37,7 +37,6 @@ _column_layout = [
 
 def _itercolumns(item):
     for key, title in _column_layout:
-        print key + ":" + title
         yield getattr(item, key)
 
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
@@ -124,7 +123,7 @@ class WorkItemView(TemplateView):
     WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
 
     def get_context_data(self, **kwargs):
-        context = super(WorkItemView, self).get_context_data()
+        context = super(WorkItemView, self).get_context_data(**kwargs)
         date = kwargs['date']
         user = self.request.user
         items = WorkItem.objects.filter(date=date, user=user)
@@ -142,8 +141,8 @@ class WorkItemView(TemplateView):
 
         if datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
             formset = self.WorkItemFormSet(logged_in_user=user)
-        
-        context['open'] = formset
+            context['open'] = formset
+
         context['date'] = date
         context['items'] = items
         context['column_names'] = list(t for k, t in _column_layout)
@@ -346,22 +345,23 @@ class WorkViewer(object):
 
 class WorklogView(TemplateView):
     template_name = 'worklog/viewwork.html'
+    data_template = 'worklog/viewwork_data.html'
 
     def get_context_data(self, **kwargs):
-        context = super(WorklogView, self).get_context_data()
-        datemin = kwargs['datemin']
-        datemax = kwargs['datemax']
-        username = kwargs['username']
+        context = super(WorklogView, self).get_context_data(**kwargs)
+        datemin = kwargs.get('datemin', None)
+        datemax = kwargs.get('datemax', None)
+        username = kwargs.get('username', None)
 
         if datemin == 'today':
             datemin = datetime.date.today()
         if datemax == 'today':
             datemax = datetime.date.today()
 
-        viewer = WorkViewer(request, username, datemin, datemax)
+        viewer = WorkViewer(self.request, username, datemin, datemax)
 
         items = WorkItem.objects.all()
-        items = view.filter_items(items).order_by('date')
+        items = viewer.filter_items(items).order_by('-date')
 
         menulink_base = ''
         if username is not None:
@@ -370,14 +370,11 @@ class WorklogView(TemplateView):
         if datemin or datemax:
             menulink_base += '../'
 
-        #rawitems = list(tuple(_itercolumns(item)) for item in items)
-        rawitems = [item for item in items]
-
         context['items'] = items
         context['filtermenu'] = viewer.menu
         context['menulink_base'] = menulink_base
-        context['column_names'] = list(t for k, t in _column_layout)
         context['current_filters'] = viewer.query_info
+        context['worklog_data_template'] = self.data_template
 
         return context
 

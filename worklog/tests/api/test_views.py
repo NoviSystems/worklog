@@ -486,8 +486,7 @@ class ViewWorkTestCase(WorklogTestCaseBase):
             self.assertNotEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),2)  # 2, one for datemin, one for datemax
 
-            i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
-            texts = list(x[i] for x in response.context['items'])
+            texts = list(x.text for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item1','item2','item3','item7',])
 
@@ -499,8 +498,7 @@ class ViewWorkTestCase(WorklogTestCaseBase):
             self.assertEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),2)  # 2, one for datemin, one for datemax
 
-            i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
-            texts = list(x[i] for x in response.context['items'])
+            texts = list(x.text for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item1','item2','item3','item7',])
 
@@ -512,8 +510,7 @@ class ViewWorkTestCase(WorklogTestCaseBase):
             self.assertNotEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),1)
 
-            i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
-            texts = list(x[i] for x in response.context['items'])
+            texts = list(x.text for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item7',])
 
@@ -525,8 +522,7 @@ class ViewWorkTestCase(WorklogTestCaseBase):
             self.assertNotEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),3)
 
-            i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
-            texts = list(x[i] for x in response.context['items'])
+            texts = list(x.text for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item1','item2','item3',])
 
@@ -538,7 +534,6 @@ class ViewWorkTestCase(WorklogTestCaseBase):
             self.assertEquals(response.context['menulink_base'],'')
             self.assertEquals(len(response.context['current_filters']),2)  # 2, one for datemin, one for datemax
 
-            i = response.context['column_names'].index('Task')  # Task corresponds to WorkItem.text
-            texts = list(x[i] for x in response.context['items'])
+            texts = list(x.text for x in response.context['items'])
             texts.sort()
             self.assertEqual(texts,['item4','item6',])
