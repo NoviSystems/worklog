@@ -21,7 +21,9 @@ setup(
     ],
     install_requires=[
         "celery",
-        "djangorestframework",
+        "djangorestframework<3.0",
+        "django-filter",
+        "github3.py",
         "xhtml2pdf",
         "reportlab==2.7",
         "pisa",
