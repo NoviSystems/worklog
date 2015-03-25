@@ -1,8 +1,8 @@
 import datetime
 import calendar
 import time
+import json
 
-from django.utils import simplejson
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -496,8 +496,8 @@ class ChartView(TemplateView):
             return self.error('Invalid job selection')
             #error = { }
             #error['error'] = 'Invalid job selection'
-            # return HttpResponse(simplejson.dumps(data),
-            # mimetype='application/json')
+            # return HttpResponse(json.dumps(data),
+            # content_type='application/json')
 
         # Check if the job doesnt exist due to a bad param
         try:
@@ -506,8 +506,8 @@ class ChartView(TemplateView):
             return self.error('Job with id %s does not exist' % job_id)
             #error = { }
             #error['error'] = 'Job with id %s does not exist' % job_id
-            # return HttpResponse(simplejson.dumps(error),
-            # mimetype='application/json')
+            # return HttpResponse(json.dumps(error),
+            # content_type='application/json')
 
         if job is not None:
             data = {}
@@ -534,8 +534,8 @@ class ChartView(TemplateView):
                         return self.error('Enter a valid date format for the start date')
                         #error = { }
                         #error['error'] = 'Enter a valid date format'
-                        # return HttpResponse(simplejson.dumps(error),
-                        # mimetype='application/json')
+                        # return HttpResponse(json.dumps(error),
+                        # content_type='application/json')
                 else:
                     if funding is None and work_items is None:
                         return self.error('There is no work or funding available for job %s' % job)
@@ -572,8 +572,8 @@ class ChartView(TemplateView):
                         return self.error('Enter a valid date format for the end date')
                          #error = { }
                          #error['error'] = 'Enter a valid date format'
-                         # return HttpResponse(simplejson.dumps(error),
-                         # mimetype='application/json')
+                         # return HttpResponse(json.dumps(error),
+                         # content_type='application/json')
                 else:
                     if funding is None and work_items is None:
                         return self.error('There is no work or funding available for job %s' % job)
@@ -612,8 +612,8 @@ class ChartView(TemplateView):
                     return self.error('Start date has to be before end date')
                     #error = { }
                     #error['error'] = 'Start date has to be before end date'
-                    # return HttpResponse(simplejson.dumps(error),
-                    # mimetype='application/json')
+                    # return HttpResponse(json.dumps(error),
+                    # content_type='application/json')
                 else:
                     # We need to calculate the hours since the first available funding
                     # or first work item
@@ -640,8 +640,8 @@ class ChartView(TemplateView):
                         return self.error('There is no work or funding available for job %s' % job)
                         #error = { }
                         #error['error'] = 'There is no work or funding available for job %s' % job
-                        # return HttpResponse(simplejson.dumps(error),
-                        # mimetype='application/json')
+                        # return HttpResponse(json.dumps(error),
+                        # content_type='application/json')
 
                     initial_days = (start_date - initial_date).days
 
@@ -678,24 +678,24 @@ class ChartView(TemplateView):
                         data[str(date)] = hours
                         date += datetime.timedelta(days=1)
 
-                    return HttpResponse(simplejson.dumps(data), mimetype='application/json')
+                    return HttpResponse(json.dumps(data), content_type='application/json')
             else:
                 return self.error('Dates could not be processed')
                 #error = { }
                 #error['error'] = 'Dates could not be processed'
-                # return HttpResponse(simplejson.dumps(error),
-                # mimetype='application/json')
+                # return HttpResponse(json.dumps(error),
+                # content_type='application/json')
         else:
             return self.error('That job does not exist')
             #error = { }
             #error['error'] = 'That job does not exist'
-            # return HttpResponse(simplejson.dumps(error),
-            # mimetype='application/json')
+            # return HttpResponse(json.dumps(error),
+            # content_type='application/json')
 
     def error(self, message):
         error = {}
         error['error'] = message
-        return HttpResponse(simplejson.dumps(error), mimetype='application/json')
+        return HttpResponse(json.dumps(error), content_type='application/json')
 
     def get_context_data(self, **kwargs):
         context = super(ChartView, self).get_context_data()
@@ -730,4 +730,4 @@ class JobDataView(View):
             work_items = WorkItem.objects.filter(job__pk=job_id, date=date.date())
             data = serializers.serialize('json', work_items)
 
-            return HttpResponse(data, mimetype='application/json')
+            return HttpResponse(data, content_type='application/json')
