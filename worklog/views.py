@@ -3,6 +3,7 @@ import calendar
 import time
 import json
 
+from django.conf import settings
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -19,7 +20,6 @@ from django.forms.models import modelformset_factory
 from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user
 
-from labsite import settings
 
 # 'columns' determines the layout of the view table
 _column_layout = [
