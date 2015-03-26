@@ -3,7 +3,6 @@ import operator
 
 from django.contrib import admin
 from django.http import HttpResponse
-from django.conf.urls.defaults import *
 from django.db.models import Sum
 
 from models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, BiweeklyEmployee, Holiday, WorkPeriod
@@ -33,7 +32,7 @@ class WorkItemAdmin(admin.ModelAdmin):
     list_display = ('user', 'date', 'hours', 'text', 'job', 'invoiced', 'do_not_invoice')
     list_filter = ('user', 'date', 'job', 'invoiced', 'do_not_invoice')
     actions = [mark_invoiced, mark_not_invoiced, mark_invoiceable, mark_not_invoiceable]
-    #sort the items by time in descending order
+    # sort the items by time in descending order
     ordering = ['-date']
 
     # order the job dropdown alphabetically

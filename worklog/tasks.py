@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.template import Template, Context
 
-from celery.task import task
+from celery import shared_task
 
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse as urlreverse
@@ -54,11 +54,7 @@ html_email_msg = Template("""
 """)
 
 
-#registry = TaskRegistry()
-
-##submit_log_url = "http://opus-dev.cnl.ncsu.edu:7979/worklog/add/reminder_%s"
-
-@task
+@shared_task
 def generate_invoice(default_date=None):
     if default_date is None:
         default_date = datetime.date.today()
@@ -172,7 +168,7 @@ def generate_invoice(default_date=None):
 
 # Generate invoices at 2 AM daily if they are needed
 # Crontab in settings.py
-@task
+@shared_task
 def generate_invoice_email():
     default_date = datetime.date.today()
     billable_jobs = Job.objects.filter(billing_schedule__date=default_date).distinct()
@@ -222,9 +218,7 @@ def get_reminder_dates_for_user(user):
     return rem_dates
 
 
-# periodic task -- by default: M-F at 6:00pm
-# Crontab in settings.py
-@task
+@shared_task
 def send_reminder_emails():
     today = datetime.date.today()
     send_emails = settings.WORKLOG_SEND_REMINDERS and today.isoweekday() in range(1, 6)
@@ -256,8 +250,7 @@ def test_send_reminder_email(username, date=datetime.date.today()):
     email.send()
 
 
-# Crontab in settings.py
-@task
+@shared_task
 def reconcile_db_with_gh(*args, **kwargs):
     ghc = GitHubConnector()
     repos = ghc.get_all_repos()

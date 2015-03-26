@@ -1,13 +1,11 @@
 import datetime
 import calendar
 import time
-import operator
+import json
 
-from django.utils import simplejson
+from django.conf import settings
 from django.core import serializers
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
@@ -20,7 +18,6 @@ from django.forms.models import modelformset_factory
 from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user
 
-from labsite import settings
 
 # 'columns' determines the layout of the view table
 _column_layout = [
@@ -101,7 +98,7 @@ class HomepageView(TemplateView):
         # filter the issues into a dictionary of {repo: [associated issues]}
         repos_with_issues = {}
         for issue in open_user_issues:
-            if not issue.repo in repos_with_issues:
+            if issue.repo not in repos_with_issues:
                 repos_with_issues[issue.repo] = []
             repos_with_issues[issue.repo].append(issue)
 
@@ -129,7 +126,7 @@ class WorkItemView(TemplateView):
         items = WorkItem.objects.filter(date=date, user=user)
         items = list(tuple(_itercolumns(item)) for item in items)
 
-        if date == 'today' or date == None:
+        if date == 'today' or date is None:
             date = datetime.date.today()
         else:
             date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
@@ -204,7 +201,7 @@ class WorkViewerFilter(object):
         self.query_fmtstring = query_fmtstring
         self.model = model
         self.value = None
-        #self.error_value = None
+        # self.error_value = None
         self.error_name = error_name
         self.display_name = self.error_name
         self.name_attr = name_attr
@@ -343,6 +340,7 @@ class WorkViewer(object):
         links = [alllink] + links
         self.menu.submenus.append(WorkViewMenu.SubMenu("Job", links))
 
+
 class WorklogView(TemplateView):
     template_name = 'worklog/viewwork.html'
     data_template = 'worklog/viewwork_data.html'
@@ -431,7 +429,7 @@ class ReportView(TemplateView):
 class ChartView(TemplateView):
     template_name = 'worklog/chart.html'
 
-    #@method_decorator(csrf_exempt)
+    # @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super(ChartView, self).dispatch(*args, **kwargs)
 
@@ -469,20 +467,12 @@ class ChartView(TemplateView):
         # Make sure the use selected a job
         if job_id == '-1':
             return self.error('Invalid job selection')
-            #error = { }
-            #error['error'] = 'Invalid job selection'
-            # return HttpResponse(simplejson.dumps(data),
-            # mimetype='application/json')
 
         # Check if the job doesnt exist due to a bad param
         try:
             job = Job.objects.get(pk=job_id)
         except:
             return self.error('Job with id %s does not exist' % job_id)
-            #error = { }
-            #error['error'] = 'Job with id %s does not exist' % job_id
-            # return HttpResponse(simplejson.dumps(error),
-            # mimetype='application/json')
 
         if job is not None:
             data = {}
@@ -507,10 +497,6 @@ class ChartView(TemplateView):
                             request.POST['start_date'], '%m/%d/%Y').date()
                     except ValueError:
                         return self.error('Enter a valid date format for the start date')
-                        #error = { }
-                        #error['error'] = 'Enter a valid date format'
-                        # return HttpResponse(simplejson.dumps(error),
-                        # mimetype='application/json')
                 else:
                     if funding is None and work_items is None:
                         return self.error('There is no work or funding available for job %s' % job)
@@ -545,10 +531,6 @@ class ChartView(TemplateView):
                             request.POST['end_date'], '%m/%d/%Y').date()
                     except ValueError:
                         return self.error('Enter a valid date format for the end date')
-                         #error = { }
-                         #error['error'] = 'Enter a valid date format'
-                         # return HttpResponse(simplejson.dumps(error),
-                         # mimetype='application/json')
                 else:
                     if funding is None and work_items is None:
                         return self.error('There is no work or funding available for job %s' % job)
@@ -585,10 +567,6 @@ class ChartView(TemplateView):
                 # Make sure the dates were in a valid order
                 if days < 0:
                     return self.error('Start date has to be before end date')
-                    #error = { }
-                    #error['error'] = 'Start date has to be before end date'
-                    # return HttpResponse(simplejson.dumps(error),
-                    # mimetype='application/json')
                 else:
                     # We need to calculate the hours since the first available funding
                     # or first work item
@@ -613,10 +591,6 @@ class ChartView(TemplateView):
                         initial_date = funding_date
                     else:
                         return self.error('There is no work or funding available for job %s' % job)
-                        #error = { }
-                        #error['error'] = 'There is no work or funding available for job %s' % job
-                        # return HttpResponse(simplejson.dumps(error),
-                        # mimetype='application/json')
 
                     initial_days = (start_date - initial_date).days
 
@@ -653,24 +627,16 @@ class ChartView(TemplateView):
                         data[str(date)] = hours
                         date += datetime.timedelta(days=1)
 
-                    return HttpResponse(simplejson.dumps(data), mimetype='application/json')
+                    return HttpResponse(json.dumps(data), content_type='application/json')
             else:
                 return self.error('Dates could not be processed')
-                #error = { }
-                #error['error'] = 'Dates could not be processed'
-                # return HttpResponse(simplejson.dumps(error),
-                # mimetype='application/json')
         else:
             return self.error('That job does not exist')
-            #error = { }
-            #error['error'] = 'That job does not exist'
-            # return HttpResponse(simplejson.dumps(error),
-            # mimetype='application/json')
 
     def error(self, message):
         error = {}
         error['error'] = message
-        return HttpResponse(simplejson.dumps(error), mimetype='application/json')
+        return HttpResponse(json.dumps(error), content_type='application/json')
 
     def get_context_data(self, **kwargs):
         context = super(ChartView, self).get_context_data()
@@ -705,4 +671,4 @@ class JobDataView(View):
             work_items = WorkItem.objects.filter(job__pk=job_id, date=date.date())
             data = serializers.serialize('json', work_items)
 
-            return HttpResponse(data, mimetype='application/json')
+            return HttpResponse(data, content_type='application/json')

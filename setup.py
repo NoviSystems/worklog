@@ -1,8 +1,9 @@
 import os
 from setuptools import setup, find_packages
 
+
 def read(fname):
-  return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name="Worklog",
@@ -13,19 +14,20 @@ setup(
     keywords="Work logging, Report, Email reminder",
     url="https://www.fi.ncsu.edu/",
     long_description=read('README.md'),
-    packages=find_packages(),  
+    packages=find_packages(),
     include_package_data=True,
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Topic :: Utilities","License :: OSI Approved :: BSD License", 
+        "Topic :: Utilities", "License :: OSI Approved :: BSD License",
     ],
     install_requires=[
         "celery",
-        "djangorestframework",
+        "djangorestframework<3.0",
+        "django-filter",
+        "github3.py",
         "xhtml2pdf",
         "reportlab==2.7",
         "pisa",
         "pytz",
-        "south",
     ],
 )
