@@ -2,33 +2,9 @@
 
 <div class="row">
     <br>
-
-
     <!-- Content -->
     <div class="col-md-6">
-        {% if items %}
-
-        <!-- Work item table -->
-        <table class="table table-bordered">
-            <tr>
-                {% for title in column_names %}
-                <th>{{ title }}</th>
-                {% endfor %}
-            </tr>
-
-            {% for item in items %}
-            <tr>
-                {% for field in item %}
-                <td>{{ field }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </table>
-
-        {% else %}
-        <p>No work accomplished... this is terrible!</p>
-        {% endif %}
-
+        {% include worklog_data_template %}
         <!-- Contents of the current query -->
         <p style="margin-bottom: 0em;">Current query:</p>
         <table style="margin-left: 3em;">
@@ -43,6 +19,7 @@
             </tr>
             {% endif %}
         </table>
+
     </div>
 
 

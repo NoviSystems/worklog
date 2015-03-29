@@ -1,12 +1,11 @@
 import datetime
 import calendar
 import time
+import json
 
-from django.utils import simplejson
+from django.conf import settings
 from django.core import serializers
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
@@ -19,7 +18,6 @@ from django.forms.models import modelformset_factory
 from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user
 
-from labsite import settings
 
 # 'columns' determines the layout of the view table
 _column_layout = [
@@ -41,14 +39,11 @@ def _itercolumns(item):
 no_reminder_msg = 'There is no stored reminder with the given id.  Perhaps that reminder was already used?'
 
 
-def find_previous_sunday(date):
-    """ Returns the most recent sunday"""
-    dow = date.isoweekday()
-    if dow == 7:
-        last_sunday = date
-    else:
-        last_sunday = date - datetime.timedelta(days=dow)
-    return last_sunday
+def find_previous_saturday(date):
+    """ Returns the most recent saturday"""
+    dow = (date.isoweekday() + 1) % 7
+    last_saturday = date - datetime.timedelta(days=dow)
+    return last_saturday
 
 
 def get_past_n_days(date, num=7):
@@ -97,13 +92,13 @@ class HomepageView(TemplateView):
 
         # totals up the hours from last sunday to today for [user] (different from last 7 days)
         total_hours = get_total_hours_from_workitems(
-            WorkItem.objects.filter(user=user, date__range=(find_previous_sunday(today), today)))
+            WorkItem.objects.filter(user=user, date__range=(find_previous_saturday(today), today)))
         # all issues assigned to [user] which are currently open
         open_user_issues = Issue.objects.select_related('repo').filter(assignee=user, open=True)
         # filter the issues into a dictionary of {repo: [associated issues]}
         repos_with_issues = {}
         for issue in open_user_issues:
-            if not issue.repo in repos_with_issues:
+            if issue.repo not in repos_with_issues:
                 repos_with_issues[issue.repo] = []
             repos_with_issues[issue.repo].append(issue)
 
@@ -121,7 +116,36 @@ class HomepageRedirectView(RedirectView):
 
 
 class WorkItemView(TemplateView):
-    pass
+    template_name = 'worklog/workform.html'
+    WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
+
+    def get_context_data(self, **kwargs):
+        context = super(WorkItemView, self).get_context_data(**kwargs)
+        date = kwargs['date']
+        user = self.request.user
+        items = WorkItem.objects.filter(date=date, user=user)
+        items = list(tuple(_itercolumns(item)) for item in items)
+
+        if date == 'today' or date is None:
+            date = datetime.date.today()
+        else:
+            date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+
+        if BiweeklyEmployee.objects.filter(user=user).count() > 0:
+            holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
+        else:
+            holidays = None
+
+        if datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
+            formset = self.WorkItemFormSet(logged_in_user=user)
+            context['open'] = formset
+
+        context['date'] = date
+        context['items'] = items
+        context['column_names'] = list(t for k, t in _column_layout)
+        context['holidays'] = holidays
+
+        return context
 
 
 class CurrentDateRedirectView(RedirectView):
@@ -129,59 +153,6 @@ class CurrentDateRedirectView(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         return reverse('worklog-date', kwargs={'date': str(datetime.date.today())})
-
-
-def createWorkItem(request, date='today'):
-    WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
-
-    if date == 'today':
-        date = datetime.date.today()
-    else:
-        date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
-
-    if request.method == 'POST':  # If the form has been submitted...
-
-        formset = WorkItemFormSet(request.POST, logged_in_user=request.user)
-        if formset.is_valid():
-            for f in formset.forms:
-                # Save but don't commit form data
-                form = f.save(commit=False)
-                # Add user and date before saving
-                form.user = request.user
-                form.date = date
-
-                form.save()
-
-            if 'submit_and_add_another' in request.POST:
-                # redisplay workitem form so another item may be added
-                return HttpResponseRedirect(request.path)
-            else:
-                if date == datetime.date.today():
-                    # Redirect after POST
-                    return HttpResponseRedirect('/worklog/view/%s/today/' % request.user.username)
-                else:
-                    return HttpResponseRedirect('/worklog/view/%s/%s_%s/' % (request.user.username, date, date))
-    elif datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
-        formset = WorkItemFormSet(logged_in_user=request.user)  # An unbound form
-    else:
-        formset = None
-
-    items = WorkItem.objects.filter(date=date, user=request.user)
-    rawitems = list(tuple(_itercolumns(item)) for item in items)
-
-    if BiweeklyEmployee.objects.filter(user=request.user).count() > 0:
-        holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
-    else:
-        holidays = None
-
-    return render_to_response('worklog/workform.html',
-                              {'open': formset, 'date': date,
-                               'items': rawitems,
-                               'column_names': list(t for k, t in _column_layout),
-                               'holidays': holidays
-                               },
-                              context_instance=RequestContext(request)
-                              )
 
 
 def make_month_range(d):
@@ -230,7 +201,7 @@ class WorkViewerFilter(object):
         self.query_fmtstring = query_fmtstring
         self.model = model
         self.value = None
-        #self.error_value = None
+        # self.error_value = None
         self.error_name = error_name
         self.display_name = self.error_name
         self.name_attr = name_attr
@@ -370,38 +341,40 @@ class WorkViewer(object):
         self.menu.submenus.append(WorkViewMenu.SubMenu("Job", links))
 
 
-def viewWork(request, username=None, datemin=None, datemax=None):
-    if datemin == 'today':
-        datemin = datetime.date.today()
-    if datemax == 'today':
-        datemax = datetime.date.today()
+class WorklogView(TemplateView):
+    template_name = 'worklog/viewwork.html'
+    data_template = 'worklog/viewwork_data.html'
 
-    viewer = WorkViewer(request, username, datemin, datemax)
+    def get_context_data(self, **kwargs):
+        context = super(WorklogView, self).get_context_data(**kwargs)
+        datemin = kwargs.get('datemin', None)
+        datemax = kwargs.get('datemax', None)
+        username = kwargs.get('username', None)
 
-    items = WorkItem.objects.all()
-    items = viewer.filter_items(items)
+        if datemin == 'today':
+            datemin = datetime.date.today()
+        if datemax == 'today':
+            datemax = datetime.date.today()
 
-    # menulink_base must either be blank, or include a trailing slash.
-    # menulink_base is the part of the URL in the menu links that will precede
-    # the '?'
-    menulink_base = ''
-    if username is not None:
-        menulink_base += '../'
+        viewer = WorkViewer(self.request, username, datemin, datemax)
 
-    if datemin or datemax:
-        menulink_base += '../'
+        items = WorkItem.objects.all()
+        items = viewer.filter_items(items).order_by('-date')
 
-    rawitems = list(tuple(_itercolumns(item)) for item in items)
+        menulink_base = ''
+        if username is not None:
+            menulink_base += '../'
 
-    return render_to_response('worklog/viewwork.html',
-                              {'items': rawitems,
-                               'filtermenu': viewer.menu,
-                               'menulink_base': menulink_base,
-                               'column_names': list(t for k, t in _column_layout),
-                               'current_filters': viewer.query_info,
-                               },
-                              context_instance=RequestContext(request)
-                              )
+        if datemin or datemax:
+            menulink_base += '../'
+
+        context['items'] = items
+        context['filtermenu'] = viewer.menu
+        context['menulink_base'] = menulink_base
+        context['current_filters'] = viewer.query_info
+        context['worklog_data_template'] = self.data_template
+
+        return context
 
 
 class ReportView(TemplateView):
@@ -456,7 +429,7 @@ class ReportView(TemplateView):
 class ChartView(TemplateView):
     template_name = 'worklog/chart.html'
 
-    #@method_decorator(csrf_exempt)
+    # @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super(ChartView, self).dispatch(*args, **kwargs)
 
@@ -494,20 +467,12 @@ class ChartView(TemplateView):
         # Make sure the use selected a job
         if job_id == '-1':
             return self.error('Invalid job selection')
-            #error = { }
-            #error['error'] = 'Invalid job selection'
-            # return HttpResponse(simplejson.dumps(data),
-            # mimetype='application/json')
 
         # Check if the job doesnt exist due to a bad param
         try:
             job = Job.objects.get(pk=job_id)
         except:
             return self.error('Job with id %s does not exist' % job_id)
-            #error = { }
-            #error['error'] = 'Job with id %s does not exist' % job_id
-            # return HttpResponse(simplejson.dumps(error),
-            # mimetype='application/json')
 
         if job is not None:
             data = {}
@@ -532,10 +497,6 @@ class ChartView(TemplateView):
                             request.POST['start_date'], '%m/%d/%Y').date()
                     except ValueError:
                         return self.error('Enter a valid date format for the start date')
-                        #error = { }
-                        #error['error'] = 'Enter a valid date format'
-                        # return HttpResponse(simplejson.dumps(error),
-                        # mimetype='application/json')
                 else:
                     if funding is None and work_items is None:
                         return self.error('There is no work or funding available for job %s' % job)
@@ -570,10 +531,6 @@ class ChartView(TemplateView):
                             request.POST['end_date'], '%m/%d/%Y').date()
                     except ValueError:
                         return self.error('Enter a valid date format for the end date')
-                         #error = { }
-                         #error['error'] = 'Enter a valid date format'
-                         # return HttpResponse(simplejson.dumps(error),
-                         # mimetype='application/json')
                 else:
                     if funding is None and work_items is None:
                         return self.error('There is no work or funding available for job %s' % job)
@@ -610,10 +567,6 @@ class ChartView(TemplateView):
                 # Make sure the dates were in a valid order
                 if days < 0:
                     return self.error('Start date has to be before end date')
-                    #error = { }
-                    #error['error'] = 'Start date has to be before end date'
-                    # return HttpResponse(simplejson.dumps(error),
-                    # mimetype='application/json')
                 else:
                     # We need to calculate the hours since the first available funding
                     # or first work item
@@ -638,10 +591,6 @@ class ChartView(TemplateView):
                         initial_date = funding_date
                     else:
                         return self.error('There is no work or funding available for job %s' % job)
-                        #error = { }
-                        #error['error'] = 'There is no work or funding available for job %s' % job
-                        # return HttpResponse(simplejson.dumps(error),
-                        # mimetype='application/json')
 
                     initial_days = (start_date - initial_date).days
 
@@ -678,24 +627,16 @@ class ChartView(TemplateView):
                         data[str(date)] = hours
                         date += datetime.timedelta(days=1)
 
-                    return HttpResponse(simplejson.dumps(data), mimetype='application/json')
+                    return HttpResponse(json.dumps(data), content_type='application/json')
             else:
                 return self.error('Dates could not be processed')
-                #error = { }
-                #error['error'] = 'Dates could not be processed'
-                # return HttpResponse(simplejson.dumps(error),
-                # mimetype='application/json')
         else:
             return self.error('That job does not exist')
-            #error = { }
-            #error['error'] = 'That job does not exist'
-            # return HttpResponse(simplejson.dumps(error),
-            # mimetype='application/json')
 
     def error(self, message):
         error = {}
         error['error'] = message
-        return HttpResponse(simplejson.dumps(error), mimetype='application/json')
+        return HttpResponse(json.dumps(error), content_type='application/json')
 
     def get_context_data(self, **kwargs):
         context = super(ChartView, self).get_context_data()
@@ -730,4 +671,4 @@ class JobDataView(View):
             work_items = WorkItem.objects.filter(job__pk=job_id, date=date.date())
             data = serializers.serialize('json', work_items)
 
-            return HttpResponse(data, mimetype='application/json')
+            return HttpResponse(data, content_type='application/json')

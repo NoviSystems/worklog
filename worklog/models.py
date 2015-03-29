@@ -123,7 +123,7 @@ class WorkItem(models.Model):
     user = models.ForeignKey(User)
     date = models.DateField()
     hours = models.FloatField()
-    text = models.TextField()
+    text = models.TextField(verbose_name="Tasks")
     job = models.ForeignKey(Job)
     repo = models.ForeignKey(Repo, null=True, blank=True)
     issue = models.ForeignKey(Issue, null=True, blank=True)

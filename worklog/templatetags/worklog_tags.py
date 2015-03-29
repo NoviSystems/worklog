@@ -16,3 +16,6 @@ def workitem_admin_actions(context):
     
 workitem_admin_actions = register.inclusion_tag("admin/worklog/workitem/actions.html", takes_context=True)(workitem_admin_actions)
 
+@register.filter
+def verbose_name(model_set, field):
+    return model_set[0]._meta.get_field_by_name(field)[0].verbose_name.title()

@@ -1,0 +1,31 @@
+{% load worklog_tags %}
+
+{% if items %}
+<table class="table table-bordered">
+    <thead>
+        <th>{{ items|verbose_name:"user" }}</th>
+        <th>{{ items|verbose_name:"date" }}</th>
+        <th>{{ items|verbose_name:"hours" }}</th>
+        <th>{{ items|verbose_name:"job" }}</th>
+        <th>{{ items|verbose_name:"repo" }}</th>
+        <th>{{ items|verbose_name:"issue" }}</th>
+        <th>{{ items|verbose_name:"text" }}</th>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.user }}</td>
+            <td>{{ item.date }}</td>
+            <td>{{ item.hours }}</td>
+            <td>{{ item.job }}</td>
+            <td>{{ item.repo }}</td>
+            <td>{{ item.issue }}</td>
+            <td>{{ item.text }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+<p>No work accomplished... this is terrible!</p>
+{% endif %}

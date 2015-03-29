@@ -115,7 +115,8 @@ function WorkItem(workItemJSON) {
         this.user = workItemJSON.user;
         this.date = workItemJSON.date;
         this.job.id = workItemJSON.job
-        this.job.name = jobs[workItemJSON.job.toString()].name;
+        if (jobs[workItemJSON.job.toString()])
+            this.job.name = jobs[workItemJSON.job.toString()].name;
         this.hours = workItemJSON.hours;
         if (workItemJSON.repo) {
             this.repo.github_id = workItemJSON.repo;
@@ -229,6 +230,17 @@ $(document).ready(function() {
             formTable.addForm();
         });
 
+        $('textarea.form-control.imput-sm.text').keydown(function(e) {
+            console.log(e.keyCode);
+            if (e.keyCode == 13) {
+                e.preventDefault();
+            }
+        });
+
+        $('tbody').keydown(function(e) {
+            console.log(e.keyCode);
+        });
+
         $('#display-table tbody').on('click', '.edit', function() {
             if ($(window).width() < 600) {
                 var workItem = $(this).data('workitem');
@@ -293,13 +305,6 @@ $(document).ready(function() {
         });
 
         $('.alert').alert();
-
-        $('.form-control').keydown(function(event) {
-            if (event.keyCode == 13) {
-                event.preventDefault();
-                $('#submit').click();
-            }
-        });
 
         $('#reconcile').on('click', function() {
 
