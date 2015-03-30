@@ -13,30 +13,30 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class WorkDayViewSet(viewsets.ModelViewSet):
-    model = models.WorkDay
+    queryset = models.WorkDay.objects.all()
     serializer_class = serializers.WorkDaySerializer
     filter_class = filters.WorkDayFilter
 
 
 class WorkItemViewSet(viewsets.ModelViewSet):
-    model = models.WorkItem
+    queryset = models.WorkItem.objects.all()
     serializer_class = serializers.WorkItemSerializer
     filter_class = filters.WorkItemFilter
 
 
 class JobViewSet(viewsets.ReadOnlyModelViewSet):
-    model = models.Job
+    queryset = models.Job.objects.all()
     serializer_class = serializers.JobSerializer
     filter_class = filters.JobFilter
 
 
 class RepoViewSet(viewsets.ReadOnlyModelViewSet):
-    model = models.Repo
+    queryset = models.Repo.objects.all()
     serializer_class = serializers.RepoSerializer
     filter_class = filters.RepoFilter
 
 
 class IssueViewSet(viewsets.ReadOnlyModelViewSet):
-    model = models.Issue
+    queryset = models.Issue.objects.all()
     serializer_class = serializers.IssueSerializer
     filter_class = filters.IssueFilter

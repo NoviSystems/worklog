@@ -54,78 +54,49 @@ class WorkItemSerializer(serializers.ModelSerializer):
         model = WorkItem
         fields = ('id', 'user', 'date', 'hours', 'text', 'job', 'repo', 'issue')
 
-    def validate_job(self, attrs, source):
+    def validate_job(self, value):
 
-        try:
-            attrs[source]
-        except KeyError:
-            raise serializers.ValidationError("Field cannot be NoneType")
-        except TypeError:
-            raise serializers.ValidationError("No POST data provided")
-
-        if attrs[source] is None:
+        if value is None:
             raise serializers.ValidationError("This field is required.")
 
         open_jobs = Job.get_jobs_open_on(datetime.date.today())
 
         try:
-            open_jobs.get(name=attrs[source])
+            open_jobs.get(name=value)
         except ObjectDoesNotExist:
             raise serializers.ValidationError("Job must be open.")
 
-        return attrs
+        return value
 
-    def validate_hours(self, attrs, source):
+    def validate_hours(self, value):
 
-        try:
-            hours = attrs[source]
-        except KeyError:
-            raise serializers.ValidationError("Field cannot be NoneType")
-        except TypeError:
-            raise serializers.ValidationError("No POST data provided")
-
-        if not hours and hours != 0:
+        if not value and value != 0:
             raise serializers.ValidationError("This field is required.")
 
-        if (hours % 1 != 0) and (hours % 1 % .25 != 0):
+        if (value % 1 != 0) and (value % 1 % .25 != 0):
             raise serializers.ValidationError("For the love of Satan, 15-minute increments. Please.")
-        elif hours < 0:
+        elif value < 0:
             raise serializers.ValidationError("The whole part of hours must be in N.")
 
-        return attrs
+        return value
 
-    def validate_issue(self, attrs, source):
-        try:
-            issue = attrs[source]
-            repo = attrs['repo']
-        except KeyError:
-            raise serializers.ValidationError("Field cannot be NoneType")
-        except TypeError:
-            raise serializers.ValidationError("No POST data provided")
+    def validate_text(self, value):
 
-        try:
-            if issue.repo != repo:
-                raise serializers.ValidationError("Issue does not belong to repo.")
-        except AttributeError:
-            pass
-
-        return attrs
-
-    def validate_text(self, attrs, source):
-
-        try:
-            text = attrs[source]
-        except KeyError:
-            raise serializers.ValidationError("Field cannot be NoneType")
-        except TypeError:
-            raise serializers.ValidationError("No POST data provided")
-
-        if not text:
+        if not value:
             raise serializers.ValidationError("This field is required.")
 
-        text_string = string.split(text)
+        text_string = string.split(value)
 
         if text_string[0] == 'commit' and len(text_string) == 1:
             raise serializers.ValidationError("Please specify a commit hash.")
 
-        return attrs
+        return value
+
+    def validate(self, data):
+        issue = data['issue']
+        repo = data['repo']
+
+        if issue and issue.repo != repo:
+            raise serializers.ValidationError("Issue does not belong to repo.")
+
+        return data
