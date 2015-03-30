@@ -95,7 +95,7 @@ function WorkItemForm(workItem, selector, formset) {
     this.populateIssues = function(repo) {
         $(this.selector + ' .issue').empty();
         this.issue.options = [];
-        $(this.selector + ' .issue').append('<option value="None" selected="selected">None</option>');
+        $(this.selector + ' .issue').append('<option value="" selected="selected">None</option>');
         if (repo) {
 
             var issues = repos[repo].issues;
@@ -122,7 +122,7 @@ function WorkItemForm(workItem, selector, formset) {
                 if (valueInList.length > 0) {
                     $(this.selector + ' .issue').val(this.issue.value);                    
                 } else {
-                    $(this.selector + ' .issue').val('None');
+                    $(this.selector + ' .issue').val('');
                     this.issue.value = null;
                 }
             }

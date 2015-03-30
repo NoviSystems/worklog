@@ -76,10 +76,10 @@ function WorkItemFormTable(rowTemplate) {
                 $(selector).remove();
             });            
         } else {
-            $('.job').val('None');
+            $('.job').val('');
             $('.hours').val('');
-            $('.repo').val('None');
-            $('.issue').val('None');
+            $('.repo').val('');
+            $('.issue').val('');
             $('.text').val('');
         }
     };

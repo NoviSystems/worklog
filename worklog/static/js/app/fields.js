@@ -26,7 +26,7 @@ function SelectField(name, value, data) {
 
     this.toHtml = function() {
 
-        var htmlString = '<div class="form-group"><select class="form-control input-sm ' + name + '" data-row="' + data +'"><option value="None" selected="selected">None</option>'
+        var htmlString = '<div class="form-group"><select class="form-control input-sm ' + name + '" data-row="' + data +'"><option value="" selected="selected">None</option>'
 
         for (var i = 0; i < this.options.length; i++) {
             htmlString += options[i].toHtml();
