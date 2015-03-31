@@ -23,7 +23,7 @@ setup(
     install_requires=[
         "celery",
         "djangorestframework",
-        "django-filter",
+        "djangorestframework-filters",
         "github3.py",
         "xhtml2pdf",
         "reportlab==2.7",

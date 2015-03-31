@@ -1,5 +1,5 @@
 
-import django_filters as filters
+import rest_framework_filters as filters
 from worklog import models
 from django.db.models import Q
 from django.contrib.auth import get_user_model
@@ -68,6 +68,8 @@ class RepoFilter(filters.FilterSet):
 
 
 class IssueFilter(filters.FilterSet):
+    repo = filters.RelatedFilter(RepoFilter, name='repo')
+
     class Meta:
         model = models.Issue
         fields = ['repo', ]
