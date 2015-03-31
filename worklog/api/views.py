@@ -1,6 +1,6 @@
 
-from worklog import models, filters
-from worklog.api import serializers
+from worklog import models
+from worklog.api import filters, serializers
 from rest_framework import viewsets
 
 from django.contrib.auth.models import User
