@@ -125,8 +125,8 @@ class WorkItem(models.Model):
     hours = models.FloatField()
     text = models.TextField(verbose_name="Tasks")
     job = models.ForeignKey(Job)
-    repo = models.ForeignKey(Repo, null=True)
-    issue = models.ForeignKey(Issue, null=True)
+    repo = models.ForeignKey(Repo, null=True, blank=True)
+    issue = models.ForeignKey(Issue, null=True, blank=True)
     invoiced = models.BooleanField(default=False)
     do_not_invoice = models.BooleanField(default=False)
 
