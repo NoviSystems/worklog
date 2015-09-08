@@ -1,8 +1,10 @@
 *.pyc
 *.db
 *.swp
+*.egg
 runserver
 runtests
 django-admin
 local_settings.py
 secrets.py
+.DS_Store
