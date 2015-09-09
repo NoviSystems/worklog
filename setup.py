@@ -2,6 +2,8 @@ import os
 from setuptools import setup, find_packages
 from setuptools.command.test import test
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
+
 README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 
 # allow setup.py to be run from any path
@@ -63,9 +65,9 @@ setup(
         "pytz",
     ],
 
+    tests_require=['django', 'djangorestframework>=3.2,', 'fantasy-database'],
+
     cmdclass={
         'test': Test,
     },
-
-    tests_require=['django', 'djangorestframework>=3.2,!=3.2.3', 'fantasy-database'],
 )
