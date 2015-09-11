@@ -55,6 +55,7 @@ setup(
     ],
 
     install_requires=[
+        "django",
         "celery",
         "djangorestframework>=3.2",
         "djangorestframework-filters",
@@ -66,12 +67,10 @@ setup(
     ],
 
     tests_require=[
-        'djangorestframework>=3.2,',
         'django_webtest',
         'factory_boy',
         'fake-factory',
-        'django',
-        ],
+    ],
 
     cmdclass={
         'test': Test,
