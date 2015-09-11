@@ -56,7 +56,7 @@ setup(
 
     install_requires=[
         "celery",
-        "djangorestframework",
+        "djangorestframework>=3.2",
         "djangorestframework-filters",
         "github3.py",
         "xhtml2pdf",
@@ -65,7 +65,13 @@ setup(
         "pytz",
     ],
 
-    tests_require=['django', 'djangorestframework>=3.2,', 'fantasy-database'],
+    tests_require=[
+        'djangorestframework>=3.2,',
+        'django_webtest',
+        'factory_boy',
+        'fake-factory',
+        'django',
+        ],
 
     cmdclass={
         'test': Test,
