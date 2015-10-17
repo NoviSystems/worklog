@@ -21,9 +21,6 @@
 
 {% if open %}
 <h2>New Work Item</h2>
-{% if holidays %}
-<h3>Today is a holiday. Work item hours will not count towards timesheet.</h3>
-{% endif %} 
 <h4>For: {{ date|date:"DATE_FORMAT" }}</h4>
 
     <button class='btn btn-success' type="button" id="submit">Submit All</button>

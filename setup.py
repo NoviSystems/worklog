@@ -25,9 +25,6 @@ setup(
         "djangorestframework",
         "djangorestframework-filters",
         "github3.py",
-        "xhtml2pdf",
-        "reportlab==2.7",
-        "pisa",
         "pytz",
     ],
 )

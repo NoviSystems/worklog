@@ -13,9 +13,6 @@ class BiweeklyEmployee(models.Model):
     obj_code = models.CharField(max_length=255, blank=True, verbose_name='Obj Code')
     hourly_pay = models.DecimalField(max_digits=5, decimal_places=2)
 
-    def get_timesheet_name(self):
-        return '%s, %s' % (self.user.last_name, self.user.first_name,)
-
     def __unicode__(self):
         return u'%s' % self.user.get_full_name()
 
