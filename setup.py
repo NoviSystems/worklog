@@ -55,11 +55,11 @@ setup(
     ],
 
     install_requires=[
-        "django",
+        "django<1.9",
         "celery",
-        "djangorestframework>=3.2",
-        "djangorestframework-filters",
-        "github3.py",
+        "djangorestframework>=3",
+        "djangorestframework-filters==v0.4.0",
+        "github3.py<1.0",
         "pytz",
     ],
 

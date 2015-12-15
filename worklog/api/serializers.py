@@ -93,6 +93,10 @@ class WorkItemSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+
+        if not data:
+            raise serializers.ValidationError("Data is null.")
+
         issue = data['issue']
         repo = data['repo']
 

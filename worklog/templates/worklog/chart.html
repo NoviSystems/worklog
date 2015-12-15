@@ -23,7 +23,7 @@
             }
         };
 
-        var jobDataUrl = "{% url 'job_data_url' %}";
+        var jobDataUrl = "{% url 'worklog:job_data_url' %}";
         var jobId = '';
 
         function parseData(data, status, xhr) {

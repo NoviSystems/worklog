@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
     
 {% block title %}Worklog{% endblock %}
@@ -27,7 +26,7 @@
 {% block nav-links %}
 {% if user.is_authenticated %}
 <ul class="nav navbar-nav">
-    <li><a href="{% url 'worklog-today' %}">New Work Item</a></li>
+    <li><a href="{% url 'worklog:today' %}">New Work Item</a></li>
     <li><a href="/worklog/chart">Chart</a></li>
     <li><a href="/worklog/view/{{ user }}">My Work</a></li>
 </ul>

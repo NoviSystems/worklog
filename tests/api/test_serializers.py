@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from rest_framework.serializers import ValidationError
 from worklog.api.serializers import WorkItemSerializer
 from worklog.models import Job, Repo, Issue
-from worklog.tests import factories
+from tests import factories
 
 
 class WorkItemSerializerTestCase(APITestCase):
@@ -44,40 +44,40 @@ class WorkItemSerializerTestCase(APITestCase):
         self.assertNotEqual(issues, [])
 
     def test_validate_job(self):
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_job(None, 'job'))
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_job({}, None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job(None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job({}))
 
-        attrs = self.serializer.validate_job({'job': self.open_jobs[0]}, 'job')
+        attrs = self.serializer.validate_job(self.open_jobs[0])
         self.assertIsNotNone(attrs)
 
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_job({'job': None}, 'job'))
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_job({'job': self.closed_jobs[0]}, 'job'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job(None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_job(self.closed_jobs[0]))
 
     def test_validate_hours(self):
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours(None, 'hours'))
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({}, None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours(None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({}))
 
-        attrs = self.serializer.validate_hours({'hours': 13}, 'hours')
+        attrs = self.serializer.validate_hours(13)
         self.assertIsNotNone(attrs)
-        attrs = self.serializer.validate_hours({'hours': 13.5}, 'hours')
+        attrs = self.serializer.validate_hours(13.5)
         self.assertIsNotNone(attrs)
 
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({'hours': None}, 'hours'))
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({'hours': -1}, 'hours'))
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours({'hours': 1.3}, 'hours'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours(None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours(-1))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_hours(1.3))
 
     def test_validate_issue(self):
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_issue(None, 'issue'))
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_issue({}, None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate(None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate({}))
 
-        attrs = self.serializer.validate_issue({'repo': self.issues[0].repo, 'issue': self.issues[0]}, 'issue')
+        attrs = self.serializer.validate({'repo': self.issues[0].repo, 'issue': self.issues[0]})
         self.assertIsNotNone(attrs)
 
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_issue(self.repo_issue_mismatch, 'issue'))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate(self.repo_issue_mismatch))
 
     def test_validate_text(self):
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_text(None, 'text'))
-        self.assertRaises(ValidationError, lambda: self.serializer.validate_text({}, None))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_text(None,))
+        self.assertRaises(ValidationError, lambda: self.serializer.validate_text({}))
 
-        attrs = self.serializer.validate_text({'text': 'foo bar baz qux'}, 'text')
+        attrs = self.serializer.validate_text('foo bar baz qux')
         self.assertIsNotNone(attrs)

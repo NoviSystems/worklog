@@ -1,7 +1,7 @@
 from django_webtest import WebTest
 from django.core.urlresolvers import reverse
 from datetime import date
-
+from django.test import override_settings
 from factories import UserFactory, IssueFactory, RepoFactory, WorkItemFactory, JobFactory
 from worklog.views import get_past_n_days, find_previous_saturday, get_total_hours_from_workitems
 from worklog.models import WorkItem
@@ -21,12 +21,12 @@ class HomepageViewTestCase(WebTest):
 
     def test_access(self):
          # Login redirect
-        self.assertEqual(self.app.get(reverse("worklog-home")).status_int, 302)
+        self.assertEqual(self.app.get(reverse("worklog:home")).status_int, 302)
         # Homepage URL
-        self.assertEqual(self.app.get(reverse("worklog-home"), user=self.user).status_int, 200)
+        self.assertEqual(self.app.get(reverse("worklog:home"), user=self.user).status_int, 200)
 
     def test_content(self):
-        response = self.app.get(reverse("worklog-home"), user=self.user)
+        response = self.app.get(reverse("worklog:home"), user=self.user)
 
         ###### Test Work pane ######
         # response.mustcontain("hours worked")  # based on self.workitem1
@@ -59,7 +59,7 @@ class WorklogViewTestCase(WebTest):
         return string
 
     def test_view(self):
-        responseView = self.app.get(reverse("worklog-view"), 
+        responseView = self.app.get(reverse("worklog:view"), 
                 user=self.user)
         rV = str(responseView)
         rVc = self.helper(responseView)
@@ -69,7 +69,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVc, "Showingallworkitems.")
 
     def test_view_today(self):
-        responseViewToday = self.app.get(reverse("worklog-view-today"),
+        responseViewToday = self.app.get(reverse("worklog:view-today"),
                 user=self.user)
         rVT = str(responseViewToday)
         rVTc = self.helper(responseViewToday)
@@ -79,7 +79,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVTc, "Dateminimum:" + str(date.today()) + "Datemaximum:" + str(date.today()))
 
     def test_view_range(self):
-        responseViewRange = self.app.get(reverse("worklog-view-daterange", kwargs={'datemin':'2014-12-01', 'datemax':'2015-01-13'}),
+        responseViewRange = self.app.get(reverse("worklog:view-daterange", kwargs={'datemin':'2014-12-01', 'datemax':'2015-01-13'}),
                 user=self.user)
         rVR = str(responseViewRange)
         rVRc = self.helper(responseViewRange)
@@ -89,17 +89,18 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVRc, "Dateminimum:2014-12-01Datemaximum:2015-01-13")
 
     def test_view_max(self):
-        responseViewMax = self.app.get(reverse("worklog-view-datemax", kwargs={'datemax':'2015-01-31'}),
+        responseViewMax = self.app.get(reverse("worklog:view-datemax", kwargs={'datemax':date.today()}),
                 user=self.user)
         rVM = str(responseViewMax)
         rVMc = self.helper(responseViewMax)
 
         self.assertEqual(rVM.count("<td>tester</td>"), 3)
         self.assertEqual(rVM.count("<td>testre</td>"), 3)
-        self.assertEqual(rVMc, "Datemaximum:2015-01-31")
+        datemaxtext = "Datemaximum:" + str(date.today())
+        self.assertEqual(rVMc, datemaxtext)
 
     def test_view_user(self):
-        responseViewUser = self.app.get(reverse("worklog-view-user", kwargs={'username':'tester'}),
+        responseViewUser = self.app.get(reverse("worklog:view-user", kwargs={'username':'tester'}),
                 user=self.user)
         rVU = str(responseViewUser)[:str(responseViewUser).find("Current query:")]
         rVUc = self.helper(responseViewUser)
@@ -109,7 +110,7 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVUc, "User:tester")
 
     def test_view_user_today(self):
-        responseViewUserToday = self.app.get(reverse("worklog-view-user-today", kwargs={'username':'tester'}),
+        responseViewUserToday = self.app.get(reverse("worklog:view-user-today", kwargs={'username':'tester'}),
                 user=self.user)
         rVUT = str(responseViewUserToday)[:str(responseViewUserToday).find("Current query:")]
         rVUTc = self.helper(responseViewUserToday)
@@ -119,22 +120,22 @@ class WorklogViewTestCase(WebTest):
         self.assertEqual(rVUTc, "User:testerDateminimum:" + str(date.today()) + "Datemaximum:" + str(date.today()))
 
     def test_view_user_range(self):
-        responseViewUserRange = self.app.get(reverse("worklog-view-user-daterange", kwargs={'username':'tester', 'datemin':'2014-12-01', 'datemax':'2015-01-31'}),
+        responseViewUserRange = self.app.get(reverse("worklog:view-user-daterange", kwargs={'username':'tester', 'datemin':'2014-12-01', 'datemax':'2015-01-31'}),
                 user=self.user)
         rVUR = str(responseViewUserRange)[:str(responseViewUserRange).find("Current query:")]
         rVURc = self.helper(responseViewUserRange)
 
-        self.assertEqual(rVUR.count("<td>tester</td>"), 3)
+        self.assertEqual(rVUR.count("<td>tester</td>"), 2)
         self.assertEqual(rVUR.count("<td>testre</td>"), 0)
         self.assertEqual(rVURc, "User:testerDateminimum:2014-12-01Datemaximum:2015-01-31")
 
     def test_view_user_max(self):
-        responseViewUserMax = self.app.get(reverse("worklog-view-user-datemax", kwargs={'username':'tester', 'datemax':'2015-01-31'}),
+        responseViewUserMax = self.app.get(reverse("worklog:view-user-datemax", kwargs={'username':'tester', 'datemax':'2015-01-31'}),
                 user=self.user)
         rVUM = str(responseViewUserMax)[:str(responseViewUserMax).find("Current query:")]
         rVUMc = self.helper(responseViewUserMax)
 
-        self.assertEqual(rVUM.count("<td>tester</td>"), 3)
+        self.assertEqual(rVUM.count("<td>tester</td>"), 2)
         self.assertEqual(rVUM.count("<td>testre</td>"), 0)
         self.assertEqual(rVUMc, "User:testerDatemaximum:2015-01-31")
 

@@ -112,16 +112,16 @@ class HomepageRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        return reverse('worklog-home')
+        return reverse('home')
 
 
 class WorkItemView(TemplateView):
     template_name = 'worklog/workform.html'
     WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, date, **kwargs):
         context = super(WorkItemView, self).get_context_data(**kwargs)
-        date = kwargs['date']
+        date = date
         user = self.request.user
         items = WorkItem.objects.filter(date=date, user=user)
         items = list(tuple(_itercolumns(item)) for item in items)
@@ -152,7 +152,7 @@ class CurrentDateRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        return reverse('worklog-date', kwargs={'date': str(datetime.date.today())})
+        return reverse('date', kwargs={'date': str(datetime.date.today())})
 
 
 def make_month_range(d):

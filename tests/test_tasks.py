@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from worklog.models import WorkDay, WorkItem, Job
 
 import worklog.tasks as tasks
-from worklog.tests import WorklogTestCaseBase
+from tests import WorklogTestCaseBase
 
 
 class SendReminderEmailsTestCase(WorklogTestCaseBase):
