@@ -1,7 +1,6 @@
 language: python
 python:
 	- "2.7"
-install:
-	- pip install -q -e . --use-mirrors
+# installs dependencies and runs all tests
 script:
-	- python setup.py test
+"python setup.py test"
