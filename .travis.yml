@@ -1,6 +1,4 @@
 language: python
 python:
-	- "2.7"
-# installs dependencies and runs all tests
-script:
-"python setup.py test"
+- "2.7"
+script: python setup.py test
