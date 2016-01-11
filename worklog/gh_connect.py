@@ -9,25 +9,24 @@ class GitHubConnector(object):
             gh_username (str): Github username defaults to the one provided in secrets.py
             gh_password (str): Github password defaults to the one provided in secrets.py
         """
-        # if password login and get all orgs and repos
         self.gh_username = gh_username
 
+        # if password login and get all orgs and repos
         if not gh_password:
             self.git_hub = GitHub(gh_username)
-            self.orgs = list(iter_orgs(self.git_hub))
+            self.orgs = list(iter_orgs(gh_username))
             self.auth = False
         else:
             self.git_hub = GitHub(gh_username, gh_password)
             self.orgs = list(self.git_hub.iter_orgs())
             self.auth = True
 
-
         # As of 10/3/2013, the default rate limit was 5000/hr.
         # Should your code loop infinitely, this exception will
         # leave enough requests to debug the problem without
         # having to wait an hour.
-        # if self.git_hub.ratelimit_remaining < 500:
-        #     raise Exception('You have only 500 GitHub requests left for this hour')
+        if self.git_hub.ratelimit_remaining < 500:
+            raise Exception('You have only 500 GitHub requests left for this hour')
 
     def get_issues_for_repo(self, repo_name=None, github_id=None):
         """ Returns all the issues for a given repo name or id in the user's account (not organization)
@@ -76,10 +75,20 @@ class GitHubConnector(object):
     def get_all_repos(self):
         """ Returns all repos for an account in secrets.py """
         repos = []
+
+        # If user is logged in, get all of their repos
+        # If user is not logged in, get all of their public organizations, and then public repos of organizations
+        # If user is not logged in, and has no public organizations, get all of their public repos
         if self.auth:
             iter_repos = self.git_hub.iter_repos()
         else:
-            iter_repos = iter_user_repos(self.gh_username)
+            if not self.orgs:
+                iter_repos = iter_user_repos(self.gh_username)
+            else:
+                 for org in self.orgs:
+                    iter_repos = org.iter_repos()
+        
         for repo in iter_repos:
             repos.append(repo)
+
         return repos
