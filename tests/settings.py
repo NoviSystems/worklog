@@ -57,7 +57,7 @@ STATIC_URL = '/static/'
 
 USE_TZ = True
 
-GITHUB_USER = 'djstein'
+GITHUB_USER = 'itng-deploy'
 GITHUB_PASS = ''
 
 # WORKLOG SETTINGS
