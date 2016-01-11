@@ -57,8 +57,8 @@ STATIC_URL = '/static/'
 
 USE_TZ = True
 
-GITHUB_USER = 'djstein@ncsu.edu'
-GITHUB_PASS = 'b3ba5ebb58715ac69646b183fea1a47365ca828f'
+GITHUB_USER = 'djstein'
+GITHUB_PASS = ''
 
 # WORKLOG SETTINGS
 WORKLOG_SEND_REMINDERS = True

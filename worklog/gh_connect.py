@@ -1,4 +1,4 @@
-from github3 import GitHub, GitHubError
+from github3 import GitHub, GitHubError, iter_orgs, iter_user_repos
 from django.conf import settings
 
 
@@ -9,15 +9,25 @@ class GitHubConnector(object):
             gh_username (str): Github username defaults to the one provided in secrets.py
             gh_password (str): Github password defaults to the one provided in secrets.py
         """
-        self.git_hub = GitHub(gh_username, gh_password)
-        self.orgs = list(self.git_hub.iter_orgs())
+        # if password login and get all orgs and repos
+        self.gh_username = gh_username
+
+        if not gh_password:
+            self.git_hub = GitHub(gh_username)
+            self.orgs = list(iter_orgs(self.git_hub))
+            self.auth = False
+        else:
+            self.git_hub = GitHub(gh_username, gh_password)
+            self.orgs = list(self.git_hub.iter_orgs())
+            self.auth = True
+
 
         # As of 10/3/2013, the default rate limit was 5000/hr.
         # Should your code loop infinitely, this exception will
         # leave enough requests to debug the problem without
         # having to wait an hour.
-        if self.git_hub.ratelimit_remaining < 500:
-            raise Exception('You have only 500 GitHub requests left for this hour')
+        # if self.git_hub.ratelimit_remaining < 500:
+        #     raise Exception('You have only 500 GitHub requests left for this hour')
 
     def get_issues_for_repo(self, repo_name=None, github_id=None):
         """ Returns all the issues for a given repo name or id in the user's account (not organization)
@@ -26,7 +36,11 @@ class GitHubConnector(object):
             repo_name (str, optional): The name of a repo
             github_id (int, optional): The github id of a repo
         """
-        repos = self.git_hub.iter_all_repos()
+        if self.auth:
+            repos = self.git_hub.iter_repos()
+        else:
+            repos = iter_user_repos(self.gh_username)
+
         for repo in repos:
             if repo_name and repo_name == repo.name:
                 return list(repo.iter_issues())
@@ -62,8 +76,14 @@ class GitHubConnector(object):
     def get_all_repos(self):
         """ Returns all repos for all organizations associated with the account in secrets.py """
         repos = []
-        for org in self.orgs:
-            org_repos = org.iter_repos()
-            for repo in org_repos:
-                repos.append(repo)
+        # for org in self.orgs:
+        #     org_repos = org.iter_repos()
+        #     for repo in org_repos:
+        #         repos.append(repo)
+        if self.auth:
+            iter_repos = self.git_hub.iter_repos()
+        else:
+            iter_repos = iter_user_repos(self.gh_username)
+        for repo in iter_repos:
+            repos.append(repo)
         return repos

@@ -59,7 +59,7 @@ setup(
         "celery",
         "djangorestframework>=3",
         "djangorestframework-filters==0.4.0",
-        "github3.py<0.9.4",
+        "github3.py<1",
         "pytz",
     ],
 
