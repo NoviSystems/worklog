@@ -74,12 +74,8 @@ class GitHubConnector(object):
                 return list(org.iter_repos())
 
     def get_all_repos(self):
-        """ Returns all repos for all organizations associated with the account in secrets.py """
+        """ Returns all repos for an account in secrets.py """
         repos = []
-        # for org in self.orgs:
-        #     org_repos = org.iter_repos()
-        #     for repo in org_repos:
-        #         repos.append(repo)
         if self.auth:
             iter_repos = self.git_hub.iter_repos()
         else:
