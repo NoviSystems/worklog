@@ -80,14 +80,14 @@ class GitHubConnector(object):
         # If user is not logged in, get all of their public organizations, and then public repos of organizations
         # If user is not logged in, and has no public organizations, get all of their public repos
         if self.auth:
-            iter_repos = self.git_hub.iter_repos()
+            for repo in self.git_hub.iter_repos():
+                repos.append(repo)
         else:
-            iter_repos = iter_user_repos(self.gh_username)
+            for repo in iter_user_repos(self.gh_username):
+                repos.append(repo)
             if self.orgs:
                  for org in self.orgs:
-                    iter_repos.append(org.iter_repos())
-        
-        for repo in iter_repos:
-            repos.append(repo)
+                    for repo in org.iter_repos():
+                        repos.append(repo)
 
         return repos
