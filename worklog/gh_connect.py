@@ -25,8 +25,8 @@ class GitHubConnector(object):
         # Should your code loop infinitely, this exception will
         # leave enough requests to debug the problem without
         # having to wait an hour.
-        if self.git_hub.ratelimit_remaining < 500:
-            raise Exception('You have only 500 GitHub requests left for this hour')
+        # if self.git_hub.ratelimit_remaining < 500:
+        #     raise Exception('You have only 500 GitHub requests left for this hour')
 
     def get_issues_for_repo(self, repo_name=None, github_id=None):
         """ Returns all the issues for a given repo name or id in the user's account (not organization)
