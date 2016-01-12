@@ -25,8 +25,8 @@ class GitHubConnector(object):
         # Should your code loop infinitely, this exception will
         # leave enough requests to debug the problem without
         # having to wait an hour.
-        if self.git_hub.ratelimit_remaining < 50:
-            raise Exception('You have only 50 GitHub requests left for this hour')
+        # if self.git_hub.ratelimit_remaining < 50:
+        #     raise Exception('You have only 50 GitHub requests left for this hour')
 
     def get_issues_for_repo(self, repo_name=None, github_id=None):
         """ Returns all the issues for a given repo name or id in the user's account (not organization)
@@ -82,11 +82,10 @@ class GitHubConnector(object):
         if self.auth:
             iter_repos = self.git_hub.iter_repos()
         else:
-            if not self.orgs:
-                iter_repos = iter_user_repos(self.gh_username)
-            else:
+            iter_repos = iter_user_repos(self.gh_username)
+            if self.orgs:
                  for org in self.orgs:
-                    iter_repos = org.iter_repos()
+                    iter_repos.append(org.iter_repos())
         
         for repo in iter_repos:
             repos.append(repo)
