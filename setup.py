@@ -55,7 +55,7 @@ setup(
     ],
 
     install_requires=[
-        "django==1.8.8",
+        "django",
         "celery",
         "djangorestframework>=3",
         "djangorestframework-filters==0.4.0",
