@@ -1,21 +1,21 @@
 from django import template
-register = template.Library() 
+register = template.Library()
 
 
-# The following was taken from: 
+# The following was taken from:
 #       django/contrib/admin/templatetags/admin_list.py
-# This is nearly identical to the cited code.  This is used by our overridden 
+# This is nearly identical to the cited code.  This is used by our overridden
 # admin template.
 def workitem_admin_actions(context):
     """
     Track the number of times the action field has been rendered on the page,
     so we know which value to use.
-    """    
-    context['action_index'] = context.get('action_index', -1) + 1    
+    """
+    context['action_index'] = context.get('action_index', -1) + 1
     return context
-    
+
 workitem_admin_actions = register.inclusion_tag("admin/worklog/workitem/actions.html", takes_context=True)(workitem_admin_actions)
 
 @register.filter
 def verbose_name(model_set, field):
-    return model_set[0]._meta.get_field_by_name(field)[0].verbose_name.title()
+    return model_set[0]._meta.get_field(field).verbose_name.title()

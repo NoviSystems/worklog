@@ -1,7 +1,6 @@
 import datetime
 from django.test import TestCase
-from django.contrib.auth.models import User
-from worklog.models import WorkItem, Job
+from django.contrib.auth import get_user_model
 
 
 class UserLoginContext(object):
@@ -19,15 +18,17 @@ class UserLoginContext(object):
 
 class WorklogTestCaseBase(TestCase):
     def setUp(self):
+        from worklog.models import Job
+
         today = datetime.date.today()
         self.today = today
-        last_week =  today - datetime.timedelta(days=7)
+        last_week  = today - datetime.timedelta(days=7)
         last_2week = today - datetime.timedelta(days=14)
-        next_week =  today + datetime.timedelta(days=7)
+        next_week  = today + datetime.timedelta(days=7)
         self.last_week = last_week
         self.next_week = next_week
-        self.yesterday =     self.today - datetime.timedelta(days=1)
-        self.tomorrow =      self.today + datetime.timedelta(days=1)
+        self.yesterday = self.today - datetime.timedelta(days=1)
+        self.tomorrow  = self.today + datetime.timedelta(days=1)
         self.today_minus_2 = self.today - datetime.timedelta(days=2)
         self.today_minus_3 = self.today - datetime.timedelta(days=3)
 
@@ -45,10 +46,12 @@ class WorklogTestCaseBase(TestCase):
         job = Job.objects.create(name="Job_Old", open_date=last_2week, close_date=last_week)
         job.save()
 
+        User = get_user_model()
         self.user = User.objects.create_user(username="master", email="master@example.com", password="password")
         self.user2 = User.objects.create_user(username="user2", email="user2@example.com", password="password")
 
     def tearDown(self):
+        from worklog.models import WorkItem, Job
         # Clean up all test data.  This does not affect the 'real' database,
         # only the test database
         Job.objects.all().delete()

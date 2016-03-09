@@ -1,5 +1,5 @@
 
-from django.conf.urls import include
+from django.conf.urls import include, url
 from rest_framework.routers import DefaultRouter
 from worklog.api import views
 
@@ -14,6 +14,6 @@ router.register(r'issues', views.IssueViewSet)
 
 
 urlpatterns = [
-    (r'^', include(router.urls)),
-    (r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

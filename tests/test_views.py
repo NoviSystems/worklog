@@ -1,7 +1,6 @@
 from django_webtest import WebTest
 from django.core.urlresolvers import reverse
 from datetime import date
-from django.test import override_settings
 from factories import UserFactory, IssueFactory, RepoFactory, WorkItemFactory, JobFactory
 from worklog.views import get_past_n_days, find_previous_saturday, get_total_hours_from_workitems
 from worklog.models import WorkItem
@@ -20,7 +19,7 @@ class HomepageViewTestCase(WebTest):
         self.issues_for_repo_2 = IssueFactory.create_batch(2, assignee=self.user, open=True, repo=self.repos[1])
 
     def test_access(self):
-         # Login redirect
+        # Login redirect
         self.assertEqual(self.app.get(reverse("worklog:home")).status_int, 302)
         # Homepage URL
         self.assertEqual(self.app.get(reverse("worklog:home"), user=self.user).status_int, 200)
@@ -59,7 +58,7 @@ class WorklogViewTestCase(WebTest):
         return string
 
     def test_view(self):
-        responseView = self.app.get(reverse("worklog:view"), 
+        responseView = self.app.get(reverse("worklog:view"),
                 user=self.user)
         rV = str(responseView)
         rVc = self.helper(responseView)
