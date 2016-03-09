@@ -4,7 +4,7 @@ from django.template import Template, Context
 from celery import shared_task
 
 from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse as urlreverse
+from django.core.urlresolvers import reverse
 import django.core.mail as mail
 
 from models import WorkItem, Job, WorkDay, GithubAlias
@@ -155,7 +155,7 @@ def generate_invoice(default_date=None):
 
         msg = ('\n\n').join(email_msgs)
 
-        msg += '\n\nReport tools: %s?date=%s' % (settings.SITE_URL + urlreverse('report_url'), default_date)
+        msg += '\n\nReport tools: %s?date=%s' % (settings.SITE_URL + reverse('worklog:report_url'), default_date)
 
         recipients = []
 
@@ -176,7 +176,7 @@ def generate_invoice_email():
     # continue only if we there are jobs to bill
     if billable_jobs:
         sub = 'Invoice'
-        msg = 'Report tools: %s?date=%s' % (settings.SITE_URL + urlreverse('report_url'), default_date)
+        msg = 'Report tools: %s?date=%s' % (settings.SITE_URL + reverse('worklog:report_url'), default_date)
         recipients = []
         for admin in settings.ADMINS:
             recipients.append(admin[1])

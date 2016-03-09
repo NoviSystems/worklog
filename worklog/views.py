@@ -4,6 +4,7 @@ import time
 import json
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core import serializers
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -61,7 +62,7 @@ def get_total_hours_from_workitems(workitems):
     return workitems.aggregate(Sum('hours'))['hours__sum'] or 0
 
 
-class HomepageView(TemplateView):
+class HomepageView(LoginRequiredMixin, TemplateView):
     template_name = 'worklog/home.html'
 
     def get_context_data(self, **kwargs):
@@ -112,10 +113,10 @@ class HomepageRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        return reverse('home')
+        return reverse('worklog:home')
 
 
-class WorkItemView(TemplateView):
+class WorkItemView(LoginRequiredMixin, TemplateView):
     template_name = 'worklog/workform.html'
     WorkItemFormSet = modelformset_factory(WorkItem, form=WorkItemForm, formset=WorkItemBaseFormSet)
 
@@ -152,7 +153,7 @@ class CurrentDateRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        return reverse('date', kwargs={'date': str(datetime.date.today())})
+        return reverse('worklog:date', kwargs={'date': str(datetime.date.today())})
 
 
 def make_month_range(d):
@@ -341,7 +342,7 @@ class WorkViewer(object):
         self.menu.submenus.append(WorkViewMenu.SubMenu("Job", links))
 
 
-class WorklogView(TemplateView):
+class WorklogView(LoginRequiredMixin, TemplateView):
     template_name = 'worklog/viewwork.html'
     data_template = 'worklog/viewwork_data.html'
 
@@ -377,7 +378,7 @@ class WorklogView(TemplateView):
         return context
 
 
-class ReportView(TemplateView):
+class ReportView(LoginRequiredMixin, TemplateView):
     template_name = 'worklog/report.html'
 
     def get_context_data(self, **kwargs):
@@ -426,7 +427,7 @@ class ReportView(TemplateView):
         return TemplateView.render_to_response(self, context)
 
 
-class ChartView(TemplateView):
+class ChartView(LoginRequiredMixin, TemplateView):
     template_name = 'worklog/chart.html'
 
     # @method_decorator(csrf_exempt)
@@ -640,8 +641,8 @@ class ChartView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(ChartView, self).get_context_data()
-        context['open_jobs'] = (Job.objects.filter(close_date__gt=datetime.date.today())
-                                | Job.objects.filter(close_date=None)).order_by('name')
+        context['open_jobs'] = (Job.objects.filter(close_date__gt=datetime.date.today()) |
+                                Job.objects.filter(close_date=None)).order_by('name')
         context['closed_jobs'] = Job.objects.filter(
             close_date__lte=datetime.date.today()).order_by('name')
 
@@ -651,7 +652,7 @@ class ChartView(TemplateView):
         return TemplateView.render_to_response(self, context)
 
 
-class JobDataView(View):
+class JobDataView(LoginRequiredMixin, View):
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):

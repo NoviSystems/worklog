@@ -1,4 +1,5 @@
-from django.conf.urls import patterns, include
+
+from django.conf.urls import include
 from rest_framework.routers import DefaultRouter
 from worklog.api import views
 
@@ -11,7 +12,8 @@ router.register(r'jobs', views.JobViewSet)
 router.register(r'repos', views.RepoViewSet)
 router.register(r'issues', views.IssueViewSet)
 
-urlpatterns = patterns('',
+
+urlpatterns = [
     (r'^', include(router.urls)),
     (r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-)
+]
