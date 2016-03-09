@@ -25,7 +25,7 @@
 
                         <td class="col-xs-6 text-center">
                             {{ hours }}
-                            {% if show_link %}&nbsp;<small>(<a href="{% url 'worklog-date' date %}">Log Work</a>)</small>{% endif %}
+                            {% if show_link %}&nbsp;<small>(<a href="{% url 'worklog:date' date %}">Log Work</a>)</small>{% endif %}
                         </td>
                     </tr>
                 {% endfor %}

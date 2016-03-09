@@ -8,7 +8,7 @@ from factory.django import DjangoModelFactory
 from faker.factory import Factory as FakeFactory
 
 User = get_user_model()
-users = tuple(User.objects.all())
+# users = tuple(User.objects.all())
 faker = FakeFactory.create()
 
 
@@ -29,7 +29,7 @@ class JobFactory(DjangoModelFactory):
     class Meta:
         model = Job
 
-    open_date = factory.LazyAttribute(lambda p: faker.date_time_between(start_date='-3y', end_date='-1y'))
+    open_date = factory.LazyAttribute(lambda p: faker.date_time_between(start_date='-1y', end_date='-1y'))
     close_date = factory.LazyAttribute(lambda p: faker.date_time_between(start_date='-1y') if random.choice([True, False]) else None)
     name = factory.LazyAttribute(lambda p: faker.sentence(nb_words=3))
     available_all_users = factory.LazyAttribute(lambda p: faker.boolean())
@@ -74,7 +74,7 @@ class WorkItemFactory(DjangoModelFactory):
         model = WorkItem
 
     user = factory.SubFactory(UserFactory)
-    date = factory.LazyAttribute(lambda p: faker.date_time())
+    date = factory.LazyAttribute(lambda p: faker.date_time_between(start_date='-1y'))
     job = factory.SubFactory(JobFactory, available_all_users=True)
     hours = factory.LazyAttribute(lambda p: random.randint(1, 24))
     repo = factory.SubFactory(RepoFactory)

@@ -1,4 +1,29 @@
-*.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+.env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
 *.db
 *.swp
 runserver
@@ -6,3 +31,4 @@ runtests
 django-admin
 local_settings.py
 secrets.py
+.DS_Store

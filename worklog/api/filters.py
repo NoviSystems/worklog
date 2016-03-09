@@ -42,8 +42,10 @@ class WorkItemFilter(filters.FilterSet):
 
 
 class JobFilter(filters.FilterSet):
+
     user = ModelChoiceMethodFilter(action='filter_user', queryset=User.objects.all())
-    date = DateMethodFilter(action='filter_date')
+    # date = DateMethodFilter(action='filter_date')
+    date = filters.MethodFilter(action='filter_date')
 
     def filter_date(self, qs, value):
         return qs.filter(open_date__lte=value).filter(Q(close_date__gte=value) | Q(close_date=None))

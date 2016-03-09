@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from worklog.gh_connect import GitHubConnector
 
 from worklog.models import WorkItem, Job, Repo
-from worklog.tests import factories
+from tests import factories
 
 from faker.factory import Factory as FakeFactory
 faker = FakeFactory.create()

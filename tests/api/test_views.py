@@ -11,9 +11,11 @@ from rest_framework.test import APITestCase, APIRequestFactory
 from faker.factory import Factory as FakeFactory
 
 from worklog.models import WorkItem, Job, Repo, Issue
-from worklog.tests import factories, WorklogTestCaseBase
+from tests import factories, WorklogTestCaseBase
 
 from worklog.api.views import WorkItemViewSet, JobViewSet, RepoViewSet, IssueViewSet
+from random import randrange
+
 
 faker = FakeFactory.create()
 
@@ -27,8 +29,6 @@ class ViewSetBaseTestCase(APITestCase):
         factories.UserFactory.create_batch(10)
         factories.WorkItemFactory.create_batch(10)
         factories.JobFactory.create_batch(10)
-        factories.RepoFactory.create_batch(10)
-        factories.IssueFactory.create_batch(10)
 
         self.user_pks = list(User.objects.all().values_list('pk', flat=True))
         self.workitem_pks = list(WorkItem.objects.all().values_list('pk', flat=True))
@@ -75,25 +75,31 @@ class WorkItemViewSetTestCase(ViewSetBaseTestCase):
 
         oldest_workitem = WorkItem.objects.all().order_by('date')[0]
         today = datetime.date.today()
-        date_list = [today - datetime.timedelta(days=x) for x in range(0, (oldest_workitem.date - today).days)]
+        date_list = [today - datetime.timedelta(days=x) for x in range(0, (today - oldest_workitem.date).days)]
 
         for date in date_list:
             query_params = {'date': str(date)}
             expected_qs = WorkItem.objects.filter(date=date).order_by('pk')
-            actual_qs = super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params)
+            response = self.client.get('/worklog/api/workitems/', query_params)
+            actual_qs = [value["id"] for value in response.data]
+            expected_qs = [value.id for value in expected_qs]
             self.assertEqual(list(actual_qs), list(expected_qs))
 
         for user in range(1, 30):
             query_params = {'user': user}
             expected_qs = WorkItem.objects.filter(user=user).order_by('pk')
-            actual_qs = super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params)
+            response = self.client.get('/worklog/api/workitems/', query_params)
+            actual_qs = [value["id"] for value in response.data]
+            expected_qs = [value.id for value in expected_qs]
             self.assertEqual(list(actual_qs), list(expected_qs))
 
         for date in date_list:
             for user in range(1, 30):
                 query_params = {'date': str(date), 'user': user}
                 expected_qs = WorkItem.objects.filter(user=user, date=date).order_by('pk')
-                actual_qs = super(WorkItemViewSetTestCase, self).get_queryset(query_params=query_params)
+                response = self.client.get('/worklog/api/workitems/', query_params)
+                actual_qs = [value["id"] for value in response.data]
+                expected_qs = [value.id for value in expected_qs]
                 self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
@@ -103,7 +109,9 @@ class WorkItemViewSetTestCase(ViewSetBaseTestCase):
             'date': '2014-06-21',
             'job': self.job_pks[0],
             'hours': 2,
-            'text': 'Dieses feld ist erforderlich'
+            'text': 'Dieses feld ist erforderlich',
+            'repo': '',
+            'issue': '',
         }
 
         response = self.client.post('/worklog/api/workitems/', data, format='json')
@@ -112,19 +120,24 @@ class WorkItemViewSetTestCase(ViewSetBaseTestCase):
     def test_put(self):
 
         data = {
-            'id': 7080,
+            'id': 10,
             'user': self.user_pks[0],
             'date': '2014-06-11',
             'job': self.job_pks[0],
             'hours': 9,
-            'text': 'testing severythin news'
+            'text': 'testing severythin news',
+            'repo': '',
+            'issue': '',
         }
 
-        response = self.client.put('/worklog/api/workitems/' + str(data['id']) + '/', data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # print "WorkItem Count", WorkItem.objects.values_list("pk", flat=True)
+
+        response = self.client.put('/worklog/api/workitems/' + str(data['id']) + '/', data, format='json')
+        # print response.content
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = {
-            'id': 7080,
+            'id': 10,
             'hours': 10
         }
 
@@ -168,37 +181,45 @@ class JobViewSetTestCase(ViewSetBaseTestCase):
 
         oldest_job = Job.objects.all().order_by('open_date')[0]
         today = datetime.date.today()
-        date_list = [today - datetime.timedelta(days=x) for x in range(0, (oldest_job.open_date - today).days)]
+        date_list = [today - datetime.timedelta(days=x) for x in range(0, (today - oldest_job.open_date).days)]
 
         for date in date_list:
-            query_params = {'date': date}
             expected_qs = Job.get_jobs_open_on(date)
-            actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
+            response = self.client.get('/worklog/api/jobs/', {'date': date})
+            actual_qs = [value["id"] for value in response.data]
+            expected_qs = [value.id for value in expected_qs]
             self.assertEqual(list(actual_qs), list(expected_qs))
 
         job_names = Job.objects.all().values_list('name', flat=True)
 
         for name in job_names:
-            query_params = {'name': name}
             expected_qs = Job.objects.filter(name=name)
-            actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
+            response = self.client.get('/worklog/api/jobs/', {'name': name})
+            actual_qs = [value["id"] for value in response.data]
+            expected_qs = [value.id for value in expected_qs]
             self.assertEqual(list(actual_qs), list(expected_qs))
 
         for user in range(1, 30):
-            query_params = {'user': user}
             expected_qs = Job.objects.filter(Q(users__id=user) | Q(available_all_users=True)).distinct().order_by('pk')
-            actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
+            response = self.client.get('/worklog/api/jobs/', {'user': user})
+            actual_qs = [value["id"] for value in response.data]
+            expected_qs = [value.id for value in expected_qs]
             self.assertEqual(list(actual_qs), list(expected_qs))
 
-        for date in date_list:
-            for name in job_names:
-                for user in range(1, 30):
-                    query_params = {'date': date, 'name': name, 'user': user}
-                    expected_qs = Job.get_jobs_open_on(date)
-                    expected_qs = expected_qs.filter(name=name)
-                    expected_qs = expected_qs.filter(Q(users__id=user) | Q(available_all_users=True)).distinct().order_by('pk')
-                    actual_qs = super(JobViewSetTestCase, self).get_queryset(query_params=query_params)
-                    self.assertEqual(list(actual_qs), list(expected_qs))
+        # make a for loop that pics a random date and random job value
+        # then loop through for each user
+        for x in range(1, 10):
+            random_date = date_list[randrange(len(date_list))]
+            random_job = job_names[randrange(len(job_names))]
+            for user in range(1, 10):
+                query_params = {'date': random_date, 'name': random_job, 'user': user}
+                expected_qs = Job.get_jobs_open_on(random_date)
+                expected_qs = expected_qs.filter(name=random_job)
+                expected_qs = expected_qs.filter(Q(users__id=user) | Q(available_all_users=True)).distinct().order_by('pk')
+                response = self.client.get('/worklog/api/jobs/', query_params)
+                actual_qs = [value["id"] for value in response.data]
+                expected_qs = [value.id for value in expected_qs]
+                self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
 
@@ -262,9 +283,10 @@ class RepoViewSetTestCase(ViewSetBaseTestCase):
         repo_names = Repo.objects.all().values_list('name', flat=True)
 
         for name in repo_names:
-            query_params = {'name': name}
             expected_qs = Repo.objects.filter(name=name)
-            actual_qs = super(RepoViewSetTestCase, self).get_queryset(query_params=query_params)
+            response = self.client.get('/worklog/api/repos/', {'name': name})
+            actual_qs = [value["github_id"] for value in response.data]
+            expected_qs = [value.github_id for value in expected_qs]
             self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
@@ -324,9 +346,10 @@ class IssueViewSetTestCase(ViewSetBaseTestCase):
         repos = Repo.objects.all().values_list('github_id', flat=True)
 
         for repo in repos:
-            query_params = {'repo': repo}
             expected_qs = Issue.objects.filter(repo=repo).order_by('pk')
-            actual_qs = super(IssueViewSetTestCase, self).get_queryset(query_params=query_params)
+            response = self.client.get('/worklog/api/issues/', {'repo': repo})
+            actual_qs = [value["github_id"] for value in response.data]
+            expected_qs = [value.github_id for value in expected_qs]
             self.assertEqual(list(actual_qs), list(expected_qs))
 
     def test_post(self):
@@ -442,17 +465,17 @@ class ViewWorkTestCase(WorklogTestCaseBase):
         with self.scoped_login(username='master', password='password'):
 
             response = self.client.get('/worklog/view/')
-            self.assertEquals(len(response.context['items']),7)
-            self.assertEquals(response.context['menulink_base'],'')
-            self.assertEquals(len(response.context['current_filters']),0)
+            self.assertEquals(len(response.context['items']), 7)
+            self.assertEquals(response.context['menulink_base'], '')
+            self.assertEquals(len(response.context['current_filters']), 0)
 
     def test_badDate(self):
         with self.scoped_login(username='master', password='password'):
 
             response = self.client.get('/worklog/view/9876-22-33_/')
-            self.assertEquals(len(response.context['items']),7)
-            self.assertNotEquals(response.context['menulink_base'],'')
-            self.assertEquals(len(response.context['current_filters']),1)
+            self.assertEquals(len(response.context['items']), 7)
+            self.assertNotEquals(response.context['menulink_base'], '')
+            self.assertEquals(len(response.context['current_filters']), 1)
 
     def test_badUser(self):
         with self.scoped_login(username='master', password='password'):
