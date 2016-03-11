@@ -96,9 +96,9 @@ class WorkItemAdmin(admin.ModelAdmin):
                             self.list_select_related, self.list_per_page, self.list_max_show_all,
                             self.list_editable, self)
         if not extra_context:
-            extra_context = cl.get_query_set(request).aggregate(Sum('hours'))
+            extra_context = cl.get_queryset(request).aggregate(Sum('hours'))
         else:
-            extra_context.update(cl.get_query_set(request).aggregate(Sum('hours')))
+            extra_context.update(cl.get_queryset(request).aggregate(Sum('hours')))
 
         return super(WorkItemAdmin, self).changelist_view(request, extra_context)
 
