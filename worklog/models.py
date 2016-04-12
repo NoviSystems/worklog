@@ -59,7 +59,7 @@ class Job(models.Model):
     open_date = models.DateField()
     close_date = models.DateField(null=True, blank=True)
     do_not_invoice = models.BooleanField(default=False)
-    users = models.ManyToManyField(User, null=True, blank=True)
+    users = models.ManyToManyField(User, blank=True)
     available_all_users = models.BooleanField(default=True)
 
     def __unicode__(self):

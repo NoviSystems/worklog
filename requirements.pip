@@ -1,7 +1,7 @@
 # project requirements - these should be in setup.py
 celery
-djangorestframework
-djangorestframework-filters
+djangorestframework>3.0
+djangorestframework-filters==0.4.0
 github3.py
 xhtml2pdf
 reportlab==2.7
