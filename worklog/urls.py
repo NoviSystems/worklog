@@ -6,8 +6,8 @@ from worklog import views
 DATEMIN = r'(?P<datemin>\d{4}-\d{2}-\d{2})'
 DATEMAX = r'(?P<datemax>\d{4}-\d{2}-\d{2})'
 # accepts:  date_date   or   date_   or   _date
-DATERANGE1 = '(?:'+DATEMIN+'_'+DATEMAX+'?)'
-DATERANGE2 = '(?:_'+DATEMAX+')'
+DATERANGE1 = '(?:' + DATEMIN + '_' + DATEMAX + '?)'
+DATERANGE2 = '(?:_' + DATEMAX + ')'
 
 USERNAME = r'(?P<username>[a-zA-Z0-9]+)'
 # JOBID = r'(?:_job_(?P<jobid>[0-9]+))'
@@ -24,12 +24,12 @@ urlpatterns = [
     url(r'^view/$', views.WorklogView.as_view(), {}, name='view'),
     url(r'^view/today/$', views.WorklogView.as_view(), {'datemin': 'today', 'datemax': 'today'}, name='view-today'),
 
-    url(r'^view/'+DATERANGE1+'/$', views.WorklogView.as_view(), name='view-daterange'),
-    url(r'^view/'+DATERANGE2+'/$', views.WorklogView.as_view(), name='view-datemax'),
-    url(r'^view/'+USERNAME+'/$', views.WorklogView.as_view(), name='view-user'),
-    url(r'^view/'+USERNAME+'/today/$', views.WorklogView.as_view(), {'datemin': 'today', 'datemax': 'today'}, name='view-user-today'),
-    url(r'^view/'+USERNAME+'/'+DATERANGE1+'/$', views.WorklogView.as_view(), name='view-user-daterange'),
-    url(r'^view/'+USERNAME+'/'+DATERANGE2+'/$', views.WorklogView.as_view(), name='view-user-datemax'),
+    url(r'^view/' + DATERANGE1 + '/$', views.WorklogView.as_view(), name='view-daterange'),
+    url(r'^view/' + DATERANGE2 + '/$', views.WorklogView.as_view(), name='view-datemax'),
+    url(r'^view/' + USERNAME + '/$', views.WorklogView.as_view(), name='view-user'),
+    url(r'^view/' + USERNAME + '/today/$', views.WorklogView.as_view(), {'datemin': 'today', 'datemax': 'today'}, name='view-user-today'),
+    url(r'^view/' + USERNAME + '/' + DATERANGE1 + '/$', views.WorklogView.as_view(), name='view-user-daterange'),
+    url(r'^view/' + USERNAME + '/' + DATERANGE2 + '/$', views.WorklogView.as_view(), name='view-user-datemax'),
 
     url(r'^report/$', views.ReportView.as_view(), name='report_url'),
     url(r'^chart/$', views.ChartView.as_view(), name='chart_url'),
