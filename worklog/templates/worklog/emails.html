@@ -1,0 +1,16 @@
+{% extends "worklog/base.html" %} {% block content %}
+
+<!-- Content -->
+<div class="text-center col-md-4 col-md-offset-4" style="margin-top:35px;">
+    {% if emails != None %}
+    <form method="post" action="">
+        {% csrf_token %}
+        {% if not emails %}<button type="submit" name="generate" value="generate" class="btn btn-success btn-lrg btn-block">Opt In</button>{% endif %}
+        {% if emails %}<button type="submit" name="invoice" value="invoice" class="btn btn-danger btn-lrg btn-block">Opt Out</button>{% endif %}
+    </form>
+    {% else %}
+    You are not a biweekly employee!
+    {% endif %}
+</div>
+
+{% endblock %}

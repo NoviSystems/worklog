@@ -12,6 +12,7 @@ class BiweeklyEmployee(models.Model):
     project_num = models.CharField(max_length=255, blank=True, verbose_name='Project #')
     obj_code = models.CharField(max_length=255, blank=True, verbose_name='Obj Code')
     hourly_pay = models.DecimalField(max_digits=5, decimal_places=2)
+    emails = models.BooleanField(default=True)
 
     def __unicode__(self):
         return u'%s' % self.user.get_full_name()

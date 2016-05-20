@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 import django.core.mail as mail
 
-from models import WorkItem, Job, WorkDay, GithubAlias
+from models import WorkItem, Job, WorkDay, GithubAlias, BiweeklyEmployee
 
 from gh_connect import GitHubConnector
 from models import Repo, Issue
@@ -225,9 +225,13 @@ def send_reminder_emails():
     if send_emails:
         email_list = []
         for user in User.objects.all():
-            if not user.email or not user.is_active:
+            try:
+                emails = BiweeklyEmployee.objects.get(user=user).emails
+            except BiweeklyEmployee.DoesNotExist:
+                emails = True
+            if not user.email or not user.is_active or not emails:
                 continue
-
+            
             date_list = get_reminder_dates_for_user(user)
 
             for date in date_list:

@@ -35,5 +35,7 @@ urlpatterns = [
     url(r'^chart/$', views.ChartView.as_view(), name='chart_url'),
     url(r'^chart/job/$', views.JobDataView.as_view(), name='job_data_url'),
 
+    url(r'^emails/$', views.EmailsView.as_view(), name="emails"),
+
     url(r'^api/', include('worklog.api.urls')),
 ]

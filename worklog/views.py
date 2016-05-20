@@ -6,12 +6,12 @@ import json
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core import serializers
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.views.generic import View, TemplateView, RedirectView
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Sum
 
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
@@ -148,6 +148,26 @@ class WorkItemView(LoginRequiredMixin, TemplateView):
 
         return context
 
+class EmailsView(LoginRequiredMixin, TemplateView):
+    template_name = 'worklog/emails.html'
+    success_url = reverse_lazy('worklog:emails')
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super(EmailsView, self).get_context_data(**kwargs)
+        try:
+            context['emails'] = BiweeklyEmployee.objects.get(user=self.request.user).emails
+        except BiweeklyEmployee.DoesNotExist:
+            context['emails'] = None
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            employee = BiweeklyEmployee.objects.get(user=self.request.user)
+            employee.emails = not employee.emails
+            employee.save()
+        except BiweeklyEmployee.DoesNotExist:
+            return HttpResponseRedirect(self.success_url)
+        return HttpResponseRedirect(self.success_url)
 
 class CurrentDateRedirectView(RedirectView):
     permanent = False

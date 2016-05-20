@@ -29,6 +29,7 @@
     <li><a href="{% url 'worklog:today' %}">New Work Item</a></li>
     <li><a href="/worklog/chart">Chart</a></li>
     <li><a href="/worklog/view/{{ user }}">My Work</a></li>
+    <li><a href="{% url 'worklog:emails' %}">Manage Emails</a></li>
 </ul>
 {% endif %}
 {% endblock %}
