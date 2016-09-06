@@ -73,11 +73,11 @@ class WorkItemAdmin(admin.ModelAdmin):
             header = list(s[0] for s in csvfields)
             rows = [header]
             # Iterate through currently displayed items.
-            for item in cl.query_set:
+            for item in cl.queryset:
                 row = list(s[1](item) for s in csvfields)
                 rows.append(row)
 
-            response = HttpResponse(mimetype='text/csv')
+            response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename=worklog_export.csv'
 
             writer = csv.writer(response)
