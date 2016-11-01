@@ -1,9 +1,12 @@
+import string
+
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
-from django.contrib.auth.models import User
 
-from gh_connect import GitHubConnector
-import string
+from worklog.gh_connect import GitHubConnector
+
+User = settings.AUTH_USER_MODEL
 
 
 class BiweeklyEmployee(models.Model):

@@ -1,13 +1,14 @@
-from django.forms import ModelForm
-from django import forms
-from models import WorkItem, Job, Repo, Issue
-from django.db.models import Q
-# define the custom formset here
-from django.forms.formsets import BaseFormSet
-
 
 import datetime
 import random
+
+from django import forms
+from django.db.models import Q
+from django.forms import ModelForm
+from django.forms.formsets import BaseFormSet
+
+
+from worklog.models import WorkItem, Job, Repo, Issue
 
 
 class WorkItemBaseFormSet(BaseFormSet):
@@ -37,11 +38,11 @@ class WorkItemForm(ModelForm):
 
     class Meta:
         model = WorkItem
-        fields = ('job','repo','hours','issue','text')
+        fields = ('job', 'repo', 'hours', 'issue', 'text')
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
-        super(WorkItemForm,self).__init__(*args,**kwargs)
+        super(WorkItemForm, self).__init__(*args, **kwargs)
 
         queryset = Job.get_jobs_open_on(datetime.date.today())
 

@@ -1,19 +1,16 @@
+import calendar
+import datetime
+
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.core import mail
+from django.core.urlresolvers import reverse
 from django.template import Template, Context
 
 from celery import shared_task
 
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
-import django.core.mail as mail
-
-from models import WorkItem, Job, WorkDay, GithubAlias
-
-from gh_connect import GitHubConnector
-from models import Repo, Issue
-
-import datetime
-import calendar
+from worklog.gh_connect import GitHubConnector
+from worklog.models import WorkItem, Job, WorkDay, GithubAlias, Repo, Issue
 
 
 email_msg = Template("""
@@ -271,8 +268,8 @@ def reconcile_db_with_gh(*args, **kwargs):
             try:
                 i.assignee = GithubAlias.objects.get(github_name=issue.assignee).user
             except GithubAlias.DoesNotExist:
-                print "No GithubAlias with github_name '%s' exists" % issue.assignee
+                print("No GithubAlias with github_name '%s' exists" % issue.assignee)
         i.body = issue.body
         i.save()
 
-    print "Not only did your task run successfully, but you're damned good looking too."
+    print("Not only did your task run successfully, but you're damned good looking too.")

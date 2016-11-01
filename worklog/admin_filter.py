@@ -1,9 +1,8 @@
-from django.db import models
 from django.contrib.admin import SimpleListFilter
+from django.contrib.auth.models import User
 from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext as _
 
-from django.contrib.auth.models import User
 
 import datetime
 import operator
@@ -14,9 +13,9 @@ def create_yearmonth_link(d, fieldname):
     """d = a datetime.date object """
     title = smart_unicode(d.strftime('%Y %B'))
     param_dict = {
-            '%s__year' % fieldname: str(d.year),
-            '%s__month' % fieldname: str(d.month),
-        }
+        '%s__year' % fieldname: str(d.year),
+        '%s__month' % fieldname: str(d.month),
+    }
     return title, param_dict
 
 
@@ -30,7 +29,7 @@ class YearMonthFilterSpec(SimpleListFilter):
         values_list = model.objects.values_list(f.name, flat=True)
         unique_dates = list(set(
             val.replace(day=1) for val in values_list if isinstance(val, datetime.date)
-            ))
+        ))
         # using reverse=True results in most recent date being listed first
         unique_dates.sort(reverse=True)
         self.links = list(create_yearmonth_link(d, self.field.name) for d in unique_dates)
@@ -49,8 +48,6 @@ class YearMonthFilterSpec(SimpleListFilter):
 class UserFilterSpec(SimpleListFilter):
     def __init__(self, f, request, params, model, *args, **kwargs):
         super(UserFilterSpec, self).__init__(f, request, params, model, *args, **kwargs)
-
-        values_list = model.objects.values_list(f.name, flat=True)
 
         self.lookup_choices = list((x.pk, x.username) for x in User.objects.all())
         self.lookup_choices.sort(key=operator.itemgetter(0))
