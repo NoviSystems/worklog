@@ -1,5 +1,3 @@
-import string
-
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -144,17 +142,17 @@ class WorkItem(models.Model):
             if(not self.job.users.filter(id=self.user.id).exists()):
                 raise ValueError("Specified job is not available to {user}".format(user=str(self.user)))
 
-        commit, hash, text = ['', '', '']
+        commit, sha, text = ['', '', '']
 
-        text_string = string.split(self.text)
+        text_string = self.text.split()
 
         if len(text_string) == 2:
             commit = text_string[0]
-            hash = text_string[1]
+            sha = text_string[1]
         elif len(text_string) == 1:
             commit = text_string[0]
         else:
-            commit, hash, text = string.split(self.text, None, 2)
+            commit, sha, text = self.text.split(None, 2)
 
         # If the text begins with "commit <sha1>", we'll sub in the actual commit message
         if (commit == "commit" and self.repo):
@@ -164,7 +162,7 @@ class WorkItem(models.Model):
 
             for repo in repos:
                 if repo.id == self.repo.github_id:
-                    msg = repo.commit(hash).commit.message
+                    msg = repo.commit(sha).commit.message
                     self.text = '%s %s' % (msg, text)
                     break
 

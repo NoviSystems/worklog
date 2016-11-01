@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
 import datetime
-import string
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -88,7 +87,7 @@ class WorkItemSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("This field is required.")
 
-        text_string = string.split(value)
+        text_string = value.split(None, 1)
 
         if text_string[0] == 'commit' and len(text_string) == 1:
             raise serializers.ValidationError("Please specify a commit hash.")
