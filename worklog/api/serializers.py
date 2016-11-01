@@ -25,14 +25,14 @@ class IssueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Issue
-        fields = ['id', 'github_id', 'title', 'body', 'number', 'repo', 'open', 'assignee', 'url']
+        fields = ['github_id', 'title', 'body', 'number', 'repo', 'open', 'assignee', 'url']
 
 
 class RepoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Repo
-        fields = ['id', 'github_id', 'name', 'url']
+        fields = ['github_id', 'name', 'url']
 
 
 class WorkDaySerializer(serializers.ModelSerializer):
