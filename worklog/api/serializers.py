@@ -11,32 +11,35 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email')
+        fields = ['id', 'username', 'email']
 
 
 class JobSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Job
-        fields = ('id', 'name')
+        fields = ['id', 'name']
 
 
 class IssueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Issue
+        fields = ['id', 'github_id', 'title', 'body', 'number', 'repo', 'open', 'assignee', 'url']
 
 
 class RepoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Repo
+        fields = ['id', 'github_id', 'name', 'url']
 
 
 class WorkDaySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkDay
+        fields = ['id', 'user', 'date', 'reconciled']
 
     def validate(self, attrs):
 
@@ -52,7 +55,7 @@ class WorkItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkItem
-        fields = ('id', 'user', 'date', 'hours', 'text', 'job', 'repo', 'issue')
+        fields = ['id', 'user', 'date', 'hours', 'text', 'job', 'repo', 'issue']
 
     def validate_job(self, value):
 
