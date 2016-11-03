@@ -1,13 +1,14 @@
-from django.forms import ModelForm
-from django import forms
-from models import WorkItem, Job, Repo, Issue
-from django.db.models import Q
-# define the custom formset here
-from django.forms.formsets import BaseFormSet
-
 
 import datetime
 import random
+
+from django import forms
+from django.db.models import Q
+from django.forms import ModelForm
+from django.forms.formsets import BaseFormSet
+
+
+from worklog.models import WorkItem, Job, Repo, Issue
 
 
 class WorkItemBaseFormSet(BaseFormSet):

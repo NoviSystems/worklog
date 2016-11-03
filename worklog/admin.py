@@ -2,10 +2,10 @@ import csv
 import operator
 
 from django.contrib import admin
-from django.http import HttpResponse
 from django.db.models import Sum
+from django.http import HttpResponse
 
-from models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, BiweeklyEmployee, Holiday, WorkPeriod
+from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, BiweeklyEmployee, Holiday, WorkPeriod
 
 
 def mark_invoiced(modeladmin, request, queryset):
@@ -60,7 +60,7 @@ class WorkItemAdmin(admin.ModelAdmin):
                 ('Date', operator.attrgetter('date')),
                 ('Hours', operator.attrgetter('hours')),
                 ('Task', operator.attrgetter('text')),
-                ]
+            ]
 
             ChangeList = self.get_changelist(request)
 
@@ -73,11 +73,11 @@ class WorkItemAdmin(admin.ModelAdmin):
             header = list(s[0] for s in csvfields)
             rows = [header]
             # Iterate through currently displayed items.
-            for item in cl.query_set:
+            for item in cl.queryset:
                 row = list(s[1](item) for s in csvfields)
                 rows.append(row)
 
-            response = HttpResponse(mimetype='text/csv')
+            response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename=worklog_export.csv'
 
             writer = csv.writer(response)
@@ -134,6 +134,7 @@ class WorkPeriodAdmin(admin.ModelAdmin):
 class HolidayAdmin(admin.ModelAdmin):
     list_display = ('description', 'start_date', 'end_date',)
     list_filter = ('start_date', 'end_date',)
+
 
 admin.site.register(WorkItem, WorkItemAdmin)
 admin.site.register(Job, JobAdmin)

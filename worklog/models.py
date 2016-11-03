@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
-from django.contrib.auth.models import User
 
-from gh_connect import GitHubConnector
-import string
+from worklog.gh_connect import GitHubConnector
+
+User = settings.AUTH_USER_MODEL
 
 
 class BiweeklyEmployee(models.Model):
@@ -13,8 +14,8 @@ class BiweeklyEmployee(models.Model):
     obj_code = models.CharField(max_length=255, blank=True, verbose_name='Obj Code')
     hourly_pay = models.DecimalField(max_digits=5, decimal_places=2)
 
-    def __unicode__(self):
-        return u'%s' % self.user.get_full_name()
+    def __str__(self):
+        return '%s' % self.user.get_full_name()
 
 
 class GithubAlias(models.Model):
@@ -27,8 +28,8 @@ class Holiday(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
 
-    def __unicode__(self):
-        return u'%s' % (self.description,)
+    def __str__(self):
+        return '%s' % (self.description,)
 
 
 class WorkDay(models.Model):
@@ -48,8 +49,8 @@ class WorkPeriod(models.Model):
     due_date = models.DateField()
     pay_day = models.DateField()
 
-    def __unicode__(self):
-        return u'%s' % (self.payroll_id,)
+    def __str__(self):
+        return '%s' % (self.payroll_id,)
 
 
 class Job(models.Model):
@@ -62,8 +63,8 @@ class Job(models.Model):
     users = models.ManyToManyField(User, blank=True)
     available_all_users = models.BooleanField(default=True)
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return self.name
 
     @staticmethod
     def get_jobs_open_on(date):
@@ -81,8 +82,8 @@ class Repo(models.Model):
     name = models.CharField(max_length=256)
     url = models.URLField(null=True)
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return self.name
 
 
 class Issue(models.Model):
@@ -95,16 +96,16 @@ class Issue(models.Model):
     assignee = models.ForeignKey(User, null=True)
     url = models.URLField(null=True)
 
-    def __unicode__(self):
-        return unicode(self.number) + u': ' + unicode(self.title)
+    def __str__(self):
+        return '%d: %s' % (self.number, self.title)
 
 
 class BillingSchedule(models.Model):
     job = models.ForeignKey(Job, related_name='billing_schedule')
     date = models.DateField()
 
-    def __unicode__(self):
-        return u'Billing for %s' % self.job
+    def __str__(self):
+        return 'Billing for %s' % self.job
 
 
 class Funding(models.Model):
@@ -112,8 +113,8 @@ class Funding(models.Model):
     hours = models.IntegerField()
     date_available = models.DateField()
 
-    def __unicode__(self):
-        return u'Funding for %s' % self.job
+    def __str__(self):
+        return 'Funding for %s' % self.job
 
 
 class WorkItem(models.Model):
@@ -132,8 +133,8 @@ class WorkItem(models.Model):
     user.user_filter = True
     invoiced.is_invoiced_filter = True
 
-    def __unicode__(self):
-        return u'{user} on {date} worked {hours} hours on job {job} doing {item}'.format(
+    def __str__(self):
+        return '{user} on {date} worked {hours} hours on job {job} doing {item}'.format(
             user=self.user, date=self.date, hours=self.hours, job=self.job, item=self.text)
 
     def save(self, *args, **kwargs):
@@ -141,17 +142,17 @@ class WorkItem(models.Model):
             if(not self.job.users.filter(id=self.user.id).exists()):
                 raise ValueError("Specified job is not available to {user}".format(user=str(self.user)))
 
-        commit, hash, text = ['', '', '']
+        commit, sha, text = ['', '', '']
 
-        text_string = string.split(self.text)
+        text_string = self.text.split()
 
         if len(text_string) == 2:
             commit = text_string[0]
-            hash = text_string[1]
+            sha = text_string[1]
         elif len(text_string) == 1:
             commit = text_string[0]
         else:
-            commit, hash, text = string.split(self.text, None, 2)
+            commit, sha, text = self.text.split(None, 2)
 
         # If the text begins with "commit <sha1>", we'll sub in the actual commit message
         if (commit == "commit" and self.repo):
@@ -161,7 +162,7 @@ class WorkItem(models.Model):
 
             for repo in repos:
                 if repo.id == self.repo.github_id:
-                    msg = repo.commit(hash).commit.message
+                    msg = repo.commit(sha).commit.message
                     self.text = '%s %s' % (msg, text)
                     break
 

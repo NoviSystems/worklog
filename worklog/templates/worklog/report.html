@@ -1,7 +1,7 @@
 {% extends "worklog/base.html" %} {% block content %}
 
 <!-- Content -->
-<div class="content" style="margin-top: 25px;">
+<div class="content">
     {% if error %} {{ error }} {% endif %} {% if generated %}
     <h1>An invoice was generated and emailed to you</h1>
     {% endif %} {% if invoiced %}

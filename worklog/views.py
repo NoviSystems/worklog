@@ -1,21 +1,22 @@
-import datetime
+
 import calendar
-import time
+import datetime
 import json
+import time
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core import serializers
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
-from django.views.generic import View, TemplateView, RedirectView
+from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.db.models import Sum
+from django.forms.models import modelformset_factory
+from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View, TemplateView, RedirectView
 
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
-from django.forms.models import modelformset_factory
 from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user
 

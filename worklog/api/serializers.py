@@ -4,39 +4,41 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
 import datetime
-import string
 
 
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email')
+        fields = ['id', 'username', 'email']
 
 
 class JobSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Job
-        fields = ('id', 'name')
+        fields = ['id', 'name']
 
 
 class IssueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Issue
+        fields = ['github_id', 'title', 'body', 'number', 'repo', 'open', 'assignee', 'url']
 
 
 class RepoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Repo
+        fields = ['github_id', 'name', 'url']
 
 
 class WorkDaySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkDay
+        fields = ['id', 'user', 'date', 'reconciled']
 
     def validate(self, attrs):
 
@@ -52,7 +54,7 @@ class WorkItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkItem
-        fields = ('id', 'user', 'date', 'hours', 'text', 'job', 'repo', 'issue')
+        fields = ['id', 'user', 'date', 'hours', 'text', 'job', 'repo', 'issue']
 
     def validate_job(self, value):
 
@@ -85,7 +87,7 @@ class WorkItemSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("This field is required.")
 
-        text_string = string.split(value)
+        text_string = value.split(None, 1)
 
         if text_string[0] == 'commit' and len(text_string) == 1:
             raise serializers.ValidationError("Please specify a commit hash.")
