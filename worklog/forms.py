@@ -11,6 +11,7 @@ import random
 
 
 class WorkItemBaseFormSet(BaseFormSet):
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("logged_in_user")
         super(WorkItemBaseFormSet, self).__init__(*args, **kwargs)
@@ -37,11 +38,11 @@ class WorkItemForm(ModelForm):
 
     class Meta:
         model = WorkItem
-        fields = ('job','repo','hours','issue','text')
+        fields = ('job', 'repo', 'hours', 'issue', 'text')
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
-        super(WorkItemForm,self).__init__(*args,**kwargs)
+        super(WorkItemForm, self).__init__(*args, **kwargs)
 
         queryset = Job.get_jobs_open_on(datetime.date.today())
 
