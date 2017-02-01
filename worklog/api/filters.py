@@ -6,15 +6,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-# these are necessary to add in form validation to method filters
-class ModelChoiceMethodFilter(filters.MethodFilter, filters.ModelChoiceFilter):
-    pass
-
-
-class DateMethodFilter(filters.MethodFilter, filters.DateFilter):
-    pass
-
-
 class WorkDayFilter(filters.FilterSet):
     class Meta:
         model = models.WorkDay
@@ -43,14 +34,13 @@ class WorkItemFilter(filters.FilterSet):
 
 class JobFilter(filters.FilterSet):
 
-    user = ModelChoiceMethodFilter(action='filter_user', queryset=User.objects.all())
-    # date = DateMethodFilter(action='filter_date')
-    date = filters.MethodFilter(action='filter_date')
+    user = filters.ModelChoiceFilter(method='filter_user', queryset=User.objects.all())
+    date = filters.DateFilter(method='filter_date')
 
-    def filter_date(self, qs, value):
+    def filter_date(self, qs, name, value):
         return qs.filter(open_date__lte=value).filter(Q(close_date__gte=value) | Q(close_date=None))
 
-    def filter_user(self, qs, value):
+    def filter_user(self, qs, name, value):
         if value.is_superuser:
             return qs
 

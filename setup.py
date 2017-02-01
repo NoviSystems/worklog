@@ -37,6 +37,7 @@ class Test(test):
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
     name="Worklog",
     version="0.8",
@@ -58,7 +59,7 @@ setup(
         "django>=1.9",
         "celery",
         "djangorestframework>=3",
-        "djangorestframework-filters==0.4.0",
+        "djangorestframework-filters==0.9.1",
         "github3.py>=1.0a",
         "pytz",
     ],
