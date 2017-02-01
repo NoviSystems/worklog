@@ -17,7 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View, TemplateView, RedirectView
 
 from worklog.forms import WorkItemForm, WorkItemBaseFormSet
-from worklog.models import WorkItem, Job, Funding, Holiday, BiweeklyEmployee, Issue
+from worklog.models import WorkItem, Job, Funding, Holiday, Issue
 from worklog.tasks import generate_invoice, get_reminder_dates_for_user
 
 
@@ -133,10 +133,7 @@ class WorkItemView(LoginRequiredMixin, TemplateView):
         else:
             date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
 
-        if BiweeklyEmployee.objects.filter(user=user).count() > 0:
-            holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
-        else:
-            holidays = None
+        holidays = Holiday.objects.filter(start_date__gte=date, end_date__lte=date)
 
         if datetime.date.today() - date < datetime.timedelta(days=settings.WORKLOG_EMAIL_REMINDERS_EXPIRE_AFTER):
             formset = self.WorkItemFormSet(logged_in_user=user)

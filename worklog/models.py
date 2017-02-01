@@ -7,12 +7,8 @@ from worklog.gh_connect import GitHubConnector
 User = settings.AUTH_USER_MODEL
 
 
-class BiweeklyEmployee(models.Model):
-    user = models.ForeignKey(User)
-    univ_id = models.CharField(max_length=9, verbose_name='University ID')
-    project_num = models.CharField(max_length=255, blank=True, verbose_name='Project #')
-    obj_code = models.CharField(max_length=255, blank=True, verbose_name='Obj Code')
-    hourly_pay = models.DecimalField(max_digits=5, decimal_places=2)
+class Employee(models.Model):
+    user = models.OneToOneField(User)
 
     def __str__(self):
         return '%s' % self.user.get_full_name()

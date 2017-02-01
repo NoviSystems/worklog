@@ -10,7 +10,7 @@ from django.template import Template, Context
 from celery import shared_task
 
 from worklog.gh_connect import GitHubConnector
-from worklog.models import WorkItem, Job, WorkDay, GithubAlias, Repo, Issue
+from worklog.models import Employee, WorkItem, Job, WorkDay, GithubAlias, Repo, Issue
 
 
 email_msg = Template("""
@@ -221,7 +221,9 @@ def send_reminder_emails():
     send_emails = settings.WORKLOG_SEND_REMINDERS and today.isoweekday() in range(1, 6)
     if send_emails:
         email_list = []
-        for user in User.objects.all():
+        for employee in Employee.objects.all():
+            user = employee.user
+
             if not user.email or not user.is_active:
                 continue
 

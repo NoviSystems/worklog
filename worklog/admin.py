@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.db.models import Sum
 from django.http import HttpResponse
 
-from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, BiweeklyEmployee, Holiday, WorkPeriod
+from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, Employee, Holiday, WorkPeriod
 
 
 def mark_invoiced(modeladmin, request, queryset):
@@ -140,6 +140,6 @@ admin.site.register(WorkItem, WorkItemAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(GithubAlias, GithubAliasAdmin)
 
-admin.site.register(BiweeklyEmployee)
+admin.site.register(Employee)
 admin.site.register(WorkPeriod, WorkPeriodAdmin)
 admin.site.register(Holiday, HolidayAdmin)
