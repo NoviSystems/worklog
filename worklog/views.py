@@ -276,7 +276,7 @@ class WorkViewer(object):
 
         self.current_queries = {}
         # Save current queries to use when creating links.
-        for filter in self.filters.itervalues():
+        for filter in self.filters.values():
             q = filter.get_query_string()
             if q:
                 self.current_queries[filter.key] = q
@@ -298,13 +298,13 @@ class WorkViewer(object):
                 self.query_info.append(qi)
 
     def filter_items(self, items):
-        for filter in self.filters.itervalues():
+        for filter in self.filters.values():
             items = filter.apply_filter(items)
         return items
 
     def build_user_links(self):
         # The basequery includes all current queries except for 'user'
-        basequery = '&'.join(v for k, v in self.current_queries.iteritems() if k != "user")
+        basequery = '&'.join(v for k, v in self.current_queries.items() if k != "user")
         alllink = (basequery, 'all users')
         if basequery:
             basequery += '&'
@@ -313,7 +313,7 @@ class WorkViewer(object):
         self.menu.submenus.append(WorkViewMenu.SubMenu("User", links))
 
     def build_yearmonth_links(self):
-        basequery = '&'.join(v for k, v in self.current_queries.iteritems() if k != "datemin" and k != "datemax")
+        basequery = '&'.join(v for k, v in self.current_queries.items() if k != "datemin" and k != "datemax")
         alllink = (basequery, 'all dates')
         if basequery:
             basequery += '&'
@@ -331,7 +331,7 @@ class WorkViewer(object):
         self.menu.submenus.append(WorkViewMenu.SubMenu("Date", links))
 
     def build_job_links(self):
-        basequery = '&'.join(v for k, v in self.current_queries.iteritems() if k != "job")
+        basequery = '&'.join(v for k, v in self.current_queries.items() if k != "job")
         alllink = (basequery, 'all jobs')
         if basequery:
             basequery += '&'
