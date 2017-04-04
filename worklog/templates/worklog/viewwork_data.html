@@ -1,15 +1,14 @@
-{% load worklog_tags %}
 
 {% if items %}
 <table class="table table-bordered">
     <thead>
-        <th>{{ items|verbose_name:"user" }}</th>
-        <th>{{ items|verbose_name:"date" }}</th>
-        <th>{{ items|verbose_name:"hours" }}</th>
-        <th>{{ items|verbose_name:"job" }}</th>
-        <th>{{ items|verbose_name:"repo" }}</th>
-        <th>{{ items|verbose_name:"issue" }}</th>
-        <th>{{ items|verbose_name:"text" }}</th>
+        <th class="col-xs-1">User</th>
+        <th class="col-xs-2">Date</th>
+        <th class="col-xs-2">Job</th>
+        <th class="col-xs-1">Hours</th>
+        <th class="col-xs-1">Repo</th>
+        <th class="col-xs-1">Issue</th>
+        <th class="col-xs-4">Text</th>
     </thead>
     <tbody>
         {% for item in items %}

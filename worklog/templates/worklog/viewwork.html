@@ -2,8 +2,9 @@
 
 <div class="row">
     <br>
+
     <!-- Content -->
-    <div class="col-md-6">
+    <div class="col-md-9">
         {% include worklog_data_template %}
         <!-- Contents of the current query -->
         <p style="margin-bottom: 0em;">Current query:</p>
@@ -22,9 +23,8 @@
 
     </div>
 
-
     <!-- Sidebar -->
-    <div class="col-md-4" style="float: right;">
+    <div class="col-md-3">
         {% for submenu in filtermenu %} {% if submenu.name %}
         <h3>By {{ submenu.name }}</h3>{% endif %}
         <ul>
