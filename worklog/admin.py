@@ -6,12 +6,28 @@ from django.contrib import admin
 from django.db.models import Sum, Q
 from django.http import HttpResponse
 
+from rangefilter.filter import DateRangeFilter
+
 from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, Employee, Holiday, WorkPeriod
 
 
 class RelatedFieldListFilter(admin.RelatedFieldListFilter):
     def has_output(self):
         return len(self.lookup_choices) > 0
+
+
+class ActiveUserFilter(RelatedFieldListFilter):
+    def field_choices(self, field, request, model_admin):
+        return field.get_choices(include_blank=False, limit_choices_to={'is_active': True})
+
+
+class InactiveUserFilter(RelatedFieldListFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = "inactive user"
+
+    def field_choices(self, field, request, model_admin):
+        return field.get_choices(include_blank=False, limit_choices_to={'is_active': False})
 
 
 class ActiveJobsFilter(RelatedFieldListFilter):
@@ -38,8 +54,12 @@ class InactiveJobsFilter(RelatedFieldListFilter):
 class WorkItemAdmin(admin.ModelAdmin):
     list_display = ('user', 'date', 'hours', 'text', 'job', 'invoiceable', 'invoiced', )
     list_filter = (
-        'user', 'date', 'invoiced', 'job__invoiceable',
-        ('job', ActiveJobsFilter), ('job', InactiveJobsFilter),
+        ('user', ActiveUserFilter),
+        'invoiced', 'job__invoiceable',
+        ('date', DateRangeFilter),
+        ('job', ActiveJobsFilter),
+        ('job', InactiveJobsFilter),
+        ('user', InactiveUserFilter),
     )
     actions = ['mark_invoiced', 'mark_not_invoiced']
     # sort the items by time in descending order

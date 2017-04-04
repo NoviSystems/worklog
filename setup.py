@@ -60,6 +60,7 @@ setup(
         "celery",
         "djangorestframework>=3",
         "djangorestframework-filters==0.9.1",
+        "django-admin-rangefilter",
         "github3.py>=1.0a",
         "pytz",
     ],
