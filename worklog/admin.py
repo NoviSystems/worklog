@@ -9,11 +9,12 @@ from django.http import HttpResponse
 from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, Employee, Holiday, WorkPeriod
 
 
-class ActiveJobsFilter(admin.RelatedFieldListFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.title = "active job"
+class RelatedFieldListFilter(admin.RelatedFieldListFilter):
+    def has_output(self):
+        return len(self.lookup_choices) > 0
 
+
+class ActiveJobsFilter(RelatedFieldListFilter):
     def field_choices(self, field, request, model_admin):
         today = date.today()
         limit = Q(open_date__lte=today) \
@@ -22,7 +23,7 @@ class ActiveJobsFilter(admin.RelatedFieldListFilter):
         return field.get_choices(include_blank=False, limit_choices_to=limit)
 
 
-class InactiveJobsFilter(admin.RelatedFieldListFilter):
+class InactiveJobsFilter(RelatedFieldListFilter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title = "inactive job"
