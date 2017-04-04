@@ -61,7 +61,7 @@ class WorkItemAdmin(admin.ModelAdmin):
         ('job', InactiveJobsFilter),
         ('user', InactiveUserFilter),
     )
-    actions = ['mark_invoiced', 'mark_not_invoiced']
+    actions = ['mark_invoiced', 'mark_not_invoiced', 'invoice']
     # sort the items by time in descending order
     ordering = ['-date']
 
@@ -72,6 +72,41 @@ class WorkItemAdmin(admin.ModelAdmin):
     def mark_not_invoiced(self, request, queryset):
         queryset.update(invoiced=False)
     mark_not_invoiced.short_description = "Mark selected items as not invoiced."
+
+    def invoice(self, request, queryset):
+        def getusername(item):
+            if item.user.last_name:
+                return '{0} {1}'.format(item.user.first_name, item.user.last_name)
+            # if no first/last name available, fall back to username
+            else:
+                return item.user.username
+
+        csvfields = [
+            # Title, function on item returning value
+            ('User Key', operator.attrgetter('user.pk')),
+            ('User Name', getusername),
+            ('Job', operator.attrgetter('job.name')),
+            ('Date', operator.attrgetter('date')),
+            ('Hours', operator.attrgetter('hours')),
+            ('Task', operator.attrgetter('text')),
+        ]
+
+        header = list(s[0] for s in csvfields)
+        rows = [header]
+        # Iterate through currently displayed items.
+        for item in queryset:
+            row = list(s[1](item) for s in csvfields)
+            rows.append(row)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=worklog_export.csv'
+
+        writer = csv.writer(response)
+        for row in rows:
+            writer.writerow(row)
+
+        return response
+    invoice.short_description = 'Export as CSV'
 
     def invoiceable(self, instance):
         return instance.job.invoiceable
@@ -85,63 +120,8 @@ class WorkItemAdmin(admin.ModelAdmin):
         return super(WorkItemAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def changelist_view(self, request, extra_context=None):
-        # Look for 'export_as_csv' in the HTTP Request header.  If it is found,
-        # we export CSV.  If it is not found, defer to the super class.
-        if 'export_as_csv' in request.POST:
-            def getusername(item):
-                if item.user.last_name:
-                    return '{0} {1}'.format(item.user.first_name, item.user.last_name)
-                # if no first/last name available, fall back to username
-                else:
-                    return item.user.username
-
-            csvfields = [
-                # Title, function on item returning value
-                ('User Key', operator.attrgetter('user.pk')),
-                ('User Name', getusername),
-                ('Job', operator.attrgetter('job.name')),
-                ('Date', operator.attrgetter('date')),
-                ('Hours', operator.attrgetter('hours')),
-                ('Task', operator.attrgetter('text')),
-            ]
-
-            ChangeList = self.get_changelist(request)
-
-            # see django/contrib/admin/views/main.py  for ChangeList class.
-            cl = ChangeList(request, self.model, self.list_display, self.list_display_links,
-                            self.list_filter, self.date_hierarchy, self.search_fields,
-                            self.list_select_related, self.list_per_page, self.list_max_show_all,
-                            self.list_editable, self)
-
-            header = list(s[0] for s in csvfields)
-            rows = [header]
-            # Iterate through currently displayed items.
-            for item in cl.queryset:
-                row = list(s[1](item) for s in csvfields)
-                rows.append(row)
-
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename=worklog_export.csv'
-
-            writer = csv.writer(response)
-            for row in rows:
-                writer.writerow(row)
-
-            return response
-
-        else:
-            # Get total number of hours for current queryset
-            ChangeList = self.get_changelist(request)
-
-            # see django/contrib/admin/views/main.py  for ChangeList class.
-            cl = ChangeList(request, self.model, self.list_display, self.list_display_links,
-                            self.list_filter, self.date_hierarchy, self.search_fields,
-                            self.list_select_related, self.list_per_page, self.list_max_show_all,
-                            self.list_editable, self)
-        if not extra_context:
-            extra_context = cl.get_queryset(request).aggregate(Sum('hours'))
-        else:
-            extra_context.update(cl.get_queryset(request).aggregate(Sum('hours')))
+        extra_context = extra_context or {}
+        extra_context.update(self.get_queryset(request).aggregate(Sum('hours')))
 
         return super(WorkItemAdmin, self).changelist_view(request, extra_context)
 
