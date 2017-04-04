@@ -113,12 +113,6 @@ class WorkItemAdmin(admin.ModelAdmin):
     invoiceable.admin_order_field = 'job__invoiceable'
     invoiceable.boolean = True
 
-    # order the job dropdown alphabetically
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "job":
-            kwargs["queryset"] = Job.objects.order_by('name')
-        return super(WorkItemAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
         extra_context.update(self.get_queryset(request).aggregate(Sum('hours')))
