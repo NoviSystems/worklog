@@ -122,12 +122,6 @@ class WorkItem(models.Model):
     repo = models.ForeignKey(Repo, null=True, blank=True)
     issue = models.ForeignKey(Issue, null=True, blank=True)
     invoiced = models.BooleanField(default=False)
-    do_not_invoice = models.BooleanField(default=False)
-
-    # see worklog.admin_filter
-    date.year_month_filter = True
-    user.user_filter = True
-    invoiced.is_invoiced_filter = True
 
     def __str__(self):
         return '{user} on {date} worked {hours} hours on job {job} doing {item}'.format(

@@ -413,7 +413,7 @@ class ReportView(LoginRequiredMixin, TemplateView):
 
             for job in jobs:
                 work_items = WorkItem.objects.filter(
-                    job=job, invoiced=False, date__lt=date).exclude(do_not_invoice=True)
+                    job=job, invoiced=False, date__lt=date).exclude(job__invoiceable=False)
                 for items in work_items:
                     items.invoiced = True
                     items.save()

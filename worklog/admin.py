@@ -29,11 +29,16 @@ mark_not_invoiceable.short_description = "Mark selected items as 'Do Not Invoice
 
 
 class WorkItemAdmin(admin.ModelAdmin):
-    list_display = ('user', 'date', 'hours', 'text', 'job', 'invoiced', 'do_not_invoice')
+    list_display = ('user', 'date', 'hours', 'text', 'job', 'invoiceable', 'invoiced', )
     list_filter = ('user', 'date', 'job', 'invoiced', 'do_not_invoice')
     actions = [mark_invoiced, mark_not_invoiced, mark_invoiceable, mark_not_invoiceable]
     # sort the items by time in descending order
     ordering = ['-date']
+
+    def invoiceable(self, instance):
+        return instance.job.invoiceable
+    invoiceable.admin_order_field = 'job__invoiceable'
+    invoiceable.boolean = True
 
     # order the job dropdown alphabetically
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

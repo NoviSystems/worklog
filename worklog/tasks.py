@@ -59,7 +59,7 @@ def generate_invoice(default_date=None):
         default_date = datetime.datetime.strptime(default_date, '%Y-%m-%d').date()
 
     # cal = calendar.Calendar(0)
-    billable_jobs = Job.objects.filter(billing_schedule__date=default_date).exclude(do_not_invoice=True).distinct()
+    billable_jobs = Job.objects.filter(billing_schedule__date=default_date).exclude(invoiceable=False).distinct()
     send_mail = False
 
     # continue only if we can bill jobs
@@ -69,7 +69,7 @@ def generate_invoice(default_date=None):
         # loop through all the jobs
         for job in billable_jobs:
             work_items = WorkItem.objects.filter(job=job, invoiced=False, date__lt=default_date) \
-                .exclude(do_not_invoice=True).distinct().order_by('date')
+                .exclude(job__invoiceable=False).distinct().order_by('date')
 
             # continue only if we have work items
             if work_items:
