@@ -112,7 +112,7 @@ class FundingInline(admin.StackedInline):
 
 
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('name', 'open_date', 'close_date', 'do_not_invoice')
+    list_display = ('name', 'open_date', 'close_date', 'invoiceable')
     actions = [mark_invoiceable, mark_not_invoiceable]
 
     inlines = [
