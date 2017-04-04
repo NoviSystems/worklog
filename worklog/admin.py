@@ -1,8 +1,9 @@
 import csv
 import operator
+from datetime import date
 
 from django.contrib import admin
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import HttpResponse
 
 from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, Employee, Holiday, WorkPeriod
@@ -28,9 +29,37 @@ def mark_not_invoiceable(modeladmin, request, queryset):
 mark_not_invoiceable.short_description = "Mark selected items as 'Do Not Invoice.'"
 
 
+class ActiveJobsFilter(admin.RelatedFieldListFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = "active job"
+
+    def field_choices(self, field, request, model_admin):
+        today = date.today()
+        limit = Q(open_date__lte=today) \
+            & (Q(close_date__isnull=True) | Q(close_date__gte=today))
+
+        return field.get_choices(include_blank=False, limit_choices_to=limit)
+
+
+class InactiveJobsFilter(admin.RelatedFieldListFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = "inactive job"
+
+    def field_choices(self, field, request, model_admin):
+        today = date.today()
+        limit = Q(open_date__gt=today) | Q(close_date__lt=today)
+
+        return field.get_choices(include_blank=False, limit_choices_to=limit)
+
+
 class WorkItemAdmin(admin.ModelAdmin):
     list_display = ('user', 'date', 'hours', 'text', 'job', 'invoiceable', 'invoiced', )
-    list_filter = ('user', 'date', 'job', 'invoiced', 'do_not_invoice')
+    list_filter = (
+        'user', 'date', 'invoiced', 'job__invoiceable',
+        ('job', ActiveJobsFilter), ('job', InactiveJobsFilter),
+    )
     actions = [mark_invoiced, mark_not_invoiced, mark_invoiceable, mark_not_invoiceable]
     # sort the items by time in descending order
     ordering = ['-date']
