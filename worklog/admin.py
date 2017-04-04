@@ -114,10 +114,13 @@ class WorkItemAdmin(admin.ModelAdmin):
     invoiceable.boolean = True
 
     def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        extra_context.update(self.get_queryset(request).aggregate(Sum('hours')))
+        response = super().changelist_view(request, extra_context)
 
-        return super(WorkItemAdmin, self).changelist_view(request, extra_context)
+        cl = response.context_data['cl']
+        hours = cl.get_queryset(request).aggregate(Sum('hours'))
+
+        response.context_data.update(hours)
+        return response
 
 
 class BillingScheduleInline(admin.StackedInline):
