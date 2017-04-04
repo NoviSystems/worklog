@@ -59,6 +59,9 @@ class Job(models.Model):
     users = models.ManyToManyField(User, blank=True)
     available_all_users = models.BooleanField(default=True)
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
