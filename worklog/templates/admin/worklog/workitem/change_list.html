@@ -1,14 +1,18 @@
 {% extends "admin/change_list.html" %}
 
-{% load admin_list %}
-{% load worklog_tags %}
-
 
 {% block result_list %}
-    {# MODIFIED: changed 'admin_actions' to 'workitem_admin_actions' #}
-    {# See: worklog/templatetags/worklog_tags.py for the defintiion of 'workitem_admin_actions' #}
-
-    {% if action_form and actions_on_top and cl.full_result_count %}{% workitem_admin_actions %}{% endif %}
-    {% result_list cl %}
-    {% if action_form and actions_on_bottom and cl.full_result_count %}{% workitem_admin_actions %}{% endif %}
+    {{ block.super }}
+    {# This is a hack, but prevents duplicating the 'admin/actions.html' template #}
+    <script>
+    (function($) {
+        $(document).ready(function() {
+            $('.actions').append($(`
+                <span style="position: relative; margin-right: 2em; float: right;">
+                    <strong>Total Hours: {{ hours__sum }}</strong>
+                </span>`
+            ));
+        });
+    })(django.jQuery);
+    </script>
 {% endblock %}
