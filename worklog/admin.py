@@ -120,10 +120,11 @@ class WorkItemAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context)
 
-        cl = response.context_data['cl']
-        hours = cl.get_queryset(request).aggregate(Sum('hours'))
+        if hasattr(response, 'context_data'):
+            cl = response.context_data['cl']
+            hours = cl.get_queryset(request).aggregate(Sum('hours'))
+            response.context_data.update(hours)
 
-        response.context_data.update(hours)
         return response
 
 
