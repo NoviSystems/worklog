@@ -111,6 +111,9 @@ class WorkItemAdmin(admin.ModelAdmin):
         Create a zip of invoices. Each invoice is per job and should contain workitems
         for approximately one month.
         """
+        if queryset.filter(job__invoiceable=False).exists():
+            self.message_user(request, "Cannot invoice items for jobs that cannot be invoiced.", level=messages.ERROR)
+            return
         if queryset.filter(invoiced=True).exists():
             self.message_user(request, "Cannot invoice items that have already been invoiced.", level=messages.ERROR)
             return
@@ -119,7 +122,7 @@ class WorkItemAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename=invoices-%s.zip' % date.today().isoformat()
 
         with ZipFile(response, 'w') as archive:
-            for job in Job.objects.filter(workitem__in=queryset):
+            for job in Job.objects.filter(workitem__in=queryset).distinct():
                 name, file = self.create_invoice(job, queryset)
                 archive.writestr(name, file)
 
