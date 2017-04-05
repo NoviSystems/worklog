@@ -1,6 +1,9 @@
 import csv
-import operator
+import io
+from collections import Counter
 from datetime import date
+from operator import attrgetter
+from zipfile import ZipFile
 
 from django.contrib import admin, messages
 from django.db.models import Sum, Q
@@ -61,7 +64,7 @@ class WorkItemAdmin(admin.ModelAdmin):
         ('job', InactiveJobsFilter),
         ('user', InactiveUserFilter),
     )
-    actions = ['mark_invoiced', 'mark_not_invoiced', 'invoice']
+    actions = ['mark_invoiced', 'mark_not_invoiced', 'archive']
     # sort the items by time in descending order
     ordering = ['-date']
 
@@ -73,44 +76,57 @@ class WorkItemAdmin(admin.ModelAdmin):
         queryset.update(invoiced=False)
     mark_not_invoiced.short_description = "Mark selected items as not invoiced."
 
-    def invoice(self, request, queryset):
+    def create_invoice(self, job, queryset):
+        """
+        Generate a CSV name and file for the workitems in the queryset
+        """
+        labels, getters = zip(*[
+            # Title, function on item returning value
+            ('Date', attrgetter('date')),
+            ('Hours', attrgetter('hours')),
+            ('Task', attrgetter('text')),
+        ])
+
+        csvfile = io.StringIO()
+        writer = csv.writer(csvfile)
+        dates = []
+
+        writer.writerow(labels)
+        for item in queryset.filter(job=job):
+            writer.writerow([getter(item) for getter in getters])
+
+            # append year-month date for each item
+            dates.append(item.date.strftime('%Y-%m'))
+
+        # generate the file name
+        name = "%(name)s-%(year_month)s.csv" % {
+            'name': job.name,
+            'year_month': Counter(dates).most_common(1)[0][0]
+        }
+
+        return name, csvfile.getvalue()
+
+    def archive(self, request, queryset):
+        """
+        Create a zip of invoices. Each invoice is per job and should contain workitems
+        for approximately one month.
+        """
         if queryset.filter(invoiced=True).exists():
             self.message_user(request, "Cannot invoice items that have already been invoiced.", level=messages.ERROR)
             return
 
-        def getusername(item):
-            if item.user.last_name:
-                return '{0} {1}'.format(item.user.first_name, item.user.last_name)
-            # if no first/last name available, fall back to username
-            else:
-                return item.user.username
+        response = HttpResponse(content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename=invoices-%s.zip' % date.today().isoformat()
 
-        csvfields = [
-            # Title, function on item returning value
-            ('User Key', operator.attrgetter('user.pk')),
-            ('User Name', getusername),
-            ('Job', operator.attrgetter('job.name')),
-            ('Date', operator.attrgetter('date')),
-            ('Hours', operator.attrgetter('hours')),
-            ('Task', operator.attrgetter('text')),
-        ]
+        with ZipFile(response, 'w') as archive:
+            for job in Job.objects.filter(workitem__in=queryset):
+                name, file = self.create_invoice(job, queryset)
+                archive.writestr(name, file)
 
-        header = list(s[0] for s in csvfields)
-        rows = [header]
-        # Iterate through currently displayed items.
-        for item in queryset:
-            row = list(s[1](item) for s in csvfields)
-            rows.append(row)
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=worklog_export.csv'
-
-        writer = csv.writer(response)
-        for row in rows:
-            writer.writerow(row)
+        queryset.update(invoiced=True)
 
         return response
-    invoice.short_description = 'Export as CSV'
+    archive.short_description = 'Invoice selected items'
 
     def invoiceable(self, instance):
         return instance.job.invoiceable
