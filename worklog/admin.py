@@ -2,7 +2,7 @@ import csv
 import operator
 from datetime import date
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Sum, Q
 from django.http import HttpResponse
 
@@ -74,6 +74,10 @@ class WorkItemAdmin(admin.ModelAdmin):
     mark_not_invoiced.short_description = "Mark selected items as not invoiced."
 
     def invoice(self, request, queryset):
+        if queryset.filter(invoiced=True).exists():
+            self.message_user(request, "Cannot invoice items that have already been invoiced.", level=messages.ERROR)
+            return
+
         def getusername(item):
             if item.user.last_name:
                 return '{0} {1}'.format(item.user.first_name, item.user.last_name)
