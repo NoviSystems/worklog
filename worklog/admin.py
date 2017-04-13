@@ -6,8 +6,11 @@ from operator import attrgetter
 from zipfile import ZipFile
 
 from django.contrib import admin, messages
+from django.contrib.admin import helpers
 from django.db.models import Sum, Q
 from django.http import HttpResponse
+from django.template.response import TemplateResponse
+from django import forms
 
 from rangefilter.filter import DateRangeFilter
 
@@ -64,17 +67,17 @@ class WorkItemAdmin(admin.ModelAdmin):
         ('job', InactiveJobsFilter),
         ('user', InactiveUserFilter),
     )
-    actions = ['mark_invoiced', 'mark_not_invoiced', 'archive']
+    actions = ['mark_invoiced', 'mark_not_invoiced', 'archive', 'reassign']
     # sort the items by time in descending order
     ordering = ['-date']
 
     def mark_invoiced(self, request, queryset):
         queryset.update(invoiced=True)
-    mark_invoiced.short_description = "Mark selected items as invoiced."
+    mark_invoiced.short_description = "Mark selected items as invoiced"
 
     def mark_not_invoiced(self, request, queryset):
         queryset.update(invoiced=False)
-    mark_not_invoiced.short_description = "Mark selected items as not invoiced."
+    mark_not_invoiced.short_description = "Mark selected items as not invoiced"
 
     def create_invoice(self, job, queryset):
         """
@@ -131,6 +134,50 @@ class WorkItemAdmin(admin.ModelAdmin):
         return response
     archive.short_description = 'Invoice selected items'
 
+    def reassign(self, request, queryset):
+        if queryset.filter(invoiced=True).exists():
+            self.message_user(request, "Cannot reassign items that have already been invoiced.", level=messages.ERROR)
+            return
+
+        if Job.objects.filter(workitem__in=queryset).distinct().count() > 1:
+            self.message_user(request, "Cannot simultaneously reassign items from multiple jobs.", level=messages.ERROR)
+            return
+
+        today = date.today()
+        jobs = Job.objects \
+            .filter(Q(open_date__lte=today) & (Q(close_date__isnull=True) | Q(close_date__gte=today))) \
+            .exclude(id=queryset.first().job_id)
+
+        if not jobs.exists():
+            self.message_user(request, "No other active jobs to reassign work items to.", level=messages.ERROR)
+            return
+
+        class Form(forms.Form):
+            job = forms.ModelChoiceField(
+                label="New job",
+                empty_label=None,
+                queryset=jobs
+            )
+
+        if request.POST.get('post'):
+            form = Form(data=request.POST)
+            form.is_valid()
+            queryset.update(job=form.cleaned_data['job'])
+
+            return None
+
+        return TemplateResponse(request, 'admin/worklog/workitem/reassign.html', dict(
+            self.admin_site.each_context(request),
+            form=Form(),
+            title="Reassign work items",
+            queryset=queryset,
+            opts=self.model._meta,
+            action_checkbox_name=helpers.ACTION_CHECKBOX_NAME,
+            media=self.media,
+        ))
+
+    reassign.short_description = 'Reasign selected items to a new job'
+
     def invoiceable(self, instance):
         return instance.job.invoiceable
     invoiceable.admin_order_field = 'job__invoiceable'
@@ -139,7 +186,7 @@ class WorkItemAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context)
 
-        if hasattr(response, 'context_data'):
+        if hasattr(response, 'context_data') and 'cl' in response.context_data:
             cl = response.context_data['cl']
             hours = cl.get_queryset(request).aggregate(Sum('hours'))
             response.context_data.update(hours)
