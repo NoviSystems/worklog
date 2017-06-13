@@ -6,20 +6,79 @@ from operator import attrgetter
 from zipfile import ZipFile
 
 from django.contrib import admin, messages
-from django.contrib.admin import helpers
+from django.contrib.admin import helpers, SimpleListFilter
 from django.db.models import Sum, Q
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django import forms
+from django.utils.translation import ugettext_lazy as _
 
 from rangefilter.filter import DateRangeFilter
 
 from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, Employee, Holiday, WorkPeriod
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
 
 
 class RelatedFieldListFilter(admin.RelatedFieldListFilter):
     def has_output(self):
         return len(self.lookup_choices) > 0
+
+
+class UserIsActiveFilter(SimpleListFilter):
+    title = _('Active Status')
+    parameter_name = 'active'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('All', _('All')),
+            (None, _('Yes')),
+            ('No', _('No')),
+        )
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': cl.get_query_string({
+                    self.parameter_name: lookup,
+                }, []),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() == 'All':
+            return queryset.all()
+        # Defaults to show Active Users when all query strings not equal to 'No' or 'All' are passed
+        return queryset.filter(is_active=(self.value() != 'No'))
+
+
+class OpenJobsFilter(SimpleListFilter):
+    title = _('Open Status')
+    parameter_name = 'open'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('All', _('All')),
+            (None, _('Yes')),
+            ('No', _('No')),
+        )
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': cl.get_query_string({
+                    self.parameter_name: lookup,
+                }, []),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if self.value() == 'All':
+            return
+        # Defaults to show Active Jobs when all query strings not equal to 'No' or 'All' are passed
+        return queryset.open(self.value() != 'No')
 
 
 class ActiveUserFilter(RelatedFieldListFilter):
@@ -202,8 +261,14 @@ class FundingInline(admin.StackedInline):
     model = Funding
 
 
+class CustomUserAdmin(UserAdmin):
+    list_display = UserAdmin.list_display + ('is_active', )
+    list_filter = UserAdmin.list_filter + (UserIsActiveFilter, )
+
+
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('name', 'open_date', 'close_date', 'invoiceable')
+    list_display = ('name', 'open_date', 'close_date', 'invoiceable', )
+    list_filter = (OpenJobsFilter,)
     inlines = [
         BillingScheduleInline,
         FundingInline,
@@ -228,6 +293,8 @@ class HolidayAdmin(admin.ModelAdmin):
 admin.site.register(WorkItem, WorkItemAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(GithubAlias, GithubAliasAdmin)
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
 
 admin.site.register(Employee)
 admin.site.register(WorkPeriod, WorkPeriodAdmin)
