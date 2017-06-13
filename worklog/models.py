@@ -2,7 +2,7 @@ import datetime
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Case, When
 
 from worklog.gh_connect import GitHubConnector
 
@@ -52,13 +52,23 @@ class WorkPeriod(models.Model):
 
 
 class JobQuerySet(models.QuerySet):
-    def open(self, is_open, date=None):
+    def annotate_is_open(self, date=None):
         if date is None:
             date = datetime.date.today()
-        if is_open:
-            return self.filter(Q(open_date__lte=date) & (Q(close_date__gte=date) | Q(close_date=None)))
-        if not is_open:
-            return self.filter(Q(open_date__gt=date) | Q(close_date__lt=date))
+        return self.annotate(is_open=Case(
+            When(
+                condition=Q(open_date__lte=date) & (Q(close_date__gte=date) | Q(close_date=None)),
+                then=True,
+            ),
+            default=False,
+            output_field=models.BooleanField(),
+        ))
+
+
+class JobManager(models.Manager.from_queryset(JobQuerySet)):
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.annotate_is_open()
 
 
 class Job(models.Model):
@@ -71,7 +81,7 @@ class Job(models.Model):
     users = models.ManyToManyField(User, blank=True)
     available_all_users = models.BooleanField(default=True)
 
-    objects = JobQuerySet.as_manager()
+    objects = JobManager()
 
     class Meta:
         ordering = ['name']
@@ -81,7 +91,9 @@ class Job(models.Model):
 
     @classmethod
     def get_jobs_open_on(cls, date):
-        return cls.objects.open(True, date)
+        return cls.objects \
+            .annotate_is_open(date) \
+            .filter(is_open=True)
 
     def hasFunding(self):
         return len(self.funding.all()) != 0

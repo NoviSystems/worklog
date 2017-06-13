@@ -78,7 +78,7 @@ class OpenJobsFilter(SimpleListFilter):
         if self.value() == 'All':
             return
         # Defaults to show Active Jobs when all query strings not equal to 'No' or 'All' are passed
-        return queryset.open(self.value() != 'No')
+        return queryset.filter(is_open=(self.value() != 'No'))
 
 
 class ActiveUserFilter(RelatedFieldListFilter):
@@ -97,11 +97,7 @@ class InactiveUserFilter(RelatedFieldListFilter):
 
 class ActiveJobsFilter(RelatedFieldListFilter):
     def field_choices(self, field, request, model_admin):
-        today = date.today()
-        limit = Q(open_date__lte=today) \
-            & (Q(close_date__isnull=True) | Q(close_date__gte=today))
-
-        return field.get_choices(include_blank=False, limit_choices_to=limit)
+        return field.get_choices(include_blank=False, limit_choices_to={'is_open': True})
 
 
 class InactiveJobsFilter(RelatedFieldListFilter):
@@ -110,10 +106,7 @@ class InactiveJobsFilter(RelatedFieldListFilter):
         self.title = "inactive job"
 
     def field_choices(self, field, request, model_admin):
-        today = date.today()
-        limit = Q(open_date__gt=today) | Q(close_date__lt=today)
-
-        return field.get_choices(include_blank=False, limit_choices_to=limit)
+        return field.get_choices(include_blank=False, limit_choices_to={'is_open': False})
 
 
 class WorkItemAdmin(admin.ModelAdmin):
@@ -267,12 +260,18 @@ class CustomUserAdmin(UserAdmin):
 
 
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('name', 'open_date', 'close_date', 'invoiceable', )
+    list_display = ('name', 'open_date', 'close_date', 'is_open', 'invoiceable')
     list_filter = (OpenJobsFilter,)
     inlines = [
         BillingScheduleInline,
         FundingInline,
     ]
+
+    def is_open(self, obj):
+        return obj.is_open
+
+    is_open.boolean = True
+    is_open.admin_order_field = 'is_open'
 
 
 class GithubAliasAdmin(admin.ModelAdmin):
