@@ -6,20 +6,64 @@ from operator import attrgetter
 from zipfile import ZipFile
 
 from django.contrib import admin, messages
-from django.contrib.admin import helpers
+from django.contrib.admin import helpers, SimpleListFilter
 from django.db.models import Sum, Q
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django import forms
+from django.utils.translation import ugettext_lazy as _
 
 from rangefilter.filter import DateRangeFilter
 
 from worklog.models import WorkItem, Job, BillingSchedule, Funding, GithubAlias, Employee, Holiday, WorkPeriod
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
 
 
 class RelatedFieldListFilter(admin.RelatedFieldListFilter):
     def has_output(self):
         return len(self.lookup_choices) > 0
+
+
+class DefaultYesFilter(SimpleListFilter):
+    def lookups(self, request, model_admin):
+        return (
+            ('all', _('All')),
+            (None, _('Yes')),
+            ('no', _('No')),
+        )
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': cl.get_query_string({
+                    self.parameter_name: lookup,
+                }, []),
+                'display': title,
+            }
+
+
+class UserIsActiveFilter(DefaultYesFilter):
+    title = _('active status')
+    parameter_name = 'active'
+
+    def queryset(self, request, queryset):
+        if self.value() == 'all':
+            return queryset.all()
+        # Defaults to show Active Users when all query strings not equal to 'No' or 'All' are passed
+        return queryset.filter(is_active=(self.value() != 'no'))
+
+
+class OpenJobsFilter(DefaultYesFilter):
+    title = _('open status')
+    parameter_name = 'open'
+
+    def queryset(self, request, queryset):
+        if self.value() == 'All':
+            return
+        # Defaults to show Active Jobs when all query strings not equal to 'No' or 'All' are passed
+        return queryset.filter(is_open=(self.value() != 'no'))
 
 
 class ActiveUserFilter(RelatedFieldListFilter):
@@ -38,11 +82,7 @@ class InactiveUserFilter(RelatedFieldListFilter):
 
 class ActiveJobsFilter(RelatedFieldListFilter):
     def field_choices(self, field, request, model_admin):
-        today = date.today()
-        limit = Q(open_date__lte=today) \
-            & (Q(close_date__isnull=True) | Q(close_date__gte=today))
-
-        return field.get_choices(include_blank=False, limit_choices_to=limit)
+        return field.get_choices(include_blank=False, limit_choices_to={'is_open': True})
 
 
 class InactiveJobsFilter(RelatedFieldListFilter):
@@ -51,10 +91,7 @@ class InactiveJobsFilter(RelatedFieldListFilter):
         self.title = "inactive job"
 
     def field_choices(self, field, request, model_admin):
-        today = date.today()
-        limit = Q(open_date__gt=today) | Q(close_date__lt=today)
-
-        return field.get_choices(include_blank=False, limit_choices_to=limit)
+        return field.get_choices(include_blank=False, limit_choices_to={'is_open': False})
 
 
 class WorkItemAdmin(admin.ModelAdmin):
@@ -202,12 +239,24 @@ class FundingInline(admin.StackedInline):
     model = Funding
 
 
+class CustomUserAdmin(UserAdmin):
+    list_display = UserAdmin.list_display + ('is_active', )
+    list_filter = ('is_staff', 'is_superuser', UserIsActiveFilter, 'groups')
+
+
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('name', 'open_date', 'close_date', 'invoiceable')
+    list_display = ('name', 'open_date', 'close_date', 'is_open', 'invoiceable')
+    list_filter = (OpenJobsFilter,)
     inlines = [
         BillingScheduleInline,
         FundingInline,
     ]
+
+    def is_open(self, obj):
+        return obj.is_open
+
+    is_open.boolean = True
+    is_open.admin_order_field = 'is_open'
 
 
 class GithubAliasAdmin(admin.ModelAdmin):
@@ -228,6 +277,8 @@ class HolidayAdmin(admin.ModelAdmin):
 admin.site.register(WorkItem, WorkItemAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(GithubAlias, GithubAliasAdmin)
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
 
 admin.site.register(Employee)
 admin.site.register(WorkPeriod, WorkPeriodAdmin)
