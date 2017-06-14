@@ -25,60 +25,45 @@ class RelatedFieldListFilter(admin.RelatedFieldListFilter):
         return len(self.lookup_choices) > 0
 
 
-class UserIsActiveFilter(SimpleListFilter):
-    title = _('Active Status')
+class DefaultYesFilter(SimpleListFilter):
+    def lookups(self, request, model_admin):
+        return (
+            ('all', _('All')),
+            (None, _('Yes')),
+            ('no', _('No')),
+        )
+
+    def choices(self, cl):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == lookup,
+                'query_string': cl.get_query_string({
+                    self.parameter_name: lookup,
+                }, []),
+                'display': title,
+            }
+
+
+class UserIsActiveFilter(DefaultYesFilter):
+    title = _('active status')
     parameter_name = 'active'
 
-    def lookups(self, request, model_admin):
-        return (
-            ('All', _('All')),
-            (None, _('Yes')),
-            ('No', _('No')),
-        )
-
-    def choices(self, cl):
-        for lookup, title in self.lookup_choices:
-            yield {
-                'selected': self.value() == lookup,
-                'query_string': cl.get_query_string({
-                    self.parameter_name: lookup,
-                }, []),
-                'display': title,
-            }
-
     def queryset(self, request, queryset):
-        if self.value() == 'All':
+        if self.value() == 'all':
             return queryset.all()
         # Defaults to show Active Users when all query strings not equal to 'No' or 'All' are passed
-        return queryset.filter(is_active=(self.value() != 'No'))
+        return queryset.filter(is_active=(self.value() != 'no'))
 
 
-class OpenJobsFilter(SimpleListFilter):
-    title = _('Open Status')
+class OpenJobsFilter(DefaultYesFilter):
+    title = _('open status')
     parameter_name = 'open'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('All', _('All')),
-            (None, _('Yes')),
-            ('No', _('No')),
-        )
-
-    def choices(self, cl):
-        for lookup, title in self.lookup_choices:
-            yield {
-                'selected': self.value() == lookup,
-                'query_string': cl.get_query_string({
-                    self.parameter_name: lookup,
-                }, []),
-                'display': title,
-            }
 
     def queryset(self, request, queryset):
         if self.value() == 'All':
             return
         # Defaults to show Active Jobs when all query strings not equal to 'No' or 'All' are passed
-        return queryset.filter(is_open=(self.value() != 'No'))
+        return queryset.filter(is_open=(self.value() != 'no'))
 
 
 class ActiveUserFilter(RelatedFieldListFilter):
@@ -256,7 +241,7 @@ class FundingInline(admin.StackedInline):
 
 class CustomUserAdmin(UserAdmin):
     list_display = UserAdmin.list_display + ('is_active', )
-    list_filter = UserAdmin.list_filter + (UserIsActiveFilter, )
+    list_filter = ('is_staff', 'is_superuser', UserIsActiveFilter, 'groups')
 
 
 class JobAdmin(admin.ModelAdmin):
