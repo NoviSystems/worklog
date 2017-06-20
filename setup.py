@@ -58,7 +58,7 @@ setup(
     install_requires=[
         "django>=1.9",
         "celery",
-        "djangorestframework>=3",
+        "djangorestframework==3.6.2",
         "djangorestframework-filters==0.9.1",
         "django-admin-rangefilter",
         "github3.py>=1.0a",
